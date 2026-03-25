@@ -73,11 +73,15 @@ Branch and pull request context are preserved when present in the URL (`&branch=
 
 ## Authentication
 
-The script needs a SonarCloud API token via environment variable:
+For **public** SonarCloud projects, no token is needed — the script works out of the box.
+
+For **private** projects, set a SonarCloud API token via environment variable:
 
 ```
 SONARCLOUD_TOKEN=<token>
 ```
+
+If the token is missing and the project is private, the API will return 401/403 — the script will suggest setting `SONARCLOUD_TOKEN`.
 
 Optional environment variables for customization:
 - `SONARCLOUD_BASE_URL` — default: `https://sonarcloud.io`
@@ -88,7 +92,7 @@ Optional environment variables for customization:
 - `SONARCLOUD_MAX_RETRIES` — default: `2`
 - `SONARCLOUD_RETRY_BACKOFF_SECONDS` — default: `1.5`
 
-If the token is missing, the script will raise a clear error. If the token lacks permissions for a private project, the API will return 403 — tell the user to check their token scope.
+If the token is missing and the project is private, the script will return a clear error suggesting the user set `SONARCLOUD_TOKEN`. If the token lacks permissions for a private project, the API will return 403 — tell the user to check their token scope.
 
 ## Error handling
 

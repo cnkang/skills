@@ -17,9 +17,7 @@ class SonarCloudClient:
         max_retries: Optional[int] = None,
         retry_backoff_seconds: Optional[float] = None,
     ) -> None:
-        self.token = token or os.environ.get("SONARCLOUD_TOKEN")
-        if not self.token:
-            raise ValueError("SONARCLOUD_TOKEN is required")
+        self.token = token or os.environ.get("SONARCLOUD_TOKEN") or None
 
         default_base = os.environ.get("SONARCLOUD_BASE_URL", "https://sonarcloud.io")
         self.base_url = (base_url or default_base).rstrip("/")
@@ -33,12 +31,10 @@ class SonarCloudClient:
         self.default_project = os.environ.get("SONARCLOUD_DEFAULT_PROJECT")
 
         self.session = requests.Session()
-        self.session.headers.update(
-            {
-                "Authorization": f"Bearer {self.token}",
-                "Accept": "application/json",
-            }
-        )
+        headers: Dict[str, str] = {"Accept": "application/json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        self.session.headers.update(headers)
 
     def _request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.api_base_url}{path}"
@@ -50,6 +46,12 @@ class SonarCloudClient:
                 if response.status_code == 429 and attempt < self.max_retries:
                     time.sleep(self.retry_backoff_seconds * (attempt + 1))
                     continue
+                if response.status_code in (401, 403) and not self.token:
+                    raise requests.HTTPError(
+                        f"HTTP {response.status_code}: Authentication required. "
+                        "This project may be private. Set SONARCLOUD_TOKEN to access it.",
+                        response=response,
+                    )
                 response.raise_for_status()
                 return response.json()
             except requests.RequestException as exc:
