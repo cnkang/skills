@@ -18,13 +18,5 @@ The skill immediately routes execution to:
 
 ## Repository mode (Codex CLI)
 
-Codex reads repository guidance from:
-
-- `AGENTS.md`
-
-`AGENTS.md` instructs Codex to load:
-
-1. `SKILL.md`
-2. `references/core-rules.md`
-
-So both modes use the same rule source.
+When used in repository mode, Codex loads `SKILL.md` which routes to
+`references/core-rules.md`. Both modes use the same rule source.

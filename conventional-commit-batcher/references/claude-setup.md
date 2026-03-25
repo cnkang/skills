@@ -1,20 +1,18 @@
 # Claude Code Setup
 
-This project is directly Claude-compatible because repository-level entrypoints are already included:
+This project provides Claude-compatible entrypoints:
 
-- `CLAUDE.md` (auto-loaded project instructions with commit interception rules)
 - `.claude/agents/conventional-commit-batcher.md`
 - `.claude/commands/commit-batch.md`
 
 ## Automatic commit interception
 
-`CLAUDE.md` is loaded automatically by Claude Code for every session. It
-contains a mandatory commit interception section that prevents the agent from
-running `git add`, `git commit`, or `git push` without first following the
-plan-first workflow. This means the skill activates for ANY commit operation,
-not just when the user explicitly asks for batching.
+The agent and command entrypoints contain mandatory commit interception rules
+that prevent the agent from running `git add`, `git commit`, or `git push`
+without first following the plan-first workflow. This means the skill activates
+for ANY commit operation, not just when the user explicitly asks for batching.
 
-Both agent and command entrypoints load the same canonical rules file:
+Both entrypoints load the same canonical rules file:
 
 - `references/core-rules.md`
 

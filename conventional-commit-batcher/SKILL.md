@@ -96,8 +96,7 @@ Commit command:
 ## Entrypoints
 
 - Codex skill: `SKILL.md`
-- Codex repo loader: `AGENTS.md`
-- Claude: `CLAUDE.md`, `.claude/agents/conventional-commit-batcher.md`, `.claude/commands/commit-batch.md`
+- Claude: `.claude/agents/conventional-commit-batcher.md`, `.claude/commands/commit-batch.md`
 - Kiro: `.kiro/agents/conventional-commit-batcher.json`, `.kiro/steering/commit-batching.md`
 - Shared skill (Kimi / Qwen / Gemini): `.agents/skills/conventional-commit-batcher/SKILL.md`
 - Shared subagent (Qwen / Gemini): `.agents/agents/conventional-commit-batcher.md`
