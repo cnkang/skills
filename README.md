@@ -32,4 +32,4 @@ npx skills add cnkang/skills/<skill-name>
 
 ## License
 
-[Apache-2.0](LICENSE)
+[MIT](LICENSE)
