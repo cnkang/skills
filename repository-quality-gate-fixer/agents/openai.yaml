@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repository Quality Gate Fixer"
+  short_description: "Close repository quality gates with scoped fixes and evidence"
+  default_prompt: "Use $repository-quality-gate-fixer to audit, fix, and verify this repository against AGENTS.md, local CI, relevant local Skills, reviews, specs, and quality gates. Preserve user changes, avoid unrelated legacy cleanup, do not lower quality standards, protect secrets, avoid remote-state changes unless explicitly authorized, verify claims against the current commit, and produce an evidence-backed final report."

@@ -19,3 +19,5 @@ venv/
 
 # Linter cache
 .ruff_cache/
+.arts
+.codeartsdoer

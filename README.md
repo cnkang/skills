@@ -24,6 +24,25 @@ Key features:
 - Agent-friendly JSON and markdown output
 - Read-only — never modifies SonarCloud state
 
+### [repository-quality-gate-fixer](repository-quality-gate-fixer/)
+
+Orchestrate a complete local repository quality-gate closure loop: audit, fix, and verify against AGENTS.md, local CI, Skills, reviews, specs, and quality gates, then produce an evidence-backed report.
+
+Key features:
+- Read-only probe collects git state, CI workflows, configs, stack, tools, and local Skills
+- Quality Gate Manifest with evidence-based completion gate
+- Scope control: focus on current branch/PR, avoid legacy debt cleanup
+- Mode escalation requires explicit authorization
+- Context-aware workflow parser: ignores `env.run`/`with.run`, handles block scalar comments
+- Secret redaction (URL credentials, tokens, Bearer/Basic auth, private keys) and credential safety
+- `--base-ref` for accurate diff scope aligned with PR base (supports branch, tag, SHA)
+- Nested `AGENTS.md` discovery for per-module agent instructions
+- JSON output includes `schema_version`, `probe_version`, `generated_at`
+- Markdown paths normalize `$HOME` to `~`
+- Extended config detection: Python, JVM, C/C++, containers, task runners
+- C / NGINX-adjacent repository checks
+- Requires Python 3.10+
+
 ## Usage
 
 ```bash
