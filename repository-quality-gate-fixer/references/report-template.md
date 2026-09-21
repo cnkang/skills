@@ -1,5 +1,10 @@
 # Repository Quality Gate Fix Report
 
+Use this template for a full audit or when a detailed report is requested.
+Remove inapplicable sections and empty rows. For a narrow fix, a concise report
+of scope, changes, verification, and blockers is sufficient. Placeholder rows do
+not create a requirement to run tools outside the agreed task.
+
 ## 1. Summary
 
 - Repository:
