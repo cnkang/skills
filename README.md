@@ -6,17 +6,17 @@ A collection of agent skills for AI-assisted development workflows.
 
 ### [conventional-commit-batcher](conventional-commit-batcher/)
 
-Auto-split mixed changes into logical commit batches with validated Conventional Commit messages. Automatically intercepts all `git add`, `git commit`, and `git push` operations to enforce a plan-first workflow with built-in safety gates.
+Split mixed changes into logical Conventional Commits when independent changes need separate commits. Planning, staging, committing, and pushing retain their own authorization boundaries.
 
 Key features:
-- Plan-first workflow prevents accidental mixed commits
+- Keep each behavior change with its tests and directly coupled docs
 - Built-in safety gates (sensitive data, conflict markers, protected branches, large files, etc.)
-- Auto-execute by default, plan-first on request
+- Execute requested commits; stop at a plan when only a plan is requested
 - Cross-platform support: Codex, Claude Code, Kiro, Kimi, Qwen, Gemini, OpenAI
 
 ### [sonarcloud-link-inspector](sonarcloud-link-inspector/)
 
-Parse SonarCloud project, issue, and security hotspot links, then fetch normalized read-only details for agent analysis and code-fix workflows.
+Inspect SonarCloud project, issue, and security hotspot links with normalized read-only output. Modify local code only when remediation is requested.
 
 Key features:
 - Supports project, issue, and security hotspot links
@@ -26,13 +26,13 @@ Key features:
 
 ### [repository-quality-gate-fixer](repository-quality-gate-fixer/)
 
-Orchestrate a complete local repository quality-gate closure loop: audit, fix, and verify against AGENTS.md, local CI, Skills, reviews, specs, and quality gates, then produce an evidence-backed report.
+Audit or repair repository quality gates with scoped fixes and current evidence. Load local, remote, environment, or NGINX guidance only when relevant.
 
 Key features:
-- Read-only probe collects git state, CI workflows, configs, stack, tools, and local Skills
+- Optional read-only probe collects repository context; installed-skill scanning is opt-in in the recommended workflow
 - Quality Gate Manifest with evidence-based completion gate
 - Scope control: focus on current branch/PR, avoid legacy debt cleanup
-- Mode escalation requires explicit authorization
+- Infer audit/fix/commit/push scope from the request and reuse existing authorization
 - Context-aware workflow parser: ignores `env.run`/`with.run`, handles block scalar comments
 - Secret redaction (URL credentials, tokens, Bearer/Basic auth, private keys) and credential safety
 - `--base-ref` for accurate diff scope aligned with PR base (supports branch, tag, SHA)
