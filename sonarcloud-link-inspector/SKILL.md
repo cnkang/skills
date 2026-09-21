@@ -1,6 +1,8 @@
 ---
 name: sonarcloud-link-inspector
 description: Inspect SonarCloud issue, hotspot, or project URLs and fetch read-only details for diagnosis or requested code remediation.
+metadata:
+  version: "1.0.0"
 ---
 
 # SonarCloud Link Inspector

@@ -2,7 +2,7 @@
 name: repository-quality-gate-fixer
 description: Diagnose and close repository or PR quality-gate failures when the user requests remediation or a quality-gate audit.
 metadata:
-  version: "0.7"
+  version: "0.7.0"
 ---
 
 # Repository Quality Gate Fixer

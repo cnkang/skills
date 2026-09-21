@@ -1,6 +1,8 @@
 ---
 name: conventional-commit-batcher
 description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
+metadata:
+  version: "3.0.0"
 ---
 
 # Conventional Commit Batcher

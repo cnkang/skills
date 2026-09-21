@@ -46,8 +46,38 @@ Key features:
 ## Usage
 
 ```bash
-npx skills add cnkang/skills/<skill-name>
+npx skills add cnkang/skills --skill <skill-name>
 ```
+
+For a global Codex installation of these three skills:
+
+```bash
+npx skills add cnkang/skills -g -a codex -y --skill conventional-commit-batcher repository-quality-gate-fixer sonarcloud-link-inspector
+```
+
+### Versions and updates
+
+| Skill | Version |
+|---|---|
+| conventional-commit-batcher | 3.0.0 |
+| repository-quality-gate-fixer | 0.7.0 |
+| sonarcloud-link-inspector | 1.0.0 |
+
+Versions are recorded in `SKILL.md` under `metadata.version`. The `skills` CLI
+detects updates using the installed source and skill-folder hash, not a semantic
+version comparison. See the [upstream update implementation](https://github.com/vercel-labs/skills/blob/main/src/cli.ts).
+
+Update only these global skills with a CLI version that supports named updates
+(verified with skills 1.7.0):
+
+```bash
+npx skills update conventional-commit-batcher repository-quality-gate-fixer sonarcloud-link-inspector -g -y
+```
+
+If `conventional-commit-batcher` was installed from the older standalone
+`cnkang/conventional-commit-batcher` repository, first run the global installation
+command above to switch its tracked source to `cnkang/skills`. Merely copying
+files or changing a version field does not migrate the CLI's source record.
 
 ## License
 
