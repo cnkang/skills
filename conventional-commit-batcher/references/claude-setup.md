@@ -1,54 +1,19 @@
-# Claude Code Setup
+# Claude Setup
 
-This project provides Claude-compatible entrypoints:
+The package includes `.claude/agents/conventional-commit-batcher.md` and `.claude/commands/commit-batch.md` adapters.
 
-- `.claude/agents/conventional-commit-batcher.md`
-- `.claude/commands/commit-batch.md`
+Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
+canonical entrypoint; adapters only route to it. If copying adapters into a
+different project location, update their relative pointers to the installed
+package and keep both validator and safety-gate scripts available. Do not copy
+only `core-rules.md`: it links to other package resources.
 
-## Automatic commit interception
+The workflow applies to mixed changes needing separate commits. It does not
+intercept every Git operation, and it does not grant authorization. To request
+execution, ask to split and commit the relevant changes. To request only a plan,
+say so explicitly. Pushing remains a separate requested action.
 
-The agent and command entrypoints contain mandatory commit interception rules
-that prevent the agent from running `git add`, `git commit`, or `git push`
-without first following the plan-first workflow. This means the skill activates
-for ANY commit operation, not just when the user explicitly asks for batching.
-
-Both entrypoints load the same canonical rules file:
-
-- `references/core-rules.md`
-
-No extra copy step is required when using Claude Code in this repository.
-
-## Reuse in another repository
-
-From the target repository root:
-
-```bash
-mkdir -p .claude/agents
-cp <path-to-conventional-commit-batcher>/.claude/agents/conventional-commit-batcher.md \
-  .claude/agents/conventional-commit-batcher.md
-```
-
-Use from Claude Code with a direct delegation prompt, for example:
-
-```text
-Use the conventional-commit-batcher subagent to split my current diff into logical commits.
-```
-
-## Optional: install slash command
-
-```bash
-mkdir -p .claude/commands
-cp <path-to-conventional-commit-batcher>/.claude/commands/commit-batch.md \
-  .claude/commands/commit-batch.md
-```
-
-Then run:
-
-```text
-/project:commit-batch
-```
-
-## Sync rule
-
-When behavior changes, update only `references/core-rules.md`.
-`SKILL.md`, `.claude/agents/*`, and `.claude/commands/*` should stay as thin loaders that point to this file.
+Use the target host's supported installation mechanism; verify discovery there.
+These adapters are not proof of compatibility with every host version. When
+updating, synchronize the installed copy with the package and check for local
+customizations first.

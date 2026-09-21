@@ -1,22 +1,19 @@
-# Codex CLI Setup
+# Codex Setup
 
-This project supports two Codex loading paths.
+Install the complete skill folder in an appropriate `.agents/skills/` directory. Codex reads the root `SKILL.md`; keep `agents/openai.yaml`, references, and scripts with it.
 
-## Automatic commit interception
+Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
+canonical entrypoint; adapters only route to it. If copying adapters into a
+different project location, update their relative pointers to the installed
+package and keep both validator and safety-gate scripts available. Do not copy
+only `core-rules.md`: it links to other package resources.
 
-Once loaded, the skill intercepts ALL commit-related operations automatically.
-The agent cannot run `git add`, `git commit`, or `git push` without first
-producing a Commit Plan and running safety gates. This applies whether the user
-explicitly asks for batching or simply says "commit my changes".
+The workflow applies to mixed changes needing separate commits. It does not
+intercept every Git operation, and it does not grant authorization. To request
+execution, ask to split and commit the relevant changes. To request only a plan,
+say so explicitly. Pushing remains a separate requested action.
 
-## Skill mode
-
-Use `SKILL.md` as the Codex skill entrypoint.
-The skill immediately routes execution to:
-
-- `references/core-rules.md`
-
-## Repository mode (Codex CLI)
-
-When used in repository mode, Codex loads `SKILL.md` which routes to
-`references/core-rules.md`. Both modes use the same rule source.
+Use the target host's supported installation mechanism; verify discovery there.
+These adapters are not proof of compatibility with every host version. When
+updating, synchronize the installed copy with the package and check for local
+customizations first.

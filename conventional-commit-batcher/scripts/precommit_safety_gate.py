@@ -407,8 +407,9 @@ def main() -> int:
         flags = required_ack_flags(findings)
         flag_hint = " ".join(flags)
         print(
-            "Explicit confirmation required before commit. "
-            f"After user approval, rerun with: python3 scripts/precommit_safety_gate.py {flag_hint}",
+            "Review flagged findings before commit. Reuse explicit authorization "
+            "already given for the same scope and risk; otherwise ask the user. "
+            f"Once reviewed and authorized, rerun this gate with: {flag_hint}",
             file=sys.stderr,
         )
         return EXIT_CONFIRMATION_REQUIRED

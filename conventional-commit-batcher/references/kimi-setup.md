@@ -1,53 +1,19 @@
-# Kimi CLI Setup
+# Kimi Setup
 
-This repository already includes a local Kimi CLI skill definition:
+The package includes `.agents/skills/conventional-commit-batcher/SKILL.md` as a shared adapter.
 
-- `.agents/skills/conventional-commit-batcher/SKILL.md` (recommended project-level path)
+Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
+canonical entrypoint; adapters only route to it. If copying adapters into a
+different project location, update their relative pointers to the installed
+package and keep both validator and safety-gate scripts available. Do not copy
+only `core-rules.md`: it links to other package resources.
 
-The skill always points execution to the canonical rules file:
+The workflow applies to mixed changes needing separate commits. It does not
+intercept every Git operation, and it does not grant authorization. To request
+execution, ask to split and commit the relevant changes. To request only a plan,
+say so explicitly. Pushing remains a separate requested action.
 
-- `references/core-rules.md`
-
-## Automatic commit interception
-
-Once the skill is discovered, it intercepts ALL commit-related operations
-automatically. The agent cannot run `git add`, `git commit`, or `git push`
-without first producing a Commit Plan and running safety gates. This applies
-whether the user explicitly asks for batching or simply says "commit my
-changes".
-
-## Use in this repository
-
-Open this repository in Kimi CLI. The skill is discovered automatically.
-
-- Skill (auto-discovered): `conventional-commit-batcher`
-- Slash command: `/skill:conventional-commit-batcher`
-
-## Reuse in another repository
-
-From target repository root:
-
-```bash
-mkdir -p .agents/skills/conventional-commit-batcher
-cp <path-to-conventional-commit-batcher>/.agents/skills/conventional-commit-batcher/SKILL.md \
-  .agents/skills/conventional-commit-batcher/
-```
-
-Then also copy rule/script files if the target repo does not already have them:
-
-```bash
-mkdir -p references scripts
-cp <path-to-conventional-commit-batcher>/references/core-rules.md references/
-cp <path-to-conventional-commit-batcher>/scripts/validate_conventional_commit.py scripts/
-```
-
-## Note on skill discovery
-
-Kimi CLI discovers project-level skills from the first existing directory among:
-
-1. `.agents/skills/` (recommended, used by this repository)
-2. `.kimi/skills/`
-3. `.claude/skills/`
-4. `.codex/skills/`
-
-If your target repository already uses a different path, place the skill directory there instead.
+Use the target host's supported installation mechanism; verify discovery there.
+These adapters are not proof of compatibility with every host version. When
+updating, synchronize the installed copy with the package and check for local
+customizations first.

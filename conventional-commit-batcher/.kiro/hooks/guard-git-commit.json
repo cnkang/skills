@@ -1,13 +1,15 @@
 {
   "name": "Guard Git Commit",
-  "version": "1.0.0",
-  "description": "Intercept git add/commit shell commands and ensure the conventional-commit-batcher skill workflow is followed first.",
+  "version": "2.0.0",
+  "description": "Check Git action scope without forcing unrelated commit batching.",
   "when": {
     "type": "preToolUse",
-    "toolTypes": ["shell"]
+    "toolTypes": [
+      "shell"
+    ]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A shell command is about to run. If it involves `git add`, `git commit`, or `git push`, STOP and ensure you have activated the `conventional-commit-batcher` skill and followed its workflow (inspect → split → safety gates → execute). The default mode is auto-execute (no user confirmation needed). Only pause for a Commit Plan if the user explicitly asked to review the plan first. Safety gate confirmations (sensitive data, protected branch, etc.) still require user confirmation."
+    "prompt": "For a Git mutation, verify it matches the user's requested action and existing authorization. Staging does not authorize committing; committing does not authorize pushing. Preserve unrelated work. Use conventional-commit-batcher only when mixed changes need batching. Do not force a batching plan for staging-only or push-only commands, and do not ask again for an unchanged authorized scope."
   }
 }

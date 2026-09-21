@@ -1,54 +1,19 @@
-# Kiro CLI Setup
+# Kiro Setup
 
-This repository already includes a local Kiro agent definition:
+The package includes `.kiro/agents/conventional-commit-batcher.json`, its prompt, a short steering file, and an optional scope-check hook. The hook is an agent prompt, not a deterministic shell security boundary.
 
-- `.kiro/agents/conventional-commit-batcher.json`
-- `.kiro/prompts/conventional-commit-batcher.md`
-- `.kiro/steering/commit-batching.md` (auto-loaded steering rules)
-- `.kiro/hooks/guard-git-commit.json` (preToolUse hook for shell commands)
+Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
+canonical entrypoint; adapters only route to it. If copying adapters into a
+different project location, update their relative pointers to the installed
+package and keep both validator and safety-gate scripts available. Do not copy
+only `core-rules.md`: it links to other package resources.
 
-## Automatic commit interception
+The workflow applies to mixed changes needing separate commits. It does not
+intercept every Git operation, and it does not grant authorization. To request
+execution, ask to split and commit the relevant changes. To request only a plan,
+say so explicitly. Pushing remains a separate requested action.
 
-Kiro enforces commit interception through three layers:
-
-1. **Steering file** (`.kiro/steering/commit-batching.md`): auto-included in
-   every session, instructs the agent to activate the skill for any commit
-   intent.
-2. **preToolUse hook** (`.kiro/hooks/guard-git-commit.json`): intercepts shell
-   commands before execution and blocks direct `git add`/`git commit`/`git push`
-   unless the skill workflow has been followed.
-3. **Agent prompt** (`.kiro/prompts/conventional-commit-batcher.md`): contains
-   the mandatory interception section.
-
-This means the agent cannot bypass the plan-first workflow regardless of how
-the commit is initiated.
-
-The prompt always points execution to the canonical rules file:
-
-- `references/core-rules.md`
-
-## Use in this repository
-
-Open this repository in Kiro CLI and invoke the local agent:
-
-- `conventional-commit-batcher`
-
-## Reuse in another repository
-
-From target repository root:
-
-```bash
-mkdir -p .kiro/agents .kiro/prompts .kiro/steering .kiro/hooks
-cp <path-to-conventional-commit-batcher>/.kiro/agents/conventional-commit-batcher.json .kiro/agents/
-cp <path-to-conventional-commit-batcher>/.kiro/prompts/conventional-commit-batcher.md .kiro/prompts/
-cp <path-to-conventional-commit-batcher>/.kiro/steering/commit-batching.md .kiro/steering/
-cp <path-to-conventional-commit-batcher>/.kiro/hooks/guard-git-commit.json .kiro/hooks/
-```
-
-Then also copy rule/script files if the target repo does not already have them:
-
-```bash
-mkdir -p references scripts
-cp <path-to-conventional-commit-batcher>/references/core-rules.md references/
-cp <path-to-conventional-commit-batcher>/scripts/validate_conventional_commit.py scripts/
-```
+Use the target host's supported installation mechanism; verify discovery there.
+These adapters are not proof of compatibility with every host version. When
+updating, synchronize the installed copy with the package and check for local
+customizations first.

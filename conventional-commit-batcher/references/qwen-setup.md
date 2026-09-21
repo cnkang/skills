@@ -1,47 +1,19 @@
-# Qwen Code Setup
+# Qwen Setup
 
-This repository already includes shared Agent Skills definitions that Qwen Code auto-discovers:
+The package includes a shared skill under `.agents/skills/` and a specialist under `.agents/agents/`.
 
-- `.agents/agents/conventional-commit-batcher.md` (subagent)
-- `.agents/skills/conventional-commit-batcher/SKILL.md` (skill)
+Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
+canonical entrypoint; adapters only route to it. If copying adapters into a
+different project location, update their relative pointers to the installed
+package and keep both validator and safety-gate scripts available. Do not copy
+only `core-rules.md`: it links to other package resources.
 
-Both point execution to the canonical rules file:
+The workflow applies to mixed changes needing separate commits. It does not
+intercept every Git operation, and it does not grant authorization. To request
+execution, ask to split and commit the relevant changes. To request only a plan,
+say so explicitly. Pushing remains a separate requested action.
 
-- `references/core-rules.md`
-
-## Automatic commit interception
-
-Once discovered, the skill and subagent intercept ALL commit-related operations
-automatically. The agent cannot run `git add`, `git commit`, or `git push`
-without first producing a Commit Plan and running safety gates. This applies
-whether the user explicitly asks for batching or simply says "commit my
-changes".
-
-## Use in this repository
-
-Open this repository in Qwen Code. The skill and subagent are discovered automatically.
-
-- Skill: model-invoked when your request matches commit batching
-- SubAgent: invoke explicitly or let the main AI delegate
-
-## Reuse in another repository
-
-From target repository root:
-
-```bash
-mkdir -p .agents/agents .agents/skills/conventional-commit-batcher
-cp <path-to-conventional-commit-batcher>/.agents/agents/conventional-commit-batcher.md .agents/agents/
-cp <path-to-conventional-commit-batcher>/.agents/skills/conventional-commit-batcher/SKILL.md .agents/skills/conventional-commit-batcher/
-```
-
-Then also copy rule/script files if the target repo does not already have them:
-
-```bash
-mkdir -p references scripts
-cp <path-to-conventional-commit-batcher>/references/core-rules.md references/
-cp <path-to-conventional-commit-batcher>/scripts/validate_conventional_commit.py scripts/
-```
-
-## Optional native directories
-
-Qwen Code also supports native `.qwen/skills` and `.qwen/agents` directories. This repository uses `.agents/*` to reduce duplicate hidden directories across CLIs.
+Use the target host's supported installation mechanism; verify discovery there.
+These adapters are not proof of compatibility with every host version. When
+updating, synchronize the installed copy with the package and check for local
+customizations first.

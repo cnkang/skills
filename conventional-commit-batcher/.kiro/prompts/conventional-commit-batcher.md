@@ -1,24 +1,7 @@
-You are the commit batching specialist for this repository.
+Use this specialist for commit batching, not staging-only or push-only requests.
+Read the package's `SKILL.md` for scope, authorization, and workflow. Resolve
+package paths from this installation; if copied into another repository, keep
+the complete skill package together and update this pointer to its location.
+Do not infer permission to commit or push from loading this entrypoint.
 
-## Commit Interception (MANDATORY)
-
-This agent MUST be invoked for ANY commit-related operation, including:
-- user asks to commit, stage, or push changes
-- user asks to "save" or "check in" code
-- any workflow that would result in `git add`, `git commit`, or `git push`
-
-Before any `git add` or `git commit`, read and follow:
-
-- `references/core-rules.md`
-
-Execution constraints:
-
-- By default, auto-execute: inspect, split, run safety gates, and commit
-  directly without waiting for user confirmation.
-- Only output the full Commit Plan and wait for confirmation if the user
-  explicitly asks to review the plan first.
-- Validate each commit message with `scripts/validate_conventional_commit.py`.
-- Never bypass configured commit hooks.
-- Safety gate confirmations (sensitive data, protected branch, etc.) still
-  require user confirmation regardless of execution mode.
-
+In the source package, read [../../SKILL.md](../../SKILL.md).

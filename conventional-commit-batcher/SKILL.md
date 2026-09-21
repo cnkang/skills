@@ -1,121 +1,57 @@
 ---
 name: conventional-commit-batcher
-version: 2.0.0
-description: Auto-split mixed changes into logical commit batches with validated Conventional Commit messages. MUST BE USED for ANY git add, git commit, or git push operation.
+description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
+metadata:
+  version: "3.0.0"
 ---
 
 # Conventional Commit Batcher
 
-Use this skill to turn a messy working tree into clean, reviewable Conventional Commit history.
+Produce reviewable commits grouped by purpose. A single cohesive change needs
+only one commit; staging-only and push-only tasks do not need a batching workflow.
 
-## Commit Interception (MANDATORY)
+## Scope and authorization
 
-This skill MUST be activated for ANY commit-related operation, including:
-- user asks to commit, stage, or push changes
-- user asks to "save" or "check in" code
-- any workflow that would result in `git add`, `git commit`, or `git push`
+- Follow the requested action. A plan does not authorize staging or committing;
+  staging does not authorize committing; committing does not authorize pushing.
+- When commits are requested, execute the agreed scope without an extra plan
+  approval. If the user requests a plan or review first, stop at that boundary.
+- Preserve unrelated staged and unstaged work. Do not reset the index or sweep
+  all changes into a commit.
+- Reuse explicit authorization for the same branch, files, and action. Ask about
+  new risks or material ambiguity, not merely because another batch has started.
+- Keep credentials out of commits and reports. Do not bypass configured hooks.
 
-Do NOT run `git add` or `git commit` directly without going through this
-skill's workflow.
+## Workflow
 
-## Use This Skill When
+1. Inspect branch, staged and unstaged diffs, and applicable project instructions.
+2. Group changes by purpose and rollback unit. Keep behavior, its tests, and
+   directly coupled documentation together. Separate independent changes.
+3. For each authorized commit, stage only its files/hunks and review the index.
+   Run the safety gate from the target repository:
+   `python3 <skill-dir>/scripts/precommit_safety_gate.py`.
+   Read [safety gates](references/safety-gates.md) when a finding needs review or
+   Python is unavailable. Never treat a nonzero gate result as a pass.
+4. Validate the message with
+   `python3 <skill-dir>/scripts/validate_conventional_commit.py "<message>"`
+   and commit normally. Use project message conventions; the bundled validator
+   checks Conventional Commits with a 72-character subject and 100-character
+   header by default.
+5. If a hook fails, diagnose it. Fix failures caused by this task within the
+   authorized scope, rerun affected checks, and retry. Stop for an actual blocker,
+   new authorization, or repeated failure without progress.
+6. Verify resulting commits and remaining work. Push only when requested, to the
+   intended remote and branch without force.
 
-- any commit operation is performed through an agent (automatic interception)
-- changes from different intents are mixed in one branch
-- you want a plan-first commit process before opening a PR
-- you need reliable Conventional Commit messages across team and agents
+Report commit IDs and purposes, validation results, and remaining changes.
+A requested plan should list batch intent, files/hunks, and proposed messages.
 
-## Skip This Skill When
+## Conditional references
 
-- the change is tiny and clearly single-intent
-- you only need one quick commit without batching
-
-Note: even when the skill could be skipped, if it is installed, the agent will
-still run the workflow and safety gates. The result may be a single batch, which
-is fine.
-
-## Default Behavior: Auto-Execute
-
-By default, the skill inspects changes, splits into logical batches, runs
-safety gates, and commits directly — without waiting for user confirmation.
-
-To see the plan before execution, explicitly ask:
-
-```text
-Show me the commit plan first before executing.
-```
-
-## High-Success Prompt (Plan-First Mode)
-
-Use this prompt only when you want to review the plan before execution:
-
-```text
-Inspect my current git changes and split them into logical Conventional Commit batches.
-Output a full Commit Plan first.
-Do not run git add or git commit until I confirm the plan.
-After confirmation, execute each batch one by one.
-```
-
-## Output Contract
-
-In auto-execute mode (default), the agent outputs a brief per-batch summary as
-each batch is committed.
-
-In plan-first mode (user requested), the agent outputs the full plan before
-any staging/commit:
-
-```text
-Commit Plan
-Batch #1: <type(scope): subject>
-Intent: <why this batch exists>
-Files/Hunks:
-- <path> (...)
-Staging commands:
-- git add ...
-Commit command:
-- git commit -m "..."
-```
-
-## Required Behavior
-
-- Always load `references/core-rules.md` first.
-- Treat `references/core-rules.md` as the single source of truth.
-- Run `python3 scripts/precommit_safety_gate.py` before every commit attempt
-  when Python is available; otherwise run the equivalent manual gate checks
-  from `references/core-rules.md`.
-- Run the sensitive-data gate before every commit and require explicit user
-  confirmation if risky files/hunks are detected.
-- When any gate reports risk, include triggered file paths and brief evidence
-  in user-facing output, plus a concrete "please review" suggestion.
-- Run the `.gitignore`/local-artifact gate before every commit and require
-  explicit user confirmation if suspicious files are present.
-- Run branch/conflict/large-file/empty-stage safety checks before every commit.
-- Never skip commit-time checks with `--no-verify`.
-- If check/hook fails, stop and report concise diagnostics.
-
-## Entrypoints
-
-- Codex skill: `SKILL.md`
-- Claude: `.claude/agents/conventional-commit-batcher.md`, `.claude/commands/commit-batch.md`
-- Kiro: `.kiro/agents/conventional-commit-batcher.json`, `.kiro/steering/commit-batching.md`
-- Shared skill (Kimi / Qwen / Gemini): `.agents/skills/conventional-commit-batcher/SKILL.md`
-- Shared subagent (Qwen / Gemini): `.agents/agents/conventional-commit-batcher.md`
-- OpenAI: `agents/openai.yaml`
-
-## References
-
-- Canonical rules: `references/core-rules.md`
-- Commit plan examples: `references/plan-examples.md`
-- Commit batching guidance: `references/commit-batching-guide.md`
-- commit-msg hook example: `references/commit-msg-hook-example.md`
-- Agent setup docs:
-  - `references/codex-setup.md`
-  - `references/claude-setup.md`
-  - `references/kiro-setup.md`
-  - `references/kimi-setup.md`
-  - `references/qwen-setup.md`
-  - `references/gemini-setup.md`
-- Validator script: `scripts/validate_conventional_commit.py`
-- Safety gate script: `scripts/precommit_safety_gate.py`
-- Validator tests: `scripts/test_validate_conventional_commit.py`
-- Safety gate tests: `scripts/test_precommit_safety_gate.py`
+- [Core rules](references/core-rules.md): partial staging, message details, or
+  commit/push recovery decisions.
+- [Batching guide](references/commit-batching-guide.md) and
+  [examples](references/plan-examples.md): ambiguous batch boundaries.
+- [Hook example](references/commit-msg-hook-example.md): only when installing hooks.
+- Agent installation instructions live in `references/*-setup.md`; read only
+  the guide for the requested host.

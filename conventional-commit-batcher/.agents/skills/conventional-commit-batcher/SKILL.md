@@ -1,21 +1,14 @@
 ---
 name: conventional-commit-batcher
-description: Auto-split mixed changes into logical commit batches with validated Conventional Commit messages. Activate when user wants to git add, git commit, stage, or push changes.
+description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
 ---
 
 # Conventional Commit Batcher
 
-Automatically organize mixed Git changes into logical, reviewable commits following Conventional Commit best practices.
+Use this specialist for commit batching, not staging-only or push-only requests.
+Read the package's `SKILL.md` for scope, authorization, and workflow. Resolve
+package paths from this installation; if copied into another repository, keep
+the complete skill package together and update this pointer to its location.
+Do not infer permission to commit or push from loading this entrypoint.
 
-## Commit Interception (MANDATORY)
-
-This skill MUST be activated for ANY commit-related operation, including:
-- user asks to commit, stage, or push changes
-- user asks to "save" or "check in" code
-- any workflow that would result in `git add`, `git commit`, or `git push`
-
-Do NOT run `git add` or `git commit` directly. Always follow the full workflow
-in `references/core-rules.md`: inspect, split into batches, run safety gates,
-and execute. By default, execute directly without waiting for user confirmation.
-Only output the plan and wait for confirmation if the user explicitly asks to
-review the plan first.
+In the source package, read [../../../SKILL.md](../../../SKILL.md).
