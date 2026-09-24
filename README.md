@@ -8,6 +8,7 @@ the task; installing a skill does not authorize edits, commits, or remote action
 | Skill | Version | Use it for |
 |---|---|---|
 | [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 3.0.0 | Split independent changes into reviewable Conventional Commits |
+| [dev-jev](dev-jev/SKILL.md) | 0.1.0 | Use Jev as a bounded, advisory semantic judgment layer during software work |
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.7.0 | Audit quality gates or repair verified repository/PR failures |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.0.0 | Inspect SonarCloud URLs and support explicitly requested remediation |
 
@@ -90,6 +91,20 @@ Its helper needs Python 3 and the dependencies in
 Supply authentication through the environment when needed; see
 [API details](sonarcloud-link-inspector/references/api-details.md).
 
+### Get a bounded semantic judgment
+
+```text
+Use $dev-jev to triage this ambiguous task with a single bounded Jev call,
+then continue reasoning and executing yourself. Do not let Jev authorize
+any action.
+```
+
+Jev is advisory only: it supplies typed judgments for routing attention, never
+generates code, and cannot approve merges, releases, or destructive operations.
+The skill reuses the installed TypeSafe Jev plugin and honors `DEV_JEV_MODE`
+(`off`, `shadow`, `advisory`); its telemetry and test scripts are stdlib-only and
+make no network requests. Minimize and redact state before invoking Jev.
+
 ## Upgrade and migration
 
 Versions live in `SKILL.md` under `metadata.version`. They identify releases for
@@ -101,7 +116,7 @@ With a CLI supporting named updates (verified with skills 1.7.0), update these
 global skills:
 
 ```bash
-npx skills update conventional-commit-batcher repository-quality-gate-fixer sonarcloud-link-inspector -g -y
+npx skills update conventional-commit-batcher dev-jev repository-quality-gate-fixer sonarcloud-link-inspector -g -y
 ```
 
 For project installations, run from the project and replace `-g` with `-p`.
@@ -122,6 +137,9 @@ or copying files does not migrate it.
   inferred from the request, routes optional guidance, and avoids redundant checks.
 - **SonarCloud inspector 1.0.0:** first explicit version; inspection remains
   read-only unless local remediation is requested.
+- **dev-jev 0.1.0:** new skill that uses the installed TypeSafe Jev plugin as a
+  bounded, advisory judgment layer. It never generates code or authorizes actions,
+  and defaults to `shadow` mode.
 
 The workflows were checked against current
 [OpenAI skills guidance](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
