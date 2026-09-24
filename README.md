@@ -23,19 +23,28 @@ Use Node.js/npm with `npx`. Preview the available skills:
 npx skills add cnkang/skills --list
 ```
 
-Install one skill for a project (run from that project):
+### Install a skill for a project
 
 ```bash
-npx skills add cnkang/skills --skill repository-quality-gate-fixer -a codex
+npx skills add cnkang/skills --skill repository-quality-gate-fixer
 ```
 
-Install all three for your global Codex environment:
+### Global installation
+
+To install skills globally, add the `-g` flag:
 
 ```bash
-npx skills add cnkang/skills -g -a codex -y --skill conventional-commit-batcher repository-quality-gate-fixer sonarcloud-link-inspector
+npx skills add cnkang/skills -g --skill repository-quality-gate-fixer
 ```
 
-For another supported host, select it using the CLI's `--agent` option.
+**Note:** The default `promptscript` agent (used by OpenCode and many other hosts) does not support global skill installation. To use global installation with Codex or other agents that support it, specify the target agent:
+
+```bash
+# Global installation for Codex environment
+npx skills add cnkang/skills -g -a codex --skill conventional-commit-batcher dev-jev repository-quality-gate-fixer sonarcloud-link-inspector
+```
+
+For other supported hosts, select it using the CLI's `--agent` option.
 The commit package also includes adapters and setup notes for
 [Codex](conventional-commit-batcher/references/codex-setup.md),
 [Claude Code](conventional-commit-batcher/references/claude-setup.md),
