@@ -1,14 +1,19 @@
 ---
 name: repository-quality-gate-fixer
 description: Diagnose and close repository or PR quality-gate failures when the user requests remediation or a quality-gate audit.
+license: MIT
+compatibility: Python 3.10+ for the optional probe; Git and project toolchains as needed.
 metadata:
-  version: "0.7.0"
+  version: "0.8.0"
 ---
 
 # Repository Quality Gate Fixer
 
 Deliver scoped, verified quality-gate results. A narrow failure needs a focused
 diagnosis; a requested full audit needs a complete gate inventory.
+
+This skill is independently installable. Its workflow does not require any other
+skill; optional collaboration must remain within the user's requested scope.
 
 ## Scope and authorization
 

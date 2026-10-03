@@ -25,8 +25,8 @@ inspect the relevant files directly. If site initialization interferes with the
 probe, `python3 -S` is supported for this script, not necessarily project tests.
 
 Pass `--base-ref <known-base>` for PR/base comparisons. Use `--json` for
-programmatic processing. Scan local skills only when needed: omit
-`--no-skill-scan`, optionally specifying `--skill-root`, `--skill-limit`,
+programmatic processing. Scan local skills only when needed: pass
+`--skill-scan`, optionally specifying `--skill-root`, `--skill-limit`,
 and `--skill-max-depth`. Prefer the runtime's existing skill registry.
 
 The probe is advisory. Its workflow parsing and diff scope are not proof that a

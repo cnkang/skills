@@ -427,5 +427,23 @@ class TestDiffScope(unittest.TestCase):
             self.assertEqual(data["diff_scope"]["base_ref_source"], "explicit_unresolved")
 
 
+
+class TestSkillScanOptIn(unittest.TestCase):
+    def test_default_cli_does_not_discover_installed_skills(self):
+        import repo_quality_probe as probe
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(probe, "collect_local_skills", side_effect=AssertionError("unexpected scan")), mock.patch.object(probe, "print_markdown"):
+            self.assertEqual(probe.main([tmp]), 0)
+            self.assertEqual(probe.collect(Path(tmp), skill_limit=80)["local_skills"], [])
+
+    def test_explicit_cli_scan_and_legacy_disable(self):
+        import repo_quality_probe as probe
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(probe, "collect_local_skills", return_value=([], [])) as scan, mock.patch.object(probe, "print_markdown"):
+            self.assertEqual(probe.main([tmp, "--skill-scan", "--skill-root", tmp]), 0)
+            scan.assert_called_once()
+            scan.reset_mock()
+            self.assertEqual(probe.main([tmp, "--no-skill-scan"]), 0)
+            scan.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

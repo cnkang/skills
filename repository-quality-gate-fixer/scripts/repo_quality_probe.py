@@ -766,7 +766,7 @@ def build_skill_roots(
 def collect(
     repo: Path,
     skill_limit: int,
-    skill_scan: bool = True,
+    skill_scan: bool = False,
     skill_roots: list[Path] | None = None,
     skill_max_depth: int = 6,
     base_ref: str | None = None,
@@ -1018,7 +1018,9 @@ def main(argv: list[str]) -> int:
         default=80,
         help="maximum number of local skills to list",
     )
-    parser.add_argument(
+    scanning = parser.add_mutually_exclusive_group()
+    scanning.add_argument("--skill-scan", action="store_true", help="opt in to local Skill discovery")
+    scanning.add_argument(
         "--no-skill-scan",
         action="store_true",
         help="disable local Skill discovery",
@@ -1063,7 +1065,7 @@ def main(argv: list[str]) -> int:
     data = collect(
         repo,
         skill_limit=max(args.skill_limit, 0),
-        skill_scan=not args.no_skill_scan,
+        skill_scan=args.skill_scan,
         skill_roots=build_skill_roots(args.skill_root, args.extra_skill_root),
         skill_max_depth=max(args.skill_max_depth, 1),
         base_ref=args.base_ref,
