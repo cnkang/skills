@@ -1,19 +1,9 @@
-# Gemini Setup
+# Gemini setup
 
-The package includes a shared skill under `.agents/skills/` and a specialist under `.agents/agents/`.
+Use the native Agent Skills installation through `npx skills@latest add cnkang/skills --skill conventional-commit-batcher -a gemini-cli`.
+Choose the CLI agent ID for your host; consult `npx skills@latest --help` and the upstream supported-agent list.
+Keep the complete package so scripts and references resolve from its actual location.
 
-Keep the complete package together. The root [SKILL.md](../SKILL.md) is the
-canonical entrypoint; adapters only route to it. If copying adapters into a
-different project location, update their relative pointers to the installed
-package and keep both validator and safety-gate scripts available. Do not copy
-only `core-rules.md`: it links to other package resources.
-
-The workflow applies to mixed changes needing separate commits. It does not
-intercept every Git operation, and it does not grant authorization. To request
-execution, ask to split and commit the relevant changes. To request only a plan,
-say so explicitly. Pushing remains a separate requested action.
-
-Use the target host's supported installation mechanism; verify discovery there.
-These adapters are not proof of compatibility with every host version. When
-updating, synchronize the installed copy with the package and check for local
-customizations first.
+Native skill installation does not deploy commands, specialist agents, steering,
+or hooks. For explicitly requested legacy integration, read
+[adapter setup](adapter-setup.md). Loading any adapter grants no Git authorization.

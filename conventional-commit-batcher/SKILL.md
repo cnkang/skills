@@ -1,14 +1,19 @@
 ---
 name: conventional-commit-batcher
 description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
+license: MIT
+compatibility: Requires Git. Python 3.10+ for bundled checks; manual fallback is documented.
 metadata:
-  version: "3.0.0"
+  version: "4.0.0"
 ---
 
 # Conventional Commit Batcher
 
 Produce reviewable commits grouped by purpose. A single cohesive change needs
 only one commit; staging-only and push-only tasks do not need a batching workflow.
+
+This skill is independently installable. Its workflow does not require any other
+skill; optional collaboration must remain within the user's requested scope.
 
 ## Scope and authorization
 
@@ -53,5 +58,7 @@ A requested plan should list batch intent, files/hunks, and proposed messages.
 - [Batching guide](references/commit-batching-guide.md) and
   [examples](references/plan-examples.md): ambiguous batch boundaries.
 - [Hook example](references/commit-msg-hook-example.md): only when installing hooks.
+- [Optional adapters](references/adapter-setup.md): only for requested host commands,
+  specialist agents, or hooks; ordinary installation does not deploy them.
 - Agent installation instructions live in `references/*-setup.md`; read only
   the guide for the requested host.
