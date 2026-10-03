@@ -29,6 +29,16 @@ def _render_location(location: Dict[str, Any]) -> str:
 
 
 def render_markdown(result: Dict[str, Any]) -> str:
+    prefix = f"Fetch status: **{result.get('fetch_status', 'unknown')}**\n\n"
+    if result.get("error"):
+        return prefix + f"Error: {result['error']}\n"
+    warnings = result.get("warnings", [])
+    if warnings:
+        prefix += "\n".join(_bullet_lines(warnings)) + "\n\n"
+    return prefix + _render_resource(result)
+
+
+def _render_resource(result: Dict[str, Any]) -> str:
     resource_type = result.get("resource_type")
     if resource_type == "issue":
         return render_issue_markdown(result)

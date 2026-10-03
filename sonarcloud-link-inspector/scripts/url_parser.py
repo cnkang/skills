@@ -44,7 +44,15 @@ def _parse_int(value: Optional[str]) -> Optional[int]:
 
 def parse_sonarcloud_url(url: str) -> ParsedSonarLink:
     parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.hostname not in {"sonarcloud.io", "sonarqube.us"}:
+        raise ValueError("Expected an HTTPS SonarQube Cloud EU or US URL")
+    if parsed.username or parsed.password or parsed.port not in (None, 443):
+        raise ValueError("Credentials and non-HTTPS ports are not allowed in source URLs")
     query = parse_qs(parsed.query)
+    if any(k.lower() in {"token", "sonarcloud_token", "password", "api_key", "authorization", "secret"} for k in query):
+        raise ValueError("Credentials must be supplied through the environment, not URLs")
+    if _first(query, "branch") and _first(query, "pullRequest", "pull_request", "pr"):
+        raise ValueError("Specify either branch or pull request, not both")
 
     issue_key = _first(query, "issues", "issueKey", "issue", "open")
     hotspot_key = _first(query, "hotspots", "hotspot", "hotspotKey")
@@ -84,7 +92,7 @@ def parse_sonarcloud_url(url: str) -> ParsedSonarLink:
 
     return ParsedSonarLink(
         source_url=url,
-        host=parsed.netloc,
+        host=parsed.hostname or "",
         path=parsed.path,
         resource_type=resource_type,
         organization_key=organization_key,

@@ -11,4 +11,4 @@ from inspect_sonarcloud_link import main
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

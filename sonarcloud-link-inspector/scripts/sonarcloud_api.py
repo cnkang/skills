@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import time
+import math
+from urllib.parse import urlparse
 from typing import Any, Dict, Iterable, Optional
 
 import requests
@@ -22,11 +24,17 @@ class SonarCloudClient:
         default_base = os.environ.get("SONARCLOUD_BASE_URL", "https://sonarcloud.io")
         self.base_url = (base_url or default_base).rstrip("/")
         self.api_base_url = (api_base_url or os.environ.get("SONARCLOUD_API_BASE_URL", self.base_url)).rstrip("/")
-        self.timeout_seconds = timeout_seconds or int(os.environ.get("SONARCLOUD_TIMEOUT_SECONDS", "20"))
+        for endpoint in (self.base_url, self.api_base_url):
+            parsed = urlparse(endpoint)
+            if parsed.scheme != "https" or parsed.hostname not in {"sonarcloud.io", "sonarqube.us"} or parsed.username or parsed.password or parsed.port not in (None, 443) or parsed.query or parsed.fragment or parsed.path not in ("", "/"):
+                raise ValueError("Endpoint must be an HTTPS SonarQube Cloud EU or US origin")
+        if urlparse(self.base_url).hostname != urlparse(self.api_base_url).hostname:
+            raise ValueError("Base URL and API URL must use the same region")
+        self.timeout_seconds = timeout_seconds if timeout_seconds is not None else int(os.environ.get("SONARCLOUD_TIMEOUT_SECONDS", "20"))
         self.max_retries = max_retries if max_retries is not None else int(os.environ.get("SONARCLOUD_MAX_RETRIES", "2"))
-        self.retry_backoff_seconds = retry_backoff_seconds if retry_backoff_seconds is not None else float(
-            os.environ.get("SONARCLOUD_RETRY_BACKOFF_SECONDS", "1.5")
-        )
+        self.retry_backoff_seconds = retry_backoff_seconds if retry_backoff_seconds is not None else float(os.environ.get("SONARCLOUD_RETRY_BACKOFF_SECONDS", "1.5"))
+        if not 0 < self.timeout_seconds <= 120 or not 0 <= self.max_retries <= 5 or not math.isfinite(self.retry_backoff_seconds) or not 0 <= self.retry_backoff_seconds <= 60:
+            raise ValueError("Invalid timeout/retry configuration (timeout 1-120s, retries 0-5, backoff 0-60s)")
         self.default_organization = os.environ.get("SONARCLOUD_DEFAULT_ORGANIZATION")
         self.default_project = os.environ.get("SONARCLOUD_DEFAULT_PROJECT")
 
@@ -37,32 +45,34 @@ class SonarCloudClient:
         self.session.headers.update(headers)
 
     def _request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if method != "GET" or not path.startswith("/api/"):
+            raise ValueError("Only read-only API GET requests are supported")
         url = f"{self.api_base_url}{path}"
-        last_exc: Exception | None = None
-
         for attempt in range(self.max_retries + 1):
             try:
-                response = self.session.request(method, url, params=params or {}, timeout=self.timeout_seconds)
-                if response.status_code == 429 and attempt < self.max_retries:
-                    time.sleep(self.retry_backoff_seconds * (attempt + 1))
+                response = self.session.request(method, url, params=params or {}, timeout=self.timeout_seconds, allow_redirects=False)
+                retryable = response.status_code == 429 or 500 <= response.status_code < 600
+                if retryable and attempt < self.max_retries:
+                    delay = self.retry_backoff_seconds * (attempt + 1)
+                    if response.status_code == 429:
+                        try:
+                            delay = max(delay, min(60.0, float(response.headers.get("Retry-After", "0"))))
+                        except (TypeError, ValueError):
+                            pass
+                    time.sleep(delay)
                     continue
-                if response.status_code in (401, 403) and not self.token:
-                    raise requests.HTTPError(
-                        f"HTTP {response.status_code}: Authentication required. "
-                        "This project may be private. Set SONARCLOUD_TOKEN to access it.",
-                        response=response,
-                    )
+                if 300 <= response.status_code < 400:
+                    raise requests.HTTPError("API redirects are not followed", response=response)
                 response.raise_for_status()
-                return response.json()
-            except requests.RequestException as exc:
-                last_exc = exc
+                payload = response.json()
+                if not isinstance(payload, dict):
+                    raise ValueError("Expected a JSON object from the API")
+                return payload
+            except (requests.Timeout, requests.ConnectionError):
                 if attempt >= self.max_retries:
                     raise
                 time.sleep(self.retry_backoff_seconds * (attempt + 1))
-
-        if last_exc is not None:
-            raise last_exc
-        raise RuntimeError("Unexpected request failure without exception")
+        raise RuntimeError("Request retry budget exhausted")
 
     def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self._request("GET", path, params=params)
@@ -136,7 +146,10 @@ class SonarCloudClient:
                 payload = self.search_hotspots(**filtered)
                 payload.setdefault("_request_params", filtered)
                 return payload
-            except Exception as exc:  # noqa: BLE001
+            except requests.HTTPError as exc:
+                # Only parameter incompatibility justifies trying a legacy parameter name.
+                if exc.response is None or exc.response.status_code != 400:
+                    raise
                 last_exc = exc
                 continue
 

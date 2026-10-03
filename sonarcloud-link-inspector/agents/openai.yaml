@@ -1,0 +1,4 @@
+interface:
+  display_name: "SonarCloud Link Inspector"
+  short_description: "Inspect EU/US SonarCloud links with read-only requests"
+  default_prompt: "Use $sonarcloud-link-inspector to explain this URL and its branch or PR context without editing code or changing remote state."
