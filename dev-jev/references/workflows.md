@@ -40,4 +40,3 @@ HIGH/critical candidate risk means read the code, trace callers, inspect tests, 
 ### Release/merge evidence check
 
 Ask only atomic questions about evidence completeness, likely regression risk, test-coverage concern, documentation concern, likely need for manual testing, or whether additional review may help. Never ask for or emit `MERGE`, `RELEASE`, or `APPROVE`. Final readiness comes from code facts, tests, CI, release gates, the current agent reasoning, and any required human decision.
-
