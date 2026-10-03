@@ -176,5 +176,42 @@ class TelemetryTests(unittest.TestCase):
             self.assertIsNone(event["confidence"])
 
 
+class PortableTelemetryTests(unittest.TestCase):
+    def test_neutral_arguments_and_legacy_arguments_produce_compatible_records(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for action, agreed in (("--final-agent-action", "--agent-agreed"), ("--final-hermes-action", "--hermes-agreed")):
+                path = Path(tmp) / (action + ".jsonl")
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(telemetry.main(["record", "--workflow", "ci", "--decision-type", "retry", "--question-id", "q1", "--primitive", "choice", "--result", "inspect", action, "inspect", agreed, "true", "--log", str(path)]), 0)
+                event = json.loads(path.read_text())
+                self.assertEqual(event["final_agent_action"], event["final_hermes_action"])
+                self.assertTrue(event["agent_agreed"])
+                self.assertTrue(event["hermes_agreed"])
+
+    def test_new_and_historical_record_fields_can_be_benchmarked_together(self):
+        rows = [{"workflow": "review", "decision_type": "risk", "primitive": "choice", "result": "inspect", "agent_agreed": False}, {"workflow": "review", "decision_type": "risk", "primitive": "choice", "result": "inspect", "hermes_agreed": True}]
+        metrics = telemetry.summarize(rows)["workflows"]["review"]["risk"]
+        self.assertEqual(metrics["agent_disagreement_rate"], 0.5)
+        self.assertEqual(metrics["hermes_disagreement_rate"], 0.5)
+
+    def test_platform_defaults_and_explicit_path_precedence(self):
+        with patch.object(telemetry.sys, "platform", "linux"):
+            self.assertEqual(telemetry.default_log_path({"XDG_STATE_HOME": "/tmp/state"}), Path("/tmp/state/dev-jev/dev-jev.jsonl"))
+        with patch.object(telemetry.sys, "platform", "win32"):
+            self.assertEqual(telemetry.default_log_path({"LOCALAPPDATA": "C:/State"}), Path("C:/State/dev-jev/dev-jev.jsonl"))
+        with patch.object(telemetry.sys, "platform", "darwin"):
+            self.assertEqual(telemetry.default_log_path({}), Path.home() / "Library/Logs/dev-jev/dev-jev.jsonl")
+        self.assertEqual(telemetry.default_log_path({"HERMES_HOME": "/profile", "DEV_JEV_LOG": "/explicit.jsonl"}), Path("/explicit.jsonl"))
+
+    def test_cli_log_path_wins_over_environment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            explicit = Path(tmp) / "explicit.jsonl"
+            overridden = Path(tmp) / "environment.jsonl"
+            with patch.dict(os.environ, {"DEV_JEV_LOG": str(overridden)}), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(telemetry.main(["record", "--workflow", "ci", "--decision-type", "retry", "--question-id", "q1", "--primitive", "choice", "--result", "unavailable", "--call-status", "unavailable", "--fallback-used", "true", "--final-agent-action", "continue", "--log", str(explicit)]), 0)
+            self.assertTrue(explicit.exists())
+            self.assertFalse(overridden.exists())
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

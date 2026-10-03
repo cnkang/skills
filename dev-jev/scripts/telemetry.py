@@ -81,8 +81,15 @@ def default_log_path(environ: dict[str, str] | None = None) -> Path:
     override = env.get("DEV_JEV_LOG")
     if override:
         return Path(override).expanduser()
-    home = Path(env.get("HERMES_HOME", str(Path.home() / ".hermes"))).expanduser()
-    return home / "logs" / "dev-jev.jsonl"
+    if env.get("HERMES_HOME"):
+        return Path(env["HERMES_HOME"]).expanduser() / "logs" / "dev-jev.jsonl"
+    if sys.platform == "win32":
+        root = Path(env.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local")))
+    elif sys.platform == "darwin":
+        root = Path.home() / "Library" / "Logs"
+    else:
+        root = Path(env.get("XDG_STATE_HOME", str(Path.home() / ".local" / "state"))).expanduser()
+    return root / "dev-jev" / "dev-jev.jsonl"
 
 
 def _safe_label(value: Any, field: str, *, required: bool = False) -> str | None:
@@ -180,11 +187,13 @@ def _record(args: argparse.Namespace) -> int:
         "latency_ms": latency_ms,
         "fallback_used": bool(args.fallback_used),
         "call_status": args.call_status,
-        "final_hermes_action": _safe_label(args.final_hermes_action, "final_hermes_action", required=True),
+        "final_agent_action": _safe_label(args.final_agent_action, "final_agent_action", required=True),
+        "final_hermes_action": _safe_label(args.final_agent_action, "final_agent_action", required=True),
         "mode": mode,
         "request_id": _safe_label(args.request_id, "request_id"),
         "ground_truth": args.ground_truth,
-        "hermes_agreed": args.hermes_agreed,
+        "agent_agreed": args.agent_agreed,
+        "hermes_agreed": args.agent_agreed,
         "provider_cost_usd": cost,
         "main_model_tokens_avoided": tokens,
         "model": _safe_label(args.model, "model"),
@@ -291,7 +300,8 @@ def summarize(records: Iterable[dict[str, Any]], noul_threshold: float = 0.75) -
             or e.get("primitive") in {"choice", "score"}
         )
         low_count = sum(1 for e in successful if e.get("confidence_band", "LOW") == "LOW")
-        disagreement = [e for e in successful if isinstance(e.get("hermes_agreed"), bool)]
+        disagreement = [e for e in successful if isinstance(e.get("agent_agreed", e.get("hermes_agreed")), bool)]
+        disagreed = sum(1 for e in disagreement if e.get("agent_agreed", e.get("hermes_agreed")) is False)
         request_events = _unique_request_events(events)
         latencies = [float(e["latency_ms"]) for e in request_events if _valid_nonnegative(e.get("latency_ms"))]
         costs = [float(e["provider_cost_usd"]) for e in request_events if _valid_nonnegative(e.get("provider_cost_usd"))]
@@ -308,9 +318,12 @@ def summarize(records: Iterable[dict[str, Any]], noul_threshold: float = 0.75) -
             "false_negative_rate": _ratio(false_negatives, positive_labels),
             "low_confidence_answers": low_count,
             "low_confidence_rate": _ratio(low_count, len(successful)),
-            "hermes_disagreements": sum(1 for e in disagreement if e.get("hermes_agreed") is False),
+            "agent_disagreements": disagreed,
+            "agent_comparable_answers": len(disagreement),
+            "agent_disagreement_rate": _ratio(disagreed, len(disagreement)),
+            "hermes_disagreements": disagreed,
             "hermes_comparable_answers": len(disagreement),
-            "hermes_disagreement_rate": _ratio(sum(1 for e in disagreement if e.get("hermes_agreed") is False), len(disagreement)),
+            "hermes_disagreement_rate": _ratio(disagreed, len(disagreement)),
             "latency_ms_p50": _percentile(latencies, 0.50),
             "latency_ms_p95": _percentile(latencies, 0.95),
             "provider_cost_usd_known_total": sum(costs) if costs else None,
@@ -381,11 +394,11 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--force-low-confidence", type=parse_bool, default=False,
                         help="apply a conservative external policy override, e.g. unsupported language")
     record.add_argument("--call-status", choices=["success", "unavailable", "error"], default="success")
-    record.add_argument("--final-hermes-action", required=True)
+    record.add_argument("--final-agent-action", "--final-hermes-action", dest="final_agent_action", required=True)
     record.add_argument("--mode", choices=sorted(MODES))
     record.add_argument("--request-id")
     record.add_argument("--ground-truth", type=parse_scalar)
-    record.add_argument("--hermes-agreed", type=parse_bool)
+    record.add_argument("--agent-agreed", "--hermes-agreed", dest="agent_agreed", type=parse_bool)
     record.add_argument("--provider-cost-usd", type=float)
     record.add_argument("--main-model-tokens-avoided", type=int)
     record.add_argument("--model")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bounded Jev Judgment"
+  short_description: "Optional semantic triage with safe provider fallback"
+  default_prompt: "Use $dev-jev for one bounded advisory judgment if compatible tools are available, then continue the task normally."
