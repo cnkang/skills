@@ -9,6 +9,8 @@
   snippets from reports.
 - **repository-quality-gate-fixer 0.8.0:** local installed-skill scanning is off by
   default. Opt in with `--skill-scan`; `--no-skill-scan` remains supported.
+  Home-path display handles Windows separators, case and UNC paths; Git fixtures
+  use an explicit identity so tests do not depend on user configuration.
 - **sonarcloud-link-inspector 1.1.0:** EU/US routing, precise URL/endpoint validation,
   bounded transient-only retries, retained batch failures, fetch statuses and
   process exit codes. Existing data fields remain; callers should now handle

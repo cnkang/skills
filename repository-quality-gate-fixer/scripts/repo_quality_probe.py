@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 PROBE_VERSION = "0.6"
@@ -852,11 +852,12 @@ def collect(
 
 def display_path(path: str) -> str:
     home = str(Path.home())
-    if path == home:
-        return "~"
-    if path.startswith(home + os.sep):
-        return "~" + path[len(home):]
-    return path
+    path_type = PureWindowsPath if PureWindowsPath(home).drive else PurePosixPath
+    try:
+        relative = path_type(path).relative_to(path_type(home))
+    except ValueError:
+        return path
+    return "~" if not relative.parts else "~/" + relative.as_posix()
 
 
 # ---------------------------------------------------------------------------
