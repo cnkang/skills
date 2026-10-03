@@ -1,8 +1,10 @@
 ---
 name: sonarcloud-link-inspector
 description: Inspect SonarCloud issue, hotspot, or project URLs and fetch read-only details for diagnosis or requested code remediation.
+license: MIT
+compatibility: Requires Python 3.10+, requests, network access, and optional SONARCLOUD_TOKEN.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # SonarCloud Link Inspector
@@ -10,6 +12,10 @@ metadata:
 Fetch the details needed to answer the user's question. A pasted URL alone does
 not authorize code changes. Keep inspection read-only unless the task explicitly
 includes remediation. This tool never changes SonarCloud state.
+
+This skill is independently installable and does not require other skills.
+Install dependencies in a project-local environment with
+`python3 -m pip install -r <skill-dir>/requirements.txt`.
 
 ## Fetch
 

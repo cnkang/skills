@@ -4,6 +4,9 @@ import argparse
 import json
 import os
 import sys
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+
+import requests
 from typing import Any, Dict, Iterable, List
 
 # Allow running from any working directory by ensuring the scripts directory is on sys.path.
@@ -15,6 +18,27 @@ from normalize import hotspot_brief, issue_brief, normalize_hotspot, normalize_i
 from render_markdown import render_markdown
 from sonarcloud_api import SonarCloudClient
 from url_parser import parse_sonarcloud_url
+
+
+def safe_error(exc: Exception) -> str:
+    response = getattr(exc, "response", None)
+    if response is not None:
+        return f"HTTP {response.status_code}"
+    if isinstance(exc, requests.exceptions.JSONDecodeError):
+        return "Invalid JSON response"
+    if isinstance(exc, ValueError):
+        return "Invalid input, configuration, or response"
+    return type(exc).__name__
+
+
+def safe_source_url(url: str) -> str:
+    try:
+        parsed = urlparse(url)
+        query = [(k, v) for k, v in parse_qsl(parsed.query) if k.lower() not in {"token", "sonarcloud_token", "password", "api_key", "authorization", "secret"}]
+        return urlunparse((parsed.scheme, parsed.hostname or "", parsed.path, "", urlencode(query), ""))
+    except ValueError:
+        return "<invalid URL>"
+
 
 PROJECT_METRIC_KEYS = [
     "alert_status",
@@ -39,7 +63,7 @@ def _safe_get_rule(client: SonarCloudClient, rule_key: str | None) -> Dict[str, 
         payload = client.get_rule(rule_key)
         return payload.get("rule", payload)
     except Exception as exc:  # noqa: BLE001
-        return {"_rule_fetch_error": str(exc), "key": rule_key}
+        return {"_rule_fetch_error": safe_error(exc), "key": rule_key}
 
 
 def _measure_list_to_map(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -100,8 +124,13 @@ def _inspect_issue(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[str
         }
 
     issue = issues[0]
+    if not isinstance(issue, dict) or issue.get("key") != issue_key:
+        raise ValueError("Issue response does not match requested key")
     rule = _safe_get_rule(client, issue.get("rule"))
-    return normalize_issue(parsed["source_url"], parsed, issue, rule)
+    result = normalize_issue(parsed["source_url"], parsed, issue, rule)
+    if rule.get("_rule_fetch_error"):
+        result["warnings"] = ["Rule fetch failed: " + rule["_rule_fetch_error"]]
+    return result
 
 
 def _inspect_hotspot(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,8 +140,19 @@ def _inspect_hotspot(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
 
     payload = client.get_hotspot(hotspot_key)
     hotspot = payload.get("hotspot", payload)
-    rule = _safe_get_rule(client, hotspot.get("ruleKey") or hotspot.get("rule"))
-    return normalize_hotspot(parsed["source_url"], parsed, hotspot, rule)
+    embedded_rule = hotspot.get("rule")
+    rule_key = hotspot.get("ruleKey") or (embedded_rule.get("key") if isinstance(embedded_rule, dict) else embedded_rule)
+    rule = _safe_get_rule(client, rule_key)
+    if isinstance(embedded_rule, dict):
+        rule = {**embedded_rule, **rule}
+    result = normalize_hotspot(parsed["source_url"], parsed, hotspot, rule)
+    if hotspot.get("key") != hotspot_key:
+        result["error"] = "Hotspot response does not match requested key"
+    if rule.get("_rule_fetch_error"):
+        result["warnings"] = ["Rule fetch failed: " + rule["_rule_fetch_error"]]
+    if parsed.get("branch") or parsed.get("pull_request"):
+        result.setdefault("warnings", []).append("Hotspot key lookup does not verify branch/PR association; source context is retained.")
+    return result
 
 
 def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[str, Any]:
@@ -120,6 +160,7 @@ def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
     organization_key = parsed.get("organization_key") or client.default_organization
 
     summary: Dict[str, Any] = {
+        "_successful_fetches": 0,
         "metrics": {},
         "quality_gate": {},
         "counts": {},
@@ -149,6 +190,7 @@ def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
             branch=parsed.get("branch"),
             pullRequest=parsed.get("pull_request"),
         )
+        summary["_successful_fetches"] += 1
         metrics = _measure_list_to_map(measure_payload)
         summary["metrics"] = metrics
         summary["counts"] = {
@@ -160,7 +202,7 @@ def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
             "ncloc": metrics.get("ncloc"),
         }
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Project measures fetch failed: {exc}")
+        summary["warnings"].append(f"Project measures fetch failed: {safe_error(exc)}")
 
     try:
         qg_payload = client.get_quality_gate_status(
@@ -168,16 +210,18 @@ def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
             branch=parsed.get("branch"),
             pullRequest=parsed.get("pull_request"),
         )
+        summary["_successful_fetches"] += 1
         summary["quality_gate"] = _normalize_quality_gate(qg_payload)
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Quality gate status fetch failed: {exc}")
+        summary["warnings"].append(f"Quality gate status fetch failed: {safe_error(exc)}")
 
     try:
         issue_params = _issue_search_params(client, parsed, ps=10)
         issue_payload = client.search_issues(**issue_params)
+        summary["_successful_fetches"] += 1
         summary["top_issues"] = [issue_brief(item) for item in issue_payload.get("issues", [])]
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Issue sampling failed: {exc}")
+        summary["warnings"].append(f"Issue sampling failed: {safe_error(exc)}")
 
     try:
         hotspot_payload = client.search_hotspots_for_project(
@@ -187,10 +231,11 @@ def _inspect_project(client: SonarCloudClient, parsed: Dict[str, Any]) -> Dict[s
             ps=10,
             only_to_review=True,
         )
+        summary["_successful_fetches"] += 1
         summary["top_hotspots"] = [hotspot_brief(item) for item in hotspot_payload.get("hotspots", [])]
         summary["request_context"]["hotspot_search_params"] = hotspot_payload.get("_request_params")
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Hotspot sampling failed: {exc}")
+        summary["warnings"].append(f"Hotspot sampling failed: {safe_error(exc)}")
 
     return normalize_project_summary(parsed["source_url"], parsed, summary)
 
@@ -205,6 +250,7 @@ def _inspect_project_hotspot_list(client: SonarCloudClient, parsed: Dict[str, An
     organization_key = parsed.get("organization_key") or client.default_organization
 
     summary: Dict[str, Any] = {
+        "_successful_fetches": 0,
         "metrics": {},
         "quality_gate": {},
         "counts": {},
@@ -235,6 +281,7 @@ def _inspect_project_hotspot_list(client: SonarCloudClient, parsed: Dict[str, An
             branch=parsed.get("branch"),
             pullRequest=parsed.get("pull_request"),
         )
+        summary["_successful_fetches"] += 1
         metrics = _measure_list_to_map(measure_payload)
         summary["metrics"] = metrics
         summary["counts"] = {
@@ -246,7 +293,7 @@ def _inspect_project_hotspot_list(client: SonarCloudClient, parsed: Dict[str, An
             "ncloc": metrics.get("ncloc"),
         }
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Project measures fetch failed: {exc}")
+        summary["warnings"].append(f"Project measures fetch failed: {safe_error(exc)}")
 
     # Fetch hotspots with a larger page size since this is a hotspot-focused view
     try:
@@ -257,62 +304,52 @@ def _inspect_project_hotspot_list(client: SonarCloudClient, parsed: Dict[str, An
             ps=25,
             only_to_review=True,
         )
+        summary["_successful_fetches"] += 1
         summary["top_hotspots"] = [hotspot_brief(item) for item in hotspot_payload.get("hotspots", [])]
         summary["request_context"]["hotspot_search_params"] = hotspot_payload.get("_request_params")
     except Exception as exc:  # noqa: BLE001
-        summary["warnings"].append(f"Hotspot sampling failed: {exc}")
+        summary["warnings"].append(f"Hotspot sampling failed: {safe_error(exc)}")
 
     return normalize_project_summary(parsed["source_url"], parsed, summary)
 
 
 def inspect_link(url: str, *, client: SonarCloudClient | None = None) -> Dict[str, Any]:
-    parsed_obj = parse_sonarcloud_url(url)
-    parsed = parsed_obj.to_dict()
-
-    if parsed["host"] and "sonarcloud" not in parsed["host"] and "sonarqube.us" not in parsed["host"]:
-        return {
-            "resource_type": "unknown",
-            "source_url": url,
-            "parsed": parsed,
-            "error": "Host does not look like SonarCloud or SonarQube Cloud US",
-        }
-
-    current_client = client or SonarCloudClient()
-
-    if parsed["resource_type"] == "issue":
-        return _inspect_issue(current_client, parsed)
-    if parsed["resource_type"] == "security_hotspot":
-        return _inspect_hotspot(current_client, parsed)
-    if parsed["resource_type"] == "project_hotspot_list":
-        return _inspect_project_hotspot_list(current_client, parsed)
-    if parsed["resource_type"] == "project":
-        return _inspect_project(current_client, parsed)
-
-    return {
-        "resource_type": "unknown",
-        "source_url": url,
-        "parsed": parsed,
-        "error": "Could not determine SonarCloud resource type from URL",
-    }
+    parsed: Dict[str, Any] = {}
+    phase = "input"
+    try:
+        parsed = parse_sonarcloud_url(url).to_dict()
+        handlers = {"issue": _inspect_issue, "security_hotspot": _inspect_hotspot, "project_hotspot_list": _inspect_project_hotspot_list, "project": _inspect_project}
+        if parsed["resource_type"] not in handlers:
+            raise ValueError("Could not determine resource type")
+        origin = "https://" + parsed["host"]
+        explicit_base = os.environ.get("SONARCLOUD_BASE_URL")
+        explicit_api = os.environ.get("SONARCLOUD_API_BASE_URL")
+        for override in (explicit_base, explicit_api):
+            if override and urlparse(override).hostname != parsed["host"]:
+                raise ValueError("Configured endpoint contradicts source URL region")
+        current_client = client or SonarCloudClient(base_url=explicit_base or origin, api_base_url=explicit_api or explicit_base or origin)
+        if isinstance(current_client, SonarCloudClient) and urlparse(current_client.api_base_url).hostname != parsed["host"]:
+            raise ValueError("Client region contradicts source URL region")
+        phase = "fetch"
+        result = handlers[parsed["resource_type"]](current_client, parsed)
+        result["request_context"] = {"branch": parsed.get("branch"), "pull_request": parsed.get("pull_request"), "host": parsed["host"]}
+        if "fetch_status" not in result:
+            result["fetch_status"] = "failed" if result.get("error") else "partial" if result.get("warnings") else "complete"
+        return result
+    except (ValueError, TypeError, KeyError, requests.RequestException) as exc:
+        return {"resource_type": parsed.get("resource_type", "unknown"), "platform": "sonarcloud", "source_url": safe_source_url(url), "error": safe_error(exc), "error_kind": phase, "fetch_status": "failed"}
 
 
 def inspect_links(urls: Iterable[str]) -> Dict[str, Any]:
-    client = SonarCloudClient()
-    results: List[Dict[str, Any]] = []
-    counts = {"project": 0, "issue": 0, "security_hotspot": 0, "project_hotspot_list": 0, "unknown": 0}
-
-    for url in urls:
-        result = inspect_link(url, client=client)
-        counts[result.get("resource_type") or "unknown"] = counts.get(result.get("resource_type") or "unknown", 0) + 1
-        results.append(result)
-
-    return {
-        "resource_type": "batch",
-        "platform": "sonarcloud",
-        "count": len(results),
-        "counts_by_type": counts,
-        "results": results,
-    }
+    # Construct a region-matched client per URL; never reuse an EU client for US links.
+    results = [inspect_link(url) for url in urls]
+    counts: Dict[str, int] = {}
+    for result in results:
+        kind = result.get("resource_type") or "unknown"
+        counts[kind] = counts.get(kind, 0) + 1
+    statuses = {item["fetch_status"] for item in results}
+    status = "complete" if statuses == {"complete"} else "failed" if statuses == {"failed"} or not results else "partial"
+    return {"resource_type": "batch", "platform": "sonarcloud", "count": len(results), "counts_by_type": counts, "results": results, "fetch_status": status}
 
 
 def format_output(result: Dict[str, Any], output_format: str) -> str:
@@ -322,6 +359,7 @@ def format_output(result: Dict[str, Any], output_format: str) -> str:
                 "# SonarCloud Batch Inspection",
                 "",
                 f"- Total links: {result.get('count')}",
+                f"- Fetch status: {result.get('fetch_status')}",
                 f"- By type: {result.get('counts_by_type')}",
                 "",
             ]
@@ -339,9 +377,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if len(args.urls) == 1:
         result = inspect_link(args.urls[0])
@@ -349,7 +387,11 @@ def main() -> None:
         result = inspect_links(args.urls)
 
     print(format_output(result, args.format))
+    items = result.get("results", [result])
+    if any(item.get("error_kind") == "input" for item in items):
+        return 2
+    return 0 if result["fetch_status"] == "complete" else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

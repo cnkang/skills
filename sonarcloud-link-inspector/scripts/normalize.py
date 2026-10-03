@@ -12,8 +12,10 @@ ISSUE_SEVERITY_ORDER = {
 }
 
 
-def _extract_file_path(component: Optional[str]) -> Optional[str]:
-    if not component:
+def _extract_file_path(component: Any) -> Optional[str]:
+    if isinstance(component, dict):
+        return component.get("path") or _extract_file_path(component.get("key"))
+    if not isinstance(component, str) or not component:
         return None
     if ":" in component:
         return component.split(":", 1)[1]
@@ -27,6 +29,10 @@ def _extract_description_sections(rule: Dict[str, Any]) -> Dict[str, str]:
         content = (section.get("content") or "").strip()
         if key and content:
             extracted[key] = content
+    for source, target in (("riskDescription", "why_is_this_security_sensitive"), ("vulnerabilityDescription", "why_is_this_an_issue"), ("fixRecommendations", "how_can_i_fix_it")):
+        content = rule.get(source)
+        if isinstance(content, str) and content:
+            extracted.setdefault(target, content)
     return extracted
 
 
@@ -166,6 +172,7 @@ def normalize_project_summary(source_url: str, parsed: Dict[str, Any], summary: 
     top_issues = _top_n_sorted(summary.get("top_issues", []), n=5)
     top_hotspots = _top_n_sorted(summary.get("top_hotspots", []), n=5)
     return {
+        "fetch_status": "failed" if not summary.get("_successful_fetches") else "partial" if summary.get("warnings") else "complete",
         "resource_type": "project",
         "platform": "sonarcloud",
         "source_url": source_url,
