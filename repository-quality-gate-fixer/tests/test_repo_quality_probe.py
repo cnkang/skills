@@ -358,6 +358,25 @@ class TestDisplayPath(unittest.TestCase):
     def test_non_home_path_unchanged(self):
         self.assertEqual(display_path("/tmp/foo"), "/tmp/foo")
 
+    def test_windows_separators_and_case(self):
+        with mock.patch("repo_quality_probe.Path.home", return_value=r"C:\Users\Example"):
+            self.assertEqual(display_path(r"C:\Users\Example"), "~")
+            self.assertEqual(display_path(r"c:\users\example/projects\foo"), "~/projects/foo")
+
+    def test_home_prefix_sibling_unchanged(self):
+        for home, sibling in [("/home/example", "/home/example-other/foo"),
+                              (r"C:\Users\Example", r"C:\Users\Example-other\foo")]:
+            with self.subTest(home=home), mock.patch("repo_quality_probe.Path.home", return_value=home):
+                self.assertEqual(display_path(sibling), sibling)
+
+    def test_posix_backslash_is_not_a_separator(self):
+        with mock.patch("repo_quality_probe.Path.home", return_value="/home/example"):
+            self.assertEqual(display_path(r"/home/example\other/foo"), r"/home/example\other/foo")
+
+    def test_windows_unc_home(self):
+        with mock.patch("repo_quality_probe.Path.home", return_value=r"\\server\share\Example"):
+            self.assertEqual(display_path("//server/share/Example/projects"), "~/projects")
+
 
 class TestDiscoverAgentFiles(unittest.TestCase):
     def test_finds_root_agents_md(self):
@@ -420,7 +439,8 @@ class TestDiffScope(unittest.TestCase):
             repo = Path(tmp)
             subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
             subprocess.run(
-                ["git", "commit", "--allow-empty", "-m", "init"],
+                ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "commit", "--allow-empty", "-m", "init"],
                 cwd=repo, check=True, capture_output=True,
             )
             data = collect(repo, skill_limit=0, skill_scan=False, base_ref="does-not-exist")
