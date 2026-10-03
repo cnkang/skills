@@ -91,13 +91,19 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_git(
-    args: Sequence[str], check: bool = True
+    args: Sequence[str], check: bool = True, *, cwd: Path | None = None,
+    input_text: str | None = None
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["git", *args],
+        ["git", "--literal-pathspecs", *args],
         text=True,
+        encoding="utf-8",
+        errors="surrogateescape",
         capture_output=True,
         check=check,
+        cwd=cwd,
+        input=input_text,
+        timeout=30,
     )
 
 
@@ -221,14 +227,14 @@ def evaluate_findings(
                     sensitive_content_files.add(path)
                     if len(sensitive_content_matches) < 5:
                         sensitive_content_matches.append(
-                            f"{path}: {line.strip()[:120]}"
+                            f"{path}: sensitive pattern detected (content withheld)"
                         )
         else:
             for line in added_lines:
                 if not matches_any(line, SENSITIVE_CONTENT_PATTERNS):
                     continue
                 if len(sensitive_content_matches) < 5:
-                    sensitive_content_matches.append(line)
+                    sensitive_content_matches.append("sensitive pattern detected (content withheld)")
 
         if sensitive_paths:
             findings.append(
@@ -336,16 +342,43 @@ def required_ack_flags(findings: Sequence[Finding]) -> list[str]:
 
 
 def staged_file_sizes(repo_root: Path, staged_paths: Sequence[str]) -> dict[str, int]:
-    sizes: dict[str, int] = {}
-    for rel_path in staged_paths:
-        file_path = repo_root / rel_path
-        if not file_path.exists() or not file_path.is_file():
-            continue
-        try:
-            sizes[rel_path] = file_path.stat().st_size
-        except OSError:
-            continue
-    return sizes
+    """Read index blob sizes, including partially staged and missing worktree files."""
+    wanted = set(staged_paths)
+    blobs: dict[str, str] = {}
+    entries = run_git(["ls-files", "--stage", "-z"], cwd=repo_root).stdout
+    for entry in split_null_terminated(entries):
+        header, path = entry.split("\t", 1)
+        mode, oid, stage = header.split()
+        if stage == "0" and mode != "160000" and path in wanted:
+            blobs[path] = oid
+    if not blobs:
+        return {}
+    output = run_git(
+        ["cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"],
+        cwd=repo_root, input_text="\n".join(blobs.values()) + "\n",
+    ).stdout
+    sizes_by_oid = {}
+    for line in output.splitlines():
+        oid, kind, size = line.split()
+        if kind != "blob":
+            raise ValueError("Expected an index blob")
+        sizes_by_oid[oid] = int(size)
+    return {path: sizes_by_oid[oid] for path, oid in blobs.items()}
+
+
+def inspect_index(repo_root: Path) -> tuple[list[str], list[str], dict[str, list[str]], list[tuple[str, str, str]]]:
+    # Disable rename rendering and external diff drivers; NUL delimiters preserve paths.
+    options = ["diff", "--cached", "--no-ext-diff", "--no-textconv", "--no-renames", "--diff-filter=ACMT"]
+    paths = split_null_terminated(run_git([*options, "--name-only", "-z"], cwd=repo_root).stdout)
+    by_file = {}
+    for path in paths:
+        diff = run_git([*options, "--unified=0", "--no-color", "--", path], cwd=repo_root).stdout
+        by_file[path] = extract_added_lines(diff)
+    rows = []
+    for record in split_null_terminated(run_git([*options, "--numstat", "-z"], cwd=repo_root).stdout):
+        added, deleted, path = record.split("\t", 2)
+        rows.append((added, deleted, path))
+    return paths, [line for lines in by_file.values() for line in lines], by_file, rows
 
 
 def main() -> int:
@@ -357,40 +390,31 @@ def main() -> int:
         ).resolve()
         branch = run_git(["branch", "--show-current"]).stdout.strip()
 
-        staged_quiet = run_git(["diff", "--cached", "--quiet"], check=False)
-        staged_has_changes = staged_quiet.returncode != 0
-
-        staged_paths = split_null_terminated(
-            run_git(["diff", "--cached", "--name-only", "-z"]).stdout
+        unmerged = run_git(["ls-files", "--unmerged", "-z"], cwd=repo_root).stdout
+        staged_quiet = run_git(["diff", "--cached", "--quiet", "--no-ext-diff", "--no-textconv"], check=False, cwd=repo_root)
+        if staged_quiet.returncode not in (0, 1):
+            raise subprocess.CalledProcessError(staged_quiet.returncode, staged_quiet.args, stderr=staged_quiet.stderr)
+        staged_paths, added_lines, added_lines_by_file, numstat_rows = inspect_index(repo_root)
+        findings = evaluate_findings(
+            branch=branch,
+            staged_paths=staged_paths,
+            staged_has_changes=staged_quiet.returncode == 1,
+            added_lines=added_lines,
+            added_lines_by_file=added_lines_by_file,
+            numstat_rows=numstat_rows,
+            file_sizes=staged_file_sizes(repo_root, staged_paths),
+            max_file_size_kb=args.max_file_size_kb,
+            allow_sensitive=args.allow_sensitive,
+            allow_local_artifacts=args.allow_local_artifacts,
+            allow_protected_branch=args.allow_protected_branch,
+            allow_large_or_binary=args.allow_large_or_binary,
         )
-        staged_diff = run_git(["diff", "--cached", "--unified=0", "--no-color"]).stdout
-        added_lines = extract_added_lines(staged_diff)
-        added_lines_by_file = extract_added_lines_by_file(staged_diff)
-        numstat_rows = parse_numstat_lines(
-            run_git(["diff", "--cached", "--numstat"]).stdout
-        )
-    except subprocess.CalledProcessError as exc:
-        stderr = exc.stderr.strip() if exc.stderr else "unknown git error"
-        print(
-            f"[Safety Gate] ERROR: failed to inspect git state: {stderr}",
-            file=sys.stderr,
-        )
+        if unmerged:
+            findings.append(Finding("unmerged_index", "block", "Unresolved index entries remain; resolve the merge before committing.", ()))
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        # Do not echo raw Git output, which can contain credential-bearing URLs.
+        print(f"[Safety Gate] ERROR: cannot inspect Git index ({type(exc).__name__}).", file=sys.stderr)
         return 1
-
-    findings = evaluate_findings(
-        branch=branch,
-        staged_paths=staged_paths,
-        staged_has_changes=staged_has_changes,
-        added_lines=added_lines,
-        added_lines_by_file=added_lines_by_file,
-        numstat_rows=numstat_rows,
-        file_sizes=staged_file_sizes(repo_root, staged_paths),
-        max_file_size_kb=args.max_file_size_kb,
-        allow_sensitive=args.allow_sensitive,
-        allow_local_artifacts=args.allow_local_artifacts,
-        allow_protected_branch=args.allow_protected_branch,
-        allow_large_or_binary=args.allow_large_or_binary,
-    )
 
     print_report(findings)
 

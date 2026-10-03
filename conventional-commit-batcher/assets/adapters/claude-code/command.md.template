@@ -1,0 +1,9 @@
+---
+description: Organize mixed changes into logical Conventional Commits within the requested scope.
+---
+
+Read `{{SKILL_DIR}}/SKILL.md` and follow its scoped workflow.
+Use this adapter only for requested commit batching. It grants no permission
+to stage, commit, or push. Keep the complete installed skill package available.
+
+User request and constraints: $ARGUMENTS

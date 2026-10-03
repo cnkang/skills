@@ -1,0 +1,9 @@
+---
+name: conventional-commit-batcher
+description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
+model: inherit
+---
+
+Read `{{SKILL_DIR}}/SKILL.md` and follow its scoped workflow.
+Use this adapter only for requested commit batching. It grants no permission
+to stage, commit, or push. Keep the complete installed skill package available.
