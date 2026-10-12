@@ -13,6 +13,9 @@ using `--output`, `--source-json`, or `--source-config`, change to the authorize
 directory (for example, `cd /private/path`) and use a path within it. Keep
 `--home PROFILE` absolute when changing directories. The existing Hermes CLI
 retains its file path behavior.
+The invocation directory and its contents must remain under trusted operator
+control. This argument check is not a filesystem sandbox against concurrent
+replacement of files or directory links.
 
 | Command | Arguments | Effects and result |
 |---|---|---|

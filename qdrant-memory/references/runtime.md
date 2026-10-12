@@ -7,7 +7,7 @@ Install the standalone-capable source in a dedicated Python 3.11+ environment:
 ```bash
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@6a15fb4935d9e99ac4adc074c76f2c98db9abc82'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@a17a51a8f1800b82e2374f684bd90c3eaa2e47d1'
 /private/path/qdrant-env/bin/qdrant-memory --help
 ```
 
