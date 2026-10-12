@@ -18,6 +18,19 @@ REQUIREMENT = (
 
 
 def main() -> int:
+    """Install or verify the runtime selected by the required ``--venv`` CLI path.
+
+    Expand ``~`` and make the path absolute. If absent, create a venv and
+    install the pinned backend with MCP support; otherwise, only verify imports
+    and CLI availability, without upgrading or checking the installed revision.
+    On success, print JSON containing ``ok``, absolute ``python`` and ``command``
+    paths, and ``requested_revision``, then return 0.
+
+    Return 1 with a stderr diagnostic for OSError or CalledProcessError during
+    creation, installation, or verification, retaining any partial installation.
+    Argument parsing (including help) and the Python 3.11+ check raise SystemExit.
+    Path expansion/resolution errors and ValueError from venv creation propagate.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--venv", required=True, type=Path, help="new private environment, or an already working installation")
     args = parser.parse_args()
