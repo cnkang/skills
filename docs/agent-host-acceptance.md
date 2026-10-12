@@ -37,7 +37,9 @@ These are 11 required tests. They establish host loading and deterministic tool
 transport compatibility. They do not establish autonomous skill selection,
 reasoning quality, execution of all workflows or support for every model/version.
 Package loading on Pi supplies instructions. Qdrant operations still require the
-Hermes MemoryProvider/native tools or `hermes qdrant-memory`; no Pi bridge is added.
+configured standalone CLI/MCP or Hermes integration. The skill-loading suite
+does not test Pi MCP transport; the separate official MCP acceptance verifies
+the backend protocol.
 
 ## CI and local reproduction
 
@@ -63,3 +65,32 @@ Local baseline on 2026-10-12: all 11 tests and the JUnit gate passed on macOS
 with Node 24.18.0 in under one second of test runtime after dependency installation.
 Local results do not establish remote three-platform success; inspect the CI
 results for the exact pushed commit before merging.
+
+## Standalone memory and installed local CLIs
+
+The required three-platform standalone job installs the immutable additive
+backend with its MCP extra and runs eight real CLI/official-client contracts
+without Hermes source. It also runs the locked Pi 1.1.0 CLI, requiring successful
+stdio connection and discovery of four memory tools, and a cross-client test:
+two different MCP client names share persisted records in the same fixed scope;
+a separate agent scope cannot search/delete them. Every report rejects skips.
+The cross-client names are protocol fixtures, not real-model executions.
+
+Opt-in local acceptance uses installed CLIs with disposable homes/configuration,
+the same backend's deterministic HTTP embedding fixture and embedded Qdrant:
+
+```bash
+QDRANT_LOCAL_AGENTS=1 QDRANT_STANDALONE_ROOT=/path/standalone-backend \
+  python -m pytest -q tests/test_local_agent_mcp.py
+QDRANT_STANDALONE_E2E=1 QDRANT_STANDALONE_ROOT=/path/standalone-backend \
+  python -m pytest -q tests/test_shared_memory_mcp.py
+```
+
+Local 2026-10-12 results: Codex CLI 0.160.0, OpenCode 2.0.24 and Pi 1.1.0
+passed three tests; shared-scope acceptance passed separately. Codex's actual
+app-server discovers four tools and calls add/search. Pi's actual CLI connects
+and inventories the tools. OpenCode registers in isolated global configuration,
+then explicitly adds/connects the runtime through its API and verifies connected
+inventory. Its project CLI listing can reflect a different loaded location;
+this test does not certify automatic project-config activation. No paid model,
+account authentication, production profile or real embedding service is used.

@@ -46,7 +46,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                for step in runtime["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 25" in step["run"]
                for step in jobs["qdrant-contract"]["steps"])
-    assert set(jobs["required-checks"]["needs"]) == {"packages", "distribution", "qdrant-contract", "qdrant-e2e", "pi-host"}
+    assert set(jobs["required-checks"]["needs"]) == {"packages", "distribution", "qdrant-contract", "qdrant-e2e", "pi-host", "qdrant-standalone"}
     assert jobs["required-checks"]["if"] == "always()"
 
 
@@ -65,3 +65,23 @@ def test_pi_host_is_locked_required_and_rejects_skips():
     assert package["devDependencies"][name] == "1.1.0"
     assert lock["packages"][f"node_modules/{name}"]["version"] == "1.1.0"
     assert lock["packages"][f"node_modules/{name}"]["integrity"].startswith("sha512-")
+
+
+def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
+    jobs = yaml.safe_load((ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8"))["jobs"]
+    job = jobs["qdrant-standalone"]
+    assert set(job["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
+    checkouts = [step["with"] for step in job["steps"] if "repository" in step.get("with", {})]
+    assert len(checkouts) == 1
+    assert checkouts[0]["repository"] == "cnkang/hermes-plugin-qdrant-memory"
+    import re
+    assert re.fullmatch(r"[0-9a-f]{40}", checkouts[0]["ref"])
+    for document in ("README.md", "README_zh-CN.md", "qdrant-memory/references/runtime.md"):
+        assert "git@" + checkouts[0]["ref"] in (ROOT / document).read_text(encoding="utf-8")
+    assert any('[mcp]' in step.get("run", "") for step in job["steps"])
+    assert any("tests/standalone" in step.get("run", "") for step in job["steps"])
+    assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 8" in step["run"] for step in job["steps"])
+    assert any("test_installed_pi_discovers_scoped_mcp" in step.get("run", "") for step in job["steps"])
+    assert any("pi-mcp.xml --minimum-tests 1" in step.get("run", "") for step in job["steps"])
+    assert any("test_shared_memory_mcp.py" in step.get("run", "") for step in job["steps"])
+    assert any("shared-memory.xml --minimum-tests 1" in step.get("run", "") for step in job["steps"])

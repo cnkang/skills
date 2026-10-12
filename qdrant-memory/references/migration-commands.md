@@ -1,6 +1,9 @@
 # Migration commands
 
-Baseline: plugin v0.1.0. Use exactly one of `--source-json PATH` or
+Use `qdrant-memory --home PROFILE migrate mem0` without Hermes, or the existing
+`hermes qdrant-memory migrate mem0` on Hermes. The options and examples below are
+shared; replace the command prefix with the selected interface.
+Use exactly one of `--source-json PATH` or
 `--source-qdrant-collection NAME`. Optional `--source-config PATH` configures the
 Qdrant source; without it the plugin uses source settings derived from the active
 configuration. Source and target at the same backend must have different

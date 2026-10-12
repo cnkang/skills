@@ -9,7 +9,8 @@ cross-skill dependencies or automatic installation chains.
 
 1. Run repository validation, unit regressions, fixed/latest CLI jobs, the pinned
    plugin contract, three-platform Hermes Hub/disposable runtime E2E jobs and
-   Pi skill host acceptance. See `agent-host-acceptance.md` for Pi reproduction
+   Pi skill host acceptance and three-platform no-Hermes CLI/MCP acceptance.
+   See `agent-host-acceptance.md` for Pi reproduction
    and its pinned npm dependency upgrade procedure.
    Inspect failures against the recorded Node, Python and CLI versions. CI installs
    only into disposable directories and never uses account tokens for fixtures.

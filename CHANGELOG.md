@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **qdrant-memory 0.2.0:** agent-neutral standalone JSON CLI and stdio MCP
+  instructions, fixed-profile scope, Codex/Claude Code/OpenCode/Pi setup, and
+  no-Hermes runtime acceptance. Preserve the original Hermes tools and CLI;
+  automatic extraction remains its lifecycle feature. Pin the additive backend
+  source until a release includes standalone support.
+
 - **Second agent host:** add MIT Pi Coding Agent 1.1.0 SDK acceptance with a
   pinned integrity-checked npm lockfile. Eleven tests exercise all five packages'
   discovery and explicit expansion plus real Qdrant reference reads. Three OS

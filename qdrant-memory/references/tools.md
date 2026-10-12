@@ -1,6 +1,6 @@
 # Tools and results
 
-| Native tool | Arguments | Result |
+| MCP or Hermes tool | Arguments | Result |
 |---|---|---|
 | `qdrant_memory_search` | Required `query: string`; optional `category: string` | `memories` array, including `id`, `score` and payload provenance |
 | `qdrant_memory_add` | Required `text: string` | Plugin result describing the saved or deduplicated memory |
@@ -8,10 +8,11 @@
 | `qdrant_memory_delete` | Required `id: string` | `id`, `action: DELETE` on success |
 
 Schemas reject additional properties. User/agent/session scope is supplied by
-the trusted host, never by tool arguments. Update/delete check the existing
+the trusted Hermes host or operator-configured MCP process, never by tool
+arguments. A client's displayed name is not authentication. Update/delete check the existing
 point in caller scope before preparing a durable operation under the runtime lock.
 
-Example calls, only when these native tools are available and the action is
+Example calls, only when these discovered tools are available and the action is
 authorized:
 
 ```json

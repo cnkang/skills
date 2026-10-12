@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | 记忆检索与编辑、维护及 Mem0 迁移流程。需要 Hermes Qdrant Memory 插件运行时；按需加载引用。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.0 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -123,73 +123,65 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 
 ## Qdrant 记忆 skill
 
-[qdrant-memory](qdrant-memory/SKILL.md) 是本仓库可独立安装的 skill，用于记忆检索与显式编辑、维护和 Mem0 迁移，按需读取对应的流程文档。
-
-### 安装
+[qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
+维护和 Mem0 迁移流程。skill 和运行时分别安装：
 
 ```bash
-# 安装到当前 Hermes 项目
-npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent
-
-# 或全局安装到 Hermes
-npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent -g
-
-# 全局安装说明到 Codex，运行依赖仍需具备
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
-
-# 也可使用 Hermes 原生安装器
-hermes skills install cnkang/skills/qdrant-memory
+# 按需要选择其他支持的 agent ID，或多个 ID。
+python3 -m venv /private/path/qdrant-env
+/private/path/qdrant-env/bin/python -m pip install \
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@29c6e0f7872259c3be788f955a0d4d84513dbe27'
 ```
 
-按需要选择项目或全局范围，以上安装方式择一即可。`npx skills` 命令可加 `--copy` 使用独立副本。保留整个 skill 目录，包括 `references/`。
+后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
+原 v0.1.0 发布版本没有这些新增入口，以上命令固定安装对应源码。
+按照[运行时配置](qdrant-memory/references/runtime.md)设置私有 profile 和
+Embedding 服务，然后初始化已授权的 collection：
 
-### 使用
+```bash
+qdrant-memory --home /private/path/profile init
+qdrant-memory --home /private/path/profile doctor
+qdrant-memory --home /private/path/profile search --query 'review preferences'
+```
 
-安装后，在支持 skill 调用的宿主中显式选择它。例如 Codex 使用 `$qdrant-memory`；Hermes 中要求 agent 使用 `qdrant-memory` skill；Pi 使用 `/skill:qdrant-memory` 加载说明。
+激活虚拟环境或使用其中可执行文件的绝对路径。
+按[agent 接入说明](qdrant-memory/references/agent-setup.md)连接 Codex、
+Claude Code、OpenCode、Pi 的 MCP，也可以让支持执行命令的 agent 使用独立
+JSON CLI。先发现四个 scoped 工具再执行操作。身份由操作员固定配置的 profile
+决定，MCP 客户端名称不能授予身份。
 
-| 流程 | 用途示例 | 所需入口 |
+[跨 agent 共享](qdrant-memory/references/shared-memory.md)可使用相同用户/profile
+和 `agent_id: null`。这是一个准确的共享分区；显式 agent ID 仍隔离。
+当前 Embedded/MCP 写入会话遵循 profile 锁，按顺序访问。
+
+| 流程 | 示例 | 入口 |
 |---|---|---|
-| [Usage](qdrant-memory/references/usage.md) | 检索偏好、保存已授权事实、按准确 ID 更新或删除记忆 | 可用的 `qdrant_memory_search`、`qdrant_memory_add`、`qdrant_memory_update`、`qdrant_memory_delete` 工具 |
-| [Maintenance](qdrant-memory/references/maintenance.md) | 本地状态、诊断、指定 scope 的清单/导出和已授权恢复 | `hermes qdrant-memory` CLI |
-| [Migration](qdrant-memory/references/migration.md) | 规划 Mem0 JSON/collection 导入，执行已授权导入后续跑、重试与校验 | `hermes qdrant-memory migrate mem0` CLI |
-
-请求示例：
+| [Usage](qdrant-memory/references/usage.md) | 检索、授权保存、按准确 ID 更新/删除 | scoped MCP/Hermes 工具或独立 CRUD CLI |
+| [Maintenance](qdrant-memory/references/maintenance.md) | 状态、诊断、清单/导出、恢复 | 独立 CLI 或兼容的 Hermes CLI |
+| [Migration](qdrant-memory/references/migration.md) | Mem0 dry-run/import/resume/verify | 独立或 Hermes 的 `migrate mem0` |
 
 ```text
-使用 qdrant-memory skill 查找我的代码审查语言偏好，不修改记忆。
-使用 qdrant-memory skill 保存这个偏好：代码审查总结使用中文。
-使用 qdrant-memory skill 找到过时的偏好，编辑前先展示准确的记忆 ID。
-使用 qdrant-memory skill 检查本地状态，不重试或删除数据。
-使用 qdrant-memory skill 对我授权的 JSON 导出做迁移 dry-run，暂不导入。
+使用 qdrant-memory skill 查找我的审查语言偏好，不修改记忆。
+使用 qdrant-memory skill 保存这个偏好：审查总结使用中文。
+使用 qdrant-memory skill 展示过时偏好的准确 ID，暂不编辑。
+使用 qdrant-memory skill 对已授权 JSON 做迁移 dry-run，暂不导入。
 ```
 
-已配置运行时的操作员可先执行：
+Hermes 用户保留已有 MemoryProvider、原生工具和 `hermes qdrant-memory`
+命令。skill 可通过
+`npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent`
+或 `hermes skills install cnkang/skills/qdrant-memory` 安装。
+自动提取和预取仍属于 Hermes 生命周期功能。加载 skill 不会安装服务、授权写入
+或修改配置。
 
-```bash
-hermes qdrant-memory --help
-hermes qdrant-memory status
-hermes qdrant-memory migrate mem0 --source-json /private/path/export.json \
-  --target-collection TARGET --dry-run
-```
+只更新本 skill：`npx skills@latest update qdrant-memory -p`，全局安装用
+`-g`。保留完整 references 目录。
 
-将源路径与目标 collection 替换为已授权的值。迁移命令仅生成计划；实际导入前，按[迁移指南](qdrant-memory/references/migration-commands.md)检查源身份、目标和写入锁归属。
-
-只更新这个 skill，并使用安装时的范围：
-
-```bash
-npx skills@latest update qdrant-memory -p
-# 全局安装使用 -g 替代 -p
-```
-
-### 运行依赖与边界
-
-本 skill 提供操作流程说明。另一个项目 [Hermes Qdrant Memory plugin](https://github.com/cnkang/hermes-plugin-qdrant-memory) 提供自动记忆、Embedding、存储、scope 权限和持久化。执行记忆操作前，需按[插件安装说明](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme)与[官方 Catalog](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory)，在当前 Hermes profile 中安装并配置运行时。加载 skill 不会自动执行安装或修改配置。
-
-将 skill 安装到 Codex 或 Pi，不会提供 Hermes 原生工具。相关工具或 CLI 不可用时，agent 应说明依赖并停止该记忆操作。skill 不提供独立的 `qdrant-memory` 可执行命令，也没有私有 Python 或直接 Qdrant 访问的降级路径。
-
-原生工具强制 caller scope 和 exact-ID 检查。CLI list/export 未指定 `--user` 时可能暴露整个 collection；CLI scope 是操作员权限边界，不自动限定当前用户。retry 会修改持久状态，export 会写出敏感本地文件。删除需明确 scope、dry-run 与授权，不自动加确认或扩大 all-agents。Embedded 只读命令也可能与 Provider 文件锁冲突；恢复必须保留 Ledger 和 WriterLease。迁移重新 Embedding；`--reuse-vectors` 会被拒绝，没有 scope 重映射参数。
-
-仓库保持根目录布局；`hermes skills tap add cnkang/skills` 默认扫描 `skills/`，不能自动发现根目录包。[非默认路径说明](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)支持编辑当前 profile 的 `skills/.hub/taps.json`，根路径使用空 `path`；这是用户主动配置，不自动执行。优先直接路径安装。fixture 验证与真实 GitHub/host 验收的区别见[兼容性说明](docs/qdrant-memory-compatibility.md)。已测试的运行时基线为插件 v0.1.0，强制 CI 在三平台覆盖 Hermes 与 Pi。
+维护 list/export 未选择用户时可能覆盖整个 collection；核实操作员权限和选择器。
+恢复保留 ledger 和 ownership。Embedded 需要独占访问；WriterLease 不能作为
+不同独立 profile 之间的分布式锁。迁移重新 Embedding，仍不支持向量复用及 scope
+重映射。[兼容性与验证边界](docs/qdrant-memory-compatibility.md)。
 
 ## License
 

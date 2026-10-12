@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+; validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access; private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional; continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | Memory search/edit, maintenance and Mem0 migration workflows. Requires the Hermes Qdrant Memory plugin runtime; references load on demand. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.0 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes; existing Hermes integration remains supported. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it; there is no mandatory invocation chain.
 
@@ -127,106 +127,71 @@ judgment and each skill's runtime dependencies.
 
 ## Qdrant memory skill
 
-[qdrant-memory](qdrant-memory/SKILL.md) is this repository's independently
-installable skill for memory search and explicit edits, maintenance, and Mem0
-migration. It loads the relevant workflow reference on demand.
-
-### Install
+[qdrant-memory](qdrant-memory/SKILL.md) supplies agent-neutral memory search,
+explicit edits, maintenance and Mem0 migration instructions. Install the skill
+and its runtime separately:
 
 ```bash
-# Install for the current Hermes project
-npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent
-
-# Or install globally for Hermes
-npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent -g
-
-# Install the instructions for Codex (runtime dependencies still apply)
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
-
-# Alternatively, use Hermes's native installer
-hermes skills install cnkang/skills/qdrant-memory
+# Choose another supported agent ID, or multiple IDs, as needed.
+python3 -m venv /private/path/qdrant-env
+/private/path/qdrant-env/bin/python -m pip install \
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@29c6e0f7872259c3be788f955a0d4d84513dbe27'
 ```
 
-Choose the project or global scope you need; these are alternative installation
-methods. Add `--copy` to an `npx skills` command for independent copies. Keep the
-entire skill directory, including `references/`.
+The backend retains its original repository/distribution name. Its standalone
+CLI and stdio MCP server require no Hermes installation. The original v0.1.0
+release does not contain these additive interfaces; the command pins their
+source. Configure the private profile and embedding service following
+[runtime setup](qdrant-memory/references/runtime.md), then initialize an authorized
+collection:
 
-### Use
+```bash
+qdrant-memory --home /private/path/profile init
+qdrant-memory --home /private/path/profile doctor
+qdrant-memory --home /private/path/profile search --query 'review preferences'
+```
 
-After installation, explicitly select the skill in a host that supports skill
-invocation. For example, use `$qdrant-memory` in Codex; in Hermes, ask the agent to
-use the `qdrant-memory` skill. In Pi, `/skill:qdrant-memory` loads its instructions.
+Use the executable from the virtual environment (activate it or use its absolute
+path). Connect [Codex, Claude Code, OpenCode or Pi through MCP](qdrant-memory/references/agent-setup.md),
+or use the standalone JSON CLI from an agent with command execution. Discover
+the four scoped tools before operations. MCP client names do not grant identity:
+scope comes from the operator's fixed profile configuration.
 
-| Workflow | Examples | Required interface |
+For [cross-agent sharing](qdrant-memory/references/shared-memory.md), configure
+the same user/profile and `agent_id: null`. This is one shared partition;
+explicit agent IDs remain private. Current embedded/MCP writers access it
+sequentially under the profile lease.
+
+| Workflow | Examples | Interface |
 |---|---|---|
-| [Usage](qdrant-memory/references/usage.md) | Recall preferences, save an authorized fact, update/delete an exact memory ID | Available `qdrant_memory_search`, `qdrant_memory_add`, `qdrant_memory_update`, `qdrant_memory_delete` tools |
-| [Maintenance](qdrant-memory/references/maintenance.md) | Local status, diagnostics, scoped inventory/export and authorized recovery | `hermes qdrant-memory` CLI |
-| [Migration](qdrant-memory/references/migration.md) | Plan a Mem0 JSON/collection import, then resume/retry and verify an authorized import | `hermes qdrant-memory migrate mem0` CLI |
-
-Example requests:
+| [Usage](qdrant-memory/references/usage.md) | Search, authorized save, exact-ID update/delete | Scoped MCP/Hermes tools or standalone CRUD CLI |
+| [Maintenance](qdrant-memory/references/maintenance.md) | Status, diagnostics, inventory/export, recovery | Standalone CLI or compatible Hermes CLI |
+| [Migration](qdrant-memory/references/migration.md) | Mem0 dry-run/import/resume/verify | Standalone or Hermes `migrate mem0` |
 
 ```text
 Use $qdrant-memory to find my review language preference; do not change memories.
-Use $qdrant-memory to save this preference: write my code review summaries in Chinese.
-Use $qdrant-memory to find the outdated preference and show its exact ID before editing it.
-Use $qdrant-memory to report local status; do not retry or delete anything.
-Use $qdrant-memory to plan a dry-run from my authorized JSON export; do not import yet.
+Use $qdrant-memory to save this preference: write review summaries in Chinese.
+Use $qdrant-memory to show the exact outdated memory ID before editing it.
+Use $qdrant-memory to dry-run my authorized JSON migration; do not import yet.
 ```
 
-For operators with a configured runtime, start with these CLI commands:
+Hermes users can retain their existing MemoryProvider, native tools and
+`hermes qdrant-memory` commands. Install instructions with
+`npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent`
+or `hermes skills install cnkang/skills/qdrant-memory`. Automatic extraction and
+prefetch remain Hermes lifecycle features. Loading a skill does not install
+services, authorize writes or change configuration.
 
-```bash
-hermes qdrant-memory --help
-hermes qdrant-memory status
-hermes qdrant-memory migrate mem0 --source-json /private/path/export.json \
-  --target-collection TARGET --dry-run
-```
+Update only this skill using `npx skills@latest update qdrant-memory -p` (use
+`-g` for global scope). Keep its complete reference directory.
 
-Replace the source path and target collection with the authorized values. The
-migration command only plans the import; execute it after reviewing source
-identities, target and writer ownership using the
-[migration guide](qdrant-memory/references/migration-commands.md).
-
-Update only this skill in the scope where it was installed:
-
-```bash
-npx skills@latest update qdrant-memory -p
-# Use -g instead of -p for a global installation
-```
-
-### Runtime dependencies and boundaries
-
-The skill supplies workflow instructions. The separate
-[Hermes Qdrant Memory plugin](https://github.com/cnkang/hermes-plugin-qdrant-memory)
-supplies automatic memory, embedding, storage, scope enforcement and persistence.
-To execute memory operations, install/configure that runtime for the active
-Hermes profile as described in the
-[plugin setup](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme) and
-[official catalog](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory).
-Loading the skill does not perform setup or change configuration.
-
-Installing the skill on Codex or Pi does not provide Hermes's native tools. If
-the relevant tools or CLI are unavailable, the agent explains the dependency and
-stops that memory operation. There is no standalone `qdrant-memory` executable
-or private Python/direct Qdrant fallback in the skill.
-
-Native tools enforce caller scope and exact-ID checks. CLI inventory without
-`--user` can expose the entire collection; CLI scope selection is an operator
-permission boundary, not automatic current-user filtering. Retry mutates durable
-state. Export writes sensitive local data. Deletion requires explicit scope,
-dry-run review and authorization; confirmation and all-agent expansion are never
-automatic. Embedded Qdrant readers can conflict with an active provider's file
-lock. Preserve ledger and writer ownership during recovery. Migration re-embeds;
-`--reuse-vectors` is refused and scope remapping is absent.
-
-The root layout remains. `hermes skills tap add cnkang/skills` defaults to scanning
-`skills/` and will not discover these packages. The
-[Hermes non-default-path documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)
-describes editing the active profile's `skills/.hub/taps.json`; use an empty
-`path` for the repository root only as a deliberate configuration change.
-Prefer direct-path install. See [compatibility and test boundaries](docs/qdrant-memory-compatibility.md)
-for fixture validation versus live GitHub/host acceptance. The tested runtime
-baseline is plugin v0.1.0; required CI covers Hermes and Pi on three platforms.
+Maintenance list/export can select all collection users when no user selector
+is provided; check operator authorization and selectors. Preserve ledger and
+ownership during recovery. Embedded storage requires exclusive access.
+WriterLease is not a distributed lock across independent profiles. Migration
+re-embeds; vector reuse and scope remapping remain unsupported.
+See [compatibility and validation boundaries](docs/qdrant-memory-compatibility.md).
 
 ## License
 
