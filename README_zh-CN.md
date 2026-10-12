@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.0 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.1 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -133,11 +133,23 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # 按需要选择其他支持的 agent ID，或多个 ID。
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@a17a51a8f1800b82e2374f684bd90c3eaa2e47d1'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@8fd42572738b15a1abcad62aeecd0de9b1877e3a'
 ```
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
 原 v0.1.0 发布版本没有这些新增入口，以上命令固定安装对应源码。
+
+后端缺失时，获得安装授权的 agent 也可以执行安装后的 skill 自带脚本：
+
+```bash
+python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /private/path/qdrant-env
+```
+
+以 CLI 输出的实际 skill 目录为准。脚本需要 Python 3.11+ 和 Git，返回运行时
+命令的绝对路径，并验证 CLI/MCP 导入；保留已有安装及 Hermes 设置。
+`npx skills` 本身不会执行脚本。CI 使用隔离 profile 验证真实 npx 分发、全新
+环境中安装固定源码后端、CLI 读写，以及 MCP 工具发现和调用。
+
 按照[运行时配置](qdrant-memory/references/runtime.md)设置私有 profile 和
 Embedding 服务，然后初始化已授权的 collection：
 
@@ -152,6 +164,26 @@ qdrant-memory --home /private/path/profile search --query 'review preferences'
 Claude Code、OpenCode、Pi 的 MCP，也可以让支持执行命令的 agent 使用独立
 JSON CLI。先发现四个 scoped 工具再执行操作。身份由操作员固定配置的 profile
 决定，MCP 客户端名称不能授予身份。
+
+### MCP 能力
+
+skill 提供操作指引，独立安装的运行时提供本地 stdio MCP 服务。客户端也可以
+直接使用 MCP，无需加载 skill；支持 skill 指令的 agent 可以配合 MCP 工具或
+JSON CLI 使用这些指引。
+
+| MCP 工具 | 操作 |
+|---|---|
+| `qdrant_memory_search` | 召回作用域内记忆，返回 ID 和来源信息。 |
+| `qdrant_memory_add` | 持久化明确授权的事实或偏好。 |
+| `qdrant_memory_update` | 按准确 ID 替换已授权的记忆。 |
+| `qdrant_memory_delete` | 按准确 ID 删除已授权的记忆。 |
+
+先确认服务已连接并发现全部四个工具，再执行已授权的检索。MCP 提供显式记忆
+操作；维护/迁移使用 CLI，自动提取对话仍属于 Hermes 生命周期能力。
+传输、权限、共享方式和各 host 的验证范围见
+[MCP 能力与验证说明](qdrant-memory/references/mcp.md)。
+
+### 共享记忆与使用流程
 
 [跨 agent 共享](qdrant-memory/references/shared-memory.md)可使用相同用户/profile
 和 `agent_id: null`。这是一个准确的共享分区；显式 agent ID 仍隔离。

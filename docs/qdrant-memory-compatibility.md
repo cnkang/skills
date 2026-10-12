@@ -40,6 +40,14 @@ backend with its MCP extra and exercises real JSON CLI subprocesses and an
 official MCP client without Hermes source or fake host modules. It retains
 zero-skip JUnit reports. No test contacts personal Qdrant or embeddings.
 
+The Ubuntu standalone job additionally uses real `npx skills@1.7.0` to install
+the candidate package into an isolated global Codex directory. It executes that
+installed package's backend installer in a fresh venv, fetching the documented
+immutable source from GitHub with its MCP extra. It verifies installed provenance,
+CLI init/doctor/add, official stdio MCP discovery/search/delete and safe reuse.
+The installation report has a required zero-skip gate. Embeddings use localhost
+fixtures, with no Hermes installation or paid model calls.
+
 For local acceptance, install `requirements-runtime-tests.txt` and the pinned
 plugin into an isolated environment, then run:
 
@@ -62,7 +70,7 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-source is pinned to `a17a51a8f1800b82e2374f684bd90c3eaa2e47d1`; original release v0.1.0 remains the Hermes
+source is pinned to merged `8fd42572738b15a1abcad62aeecd0de9b1877e3a`; original release v0.1.0 remains the Hermes
 compatibility baseline. Skill installation alone does not create memory tools.
 Connect an authorized MCP process or use the standalone JSON CRUD CLI; Hermes
 native tools remain supported. Do not use private APIs. MCP client names and

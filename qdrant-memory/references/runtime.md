@@ -7,11 +7,36 @@ Install the standalone-capable source in a dedicated Python 3.11+ environment:
 ```bash
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@a17a51a8f1800b82e2374f684bd90c3eaa2e47d1'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@8fd42572738b15a1abcad62aeecd0de9b1877e3a'
 /private/path/qdrant-env/bin/qdrant-memory --help
 ```
 
-The original v0.1.0 release predates these interfaces. Use the pinned source until a release includes them. Skill installation does not install the runtime. Do not install dependencies or change settings merely on skill load.
+The original v0.1.0 release predates these interfaces. Use the pinned source until a release includes them. `npx skills` installs instructions and the bundled installer, not Python dependencies. Do not install dependencies or change settings merely on skill load.
+
+## Install a missing backend
+
+When setup is authorized and neither compatible MCP tools nor a working CLI is
+available, the agent can run the installed skill's [installer](../scripts/install_runtime.py):
+
+```bash
+python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
+  --venv /private/path/qdrant-env
+```
+
+Use the actual installed skill path reported by `npx skills` (global Codex usually
+uses `~/.agents/skills/qdrant-memory`). Python 3.11+ and Git must be available;
+installation requires access to GitHub and Python package indexes. On Windows use
+`py -3.11` or an available newer Python and the returned `Scripts` executable.
+The installer installs the pinned backend with its official MCP SDK in a new venv,
+then verifies imports and the CLI. A working existing environment is reused without
+an upgrade; an incomplete or incompatible environment fails and is retained.
+Choose a new path to retry rather than deleting another installation.
+
+Use the returned absolute `command` for CLI and MCP configuration. This does not
+install Hermes, change an existing Hermes plugin, download embedding models,
+initialize storage or write any agent's MCP settings. Configure the authorized
+profile and verify service readiness separately below. Installing dependencies
+does not grant permission to import or save memories.
 
 Choose an operator-authorized private profile. Its `qdrant-memory.json` uses existing backend fields:
 

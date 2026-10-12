@@ -66,11 +66,11 @@ def test_each_package_is_independent(tmp_path, name):
     assert validate_skill(dest) == []
 
 
-def test_document_only_package_and_missing_resource(tmp_path):
+def test_qdrant_package_and_missing_resource(tmp_path):
     name = "qdrant-memory"
     dest = tmp_path / name
     shutil.copytree(ROOT / name, dest)
-    assert not (dest / "scripts").exists()
+    assert (dest / "scripts/install_runtime.py").is_file()
     assert validate_skill(dest) == []
     next((dest / "references").glob("*.md")).unlink()
     assert any("missing reference" in error for error in validate_skill(dest))

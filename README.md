@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+; validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access; private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional; continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.0 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes; existing Hermes integration remains supported. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.1 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes; existing Hermes integration remains supported. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it; there is no mandatory invocation chain.
 
@@ -138,13 +138,28 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@a17a51a8f1800b82e2374f684bd90c3eaa2e47d1'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@8fd42572738b15a1abcad62aeecd0de9b1877e3a'
 ```
 
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
 release does not contain these additive interfaces; the command pins their
-source. Configure the private profile and embedding service following
+source.
+
+If the backend is missing, an agent authorized to set it up can instead run the
+bundled installer from the installed skill directory:
+
+```bash
+python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /private/path/qdrant-env
+```
+
+Use the actual skill directory printed by the CLI. The installer needs Python
+3.11+ and Git, returns the absolute runtime command, and verifies CLI/MCP imports.
+It leaves existing installations and Hermes settings intact. `npx skills` itself
+does not execute it. CI exercises real npx distribution, fresh pinned-source
+backend installation, CLI CRUD and MCP discovery/calls using isolated profiles.
+
+Configure the private profile and embedding service following
 [runtime setup](qdrant-memory/references/runtime.md), then initialize an authorized
 collection:
 
@@ -159,6 +174,28 @@ path). Connect [Codex, Claude Code, OpenCode or Pi through MCP](qdrant-memory/re
 or use the standalone JSON CLI from an agent with command execution. Discover
 the four scoped tools before operations. MCP client names do not grant identity:
 scope comes from the operator's fixed profile configuration.
+
+### MCP capabilities
+
+The skill supplies operating instructions. The separately installed runtime
+supplies a local stdio MCP server; a client can use that server without loading
+the skill. Agents that support skill instructions can use them together with
+MCP tools or the JSON CLI.
+
+| MCP tool | Operation |
+|---|---|
+| `qdrant_memory_search` | Recall scoped memories with IDs and provenance. |
+| `qdrant_memory_add` | Persist an explicitly authorized fact or preference. |
+| `qdrant_memory_update` | Replace an authorized memory by exact ID. |
+| `qdrant_memory_delete` | Delete an authorized memory by exact ID. |
+
+Verify a connected server and discovery of all four tools before requesting an
+authorized search. MCP exposes explicit memory operations; maintenance/migration
+uses the CLI and automatic conversation extraction remains a Hermes feature.
+See [MCP capabilities and verification](qdrant-memory/references/mcp.md) for
+transport, permissions, sharing and host-specific validation boundaries.
+
+### Shared memory and workflows
 
 For [cross-agent sharing](qdrant-memory/references/shared-memory.md), configure
 the same user/profile and `agent_id: null`. This is one shared partition;

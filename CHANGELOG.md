@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **qdrant-memory 0.2.1:** make the four MCP tools, skill/runtime separation,
+  local stdio setup and verified host boundaries explicit. Keep Hermes lifecycle
+  compatibility and sequential shared scopes. Pin installation and CI to the
+  tested merged backend snapshot. Bundle an authorized missing-backend installer;
+  require real npx distribution, fresh VCS installation and CLI/MCP acceptance
+  in CI. No backend runtime interface changes.
+
 - **qdrant-memory 0.2.0:** agent-neutral standalone JSON CLI and stdio MCP
   instructions, fixed-profile scope, Codex/Claude Code/OpenCode/Pi setup, and
   no-Hermes runtime acceptance. Preserve the original Hermes tools and CLI;
