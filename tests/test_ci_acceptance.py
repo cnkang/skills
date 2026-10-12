@@ -88,6 +88,6 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     installer = next(step for step in job["steps"] if "test_skill_runtime_install.py" in step.get("run", ""))
     assert installer["if"] == "runner.os == 'Linux'"
     assert installer["env"]["QDRANT_SKILL_INSTALL_E2E"] == "1"
-    assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "${{ github.workspace }}"
+    assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/tree/${{ github.event.pull_request.head.sha || github.sha }}"
     gate = next(step for step in job["steps"] if "skill-runtime-install.xml --minimum-tests 1" in step.get("run", ""))
     assert gate["if"] == installer["if"]

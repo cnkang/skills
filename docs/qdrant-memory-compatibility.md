@@ -41,7 +41,8 @@ official MCP client without Hermes source or fake host modules. It retains
 zero-skip JUnit reports. No test contacts personal Qdrant or embeddings.
 
 The Ubuntu standalone job additionally uses real `npx skills@1.7.0` to install
-the candidate package into an isolated global Codex directory. It executes that
+the candidate package from GitHub at the exact branch/PR head commit into an
+isolated global Codex directory. It executes that
 installed package's backend installer in a fresh venv, fetching the documented
 immutable source from GitHub with its MCP extra. It verifies installed provenance,
 CLI init/doctor/add, official stdio MCP discovery/search/delete and safe reuse.
