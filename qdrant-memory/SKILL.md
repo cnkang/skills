@@ -53,7 +53,7 @@ leases do not exclude other profiles/hosts. Preserve recorded destructive recove
 Never automatically add `--confirm`, `--force` or `--all-agents`.
 Use one memory interface for each Hermes profile. Before you register an
 interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory,
-do not register a second interface and tell the user that Hermes needs no
+do not register a second interface. Inform the user that Hermes needs no
 additional setup. If it does not list the plugin, recommend the Plugin Catalog
 install for Hermes (`hermes plugins install qdrant-memory`). Other agents can
 still use this skill.

@@ -3,7 +3,8 @@
 
 Print a Hermes advisory and continue: recommend the native plugin when it is
 missing, and state that the skill is not necessary for Hermes when the plugin
-is installed. Other agents can still use the runtime.
+is installed. Detection reads HERMES_HOME and ~/.hermes only; no Hermes
+command runs. Other agents can still use the runtime.
 """
 from __future__ import annotations
 
@@ -28,8 +29,14 @@ def _hermes_homes() -> list[Path]:
     homes = []
     configured = os.environ.get("HERMES_HOME")
     if configured:
-        homes.append(Path(configured).expanduser())
-    homes.append(Path.home() / ".hermes")
+        try:
+            homes.append(Path(configured).expanduser())
+        except (OSError, RuntimeError, ValueError):
+            pass
+    try:
+        homes.append(Path.home() / ".hermes")
+    except (OSError, RuntimeError, ValueError):
+        pass
     return homes
 
 
@@ -54,16 +61,7 @@ def hermes_plugin_installed() -> bool:
                 return True
         except OSError:
             continue
-    executable = shutil.which("hermes")
-    if not executable:
-        return False
-    try:
-        result = subprocess.run(
-            [executable, "plugins", "list"], capture_output=True, text=True, timeout=20
-        )
-    except (OSError, subprocess.SubprocessError):
-        return False
-    return "qdrant-memory" in (result.stdout or "")
+    return False
 
 
 def hermes_advisory() -> str:
@@ -112,7 +110,10 @@ def main() -> int:
         for char in str(target)
     ):
         parser.error("shell-sensitive characters in --venv path; choose a private path with ordinary names (spaces are supported)")
-    advisory = hermes_advisory()
+    try:
+        advisory = hermes_advisory()
+    except Exception:
+        advisory = ""  # The advisory must never fail the install.
     if advisory:
         print(advisory, file=sys.stderr)
     scripts = target / ("Scripts" if os.name == "nt" else "bin")
