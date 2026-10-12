@@ -1,6 +1,6 @@
 // Real Pi discovery, prompt expansion and read-tool loop; scripted model transport.
 import assert from 'node:assert/strict';
-import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -102,17 +102,22 @@ async function agent(t, files, replies) {
   return { session, requests };
 }
 
-function body(text) { return text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '').trim(); }
+function body(text) {
+  // Pi normalizes Windows CRLF before stripping frontmatter and expanding skills.
+  return text.replace(/\r\n?/g, '\n').replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+}
 for (const name of names) {
-  test(`Pi /skill:${name} expands the installed instructions`, { timeout: 30000 }, async (t) => {
+  test(`Pi /skill:${name} expands CRLF installed instructions`, { timeout: 30000 }, async (t) => {
     const files = await fixture(t);
+    const entrypoint = join(files.installed, name, 'SKILL.md');
+    await writeFile(entrypoint, (await readFile(entrypoint, 'utf8')).replace(/\r?\n/g, '\r\n'));
     const { session, requests } = await agent(t, files, ['Fixture complete']);
     assert.deepEqual(session.getActiveToolNames(), ['read']);
     assert.ok(session.systemPrompt.includes(`<name>${name}</name>`));
     await session.prompt(`/skill:${name} Confirm instructions were loaded.`);
     assert.equal(requests.length, 1);
     const content = JSON.stringify(requests[0].messages);
-    const expected = body(await readFile(join(files.installed, name, 'SKILL.md'), 'utf8'));
+    const expected = body(await readFile(entrypoint, 'utf8'));
     assert.ok(content.includes(JSON.stringify(expected).slice(1, -1)));
     assert.equal(session.getLastAssistantText(), 'Fixture complete');
   });
