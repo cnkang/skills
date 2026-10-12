@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Clarify public Qdrant compatibility and authorized runtime setup guidance.
+  Exclude local environment secrets while retaining publishable example files.
+
 - **qdrant-memory 0.2.2:** pin new backend installation and required runtime CI
   to the reviewed transcript-author isolation fix. Preserve CLI/MCP interfaces;
   document that receiving the security update requires a fresh private environment
