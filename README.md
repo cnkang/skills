@@ -128,8 +128,10 @@ judgment and each skill's runtime dependencies.
 ## Qdrant memory skill
 
 [qdrant-memory](qdrant-memory/SKILL.md) supplies agent-neutral memory search,
-explicit edits, maintenance and Mem0 migration instructions. Install the skill
-and its runtime separately:
+explicit edits, maintenance and Mem0 migration instructions for Codex, OpenCode,
+Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
+an authorized memory scope or keep private scopes. Install the skill and its
+runtime separately:
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g

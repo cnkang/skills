@@ -124,7 +124,9 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 ## Qdrant 记忆 skill
 
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
-维护和 Mem0 迁移流程。skill 和运行时分别安装：
+维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
+或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
+作用域。skill 和运行时分别安装：
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
