@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **qdrant-memory 0.2.3:** require one memory interface for each Hermes
+  profile in the skill guidance and MCP/Hermes setup notes. The bundled
+  installer detects Hermes and prints an advisory: recommend the native plugin
+  when it is missing, and state that the skill is not necessary for Hermes when
+  the plugin is installed. Other agents can still use the runtime.
+  No interface changes.
+
 - Clarify public Qdrant compatibility and authorized runtime setup guidance.
   Exclude local environment secrets while retaining publishable example files.
 

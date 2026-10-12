@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Install the reviewed standalone backend into an explicitly selected private venv."""
+"""Install the reviewed standalone backend into an explicitly selected private venv.
+
+Print a Hermes advisory and continue: recommend the native plugin when it is
+missing, and state that the skill is not necessary for Hermes when the plugin
+is installed. Other agents can still use the runtime.
+"""
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -15,6 +21,68 @@ REQUIREMENT = (
     "hermes-plugin-qdrant-memory[mcp] @ "
     "git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + REVISION
 )
+
+
+def _hermes_homes() -> list[Path]:
+    """Return candidate Hermes profile homes without failing setup."""
+    homes = []
+    configured = os.environ.get("HERMES_HOME")
+    if configured:
+        homes.append(Path(configured).expanduser())
+    homes.append(Path.home() / ".hermes")
+    return homes
+
+
+def hermes_detected() -> bool:
+    """Report Hermes on this machine without failing setup."""
+    if shutil.which("hermes"):
+        return True
+    for home in _hermes_homes():
+        try:
+            if home.is_dir():
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def hermes_plugin_installed() -> bool:
+    """Report an installed Hermes qdrant-memory plugin without failing setup."""
+    for home in _hermes_homes():
+        try:
+            if (home / "plugins" / "qdrant-memory").is_dir():
+                return True
+        except OSError:
+            continue
+    executable = shutil.which("hermes")
+    if not executable:
+        return False
+    try:
+        result = subprocess.run(
+            [executable, "plugins", "list"], capture_output=True, text=True, timeout=20
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "qdrant-memory" in (result.stdout or "")
+
+
+def hermes_advisory() -> str:
+    """Return the Hermes install advisory, or an empty string when none applies."""
+    if not hermes_detected():
+        return ""
+    if hermes_plugin_installed():
+        return (
+            "Note: Hermes on this machine already has the qdrant-memory plugin installed.\n"
+            "This skill is not necessary for Hermes: use the native qdrant-memory tools\n"
+            "and the \"hermes qdrant-memory\" commands. The skill remains usable for other\n"
+            "agents, for example Codex, Claude Code, OpenCode or Pi."
+        )
+    return (
+        "Note: Hermes is present on this machine, but its qdrant-memory plugin is not\n"
+        "installed. For Hermes, prefer the plugin: install it from the Plugin Catalog\n"
+        "with \"hermes plugins install qdrant-memory\". This runtime and skill remain\n"
+        "usable for other agents, for example Codex, Claude Code, OpenCode or Pi."
+    )
 
 
 def main() -> int:
@@ -44,6 +112,9 @@ def main() -> int:
         for char in str(target)
     ):
         parser.error("shell-sensitive characters in --venv path; choose a private path with ordinary names (spaces are supported)")
+    advisory = hermes_advisory()
+    if advisory:
+        print(advisory, file=sys.stderr)
     scripts = target / ("Scripts" if os.name == "nt" else "bin")
     python = scripts / ("python.exe" if os.name == "nt" else "python")
     console = scripts / ("qdrant-memory.exe" if os.name == "nt" else "qdrant-memory")

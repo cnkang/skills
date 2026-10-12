@@ -27,6 +27,13 @@ the absolute executable/profile paths using [agent setup](agent-setup.md).
 Verify a connected server and discovery of all four tools, then perform an
 authorized search. A saved settings entry alone does not verify a connection.
 
+Check `hermes plugins list` before you register this server. If the native
+plugin is already registered for Hermes, do not register this server there.
+Tell the user that Hermes needs no additional setup and that other agents can
+still use this server or the CLI. If the plugin is not registered, recommend
+it for Hermes first (`hermes plugins install qdrant-memory`). Register one MCP
+server for each profile. Duplicate registrations contend for one writer lease.
+
 The transport is local stdio. The backend advertises tools, with no resources
 or prompts, HTTP/SSE listener or remote authentication service. Export, migration,
 reset and bulk deletion use the operator CLI, not MCP tools. Automatic turn
