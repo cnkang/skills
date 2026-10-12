@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-4 个可独立安装、按需使用的开发 skills。选择一个或任意多个即可；每个包都包含自己的入口、脚本、引用和许可证，不需要安装其他 skill。
+5 个可独立安装、按需使用的开发与 Qdrant 记忆 skills。每个包包含自己的入口、所需资源和许可证，不需要安装其他 skill。
 
 | Skill | Version | 用途与依赖 |
 |---|---|---|
@@ -10,6 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | 通过 Hermes Qdrant 插件原生工具/CLI 进行检索与显式修改、维护及 Mem0 迁移，三条流程按需加载。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -113,9 +114,40 @@ python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
 
-分发测试使用隔离的 HOME、配置和项目目录，验证全部 15 种非空选择组合、9 个宿主的项目/全局与链接/复制安装、临时使用及选择性更新。更新来源由本地 Git fixture 提供，不访问真实私有仓库或 token。脚本失败不等于真实宿主不可用；需区分打包缺陷和上游 CLI 行为变化。
+分发测试使用隔离的 HOME、配置和项目目录，保留原四个 skills 的全部 15 种组合，并新增Qdrant 独立、全清单及与每个原 skill 的混装（共 21 组）。覆盖重复安装、9 个宿主的项目/全局与链接/复制路径、Qdrant 包在 Codex/Hermes 的安装、临时使用及纯文档包的选择性更新。更新来源由本地 Git fixture 提供，不访问真实私有仓库或 token。脚本失败不等于真实宿主不可用；需区分打包缺陷和上游 CLI 行为变化。
 
 CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的验收参见 [behavior scenarios](docs/behavior-scenarios.md)；结构检查不能证明模型行为。[发布与回滚](docs/releasing.md)说明默认分支更新渠道、版本、标签与迁移流程。
+
+三平台强制[agent 平台验收](docs/agent-host-acceptance.md)覆盖 Hermes 和 MIT 开源的 Pi Coding Agent。Pi 使用真实 skill 发现、显式加载与引用文件读取流程，模型端采用本地确定性测试服务，无需付费 API、账户或下载模型。平台加载兼容性、真实模型判断能力和各 skill 的运行依赖分别说明。
+
+## Qdrant 记忆 skill
+
+[Hermes Qdrant 插件](https://github.com/cnkang/hermes-plugin-qdrant-memory)负责自动记忆、Embedding、存储、scope 权限和可靠持久化；一个纯文档 skill 按需加载 usage、maintenance、migration 三条公开接口操作流程，不复制插件 Python，也不引入第二条写入路径。离线 contract 和三平台 Hermes Hub／临时环境 E2E 固定插件 v0.1.0 release SHA 与 Hermes 源码 SHA，使用真实 Embedded 存储和本地 HTTP embedding 测试服务。专用验收拒绝跳过或空报告，`Required checks` 汇总全部检查。覆盖范围与本地命令见[兼容性说明](docs/qdrant-memory-compatibility.md)。
+
+```bash
+npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent
+npx skills@latest add cnkang/skills --skill qdrant-memory -a codex
+```
+
+远程命令需在新增包合并/发布后使用；此前以本地路径验证。安装到 Codex 等宿主只获得说明，不会获得 Hermes 原生工具。usage 需要可用的 `qdrant_memory_search/add/update/delete`；维护和迁移需要 `hermes qdrant-memory ...`。没有兼容入口时说明依赖并停止记忆操作，不调用私有 Python API。插件没有独立 `qdrant-memory` 命令。skills 不自动安装插件/依赖或修改配置。安装指引见[官方 Catalog](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory)。
+
+可独立请求：
+
+```text
+Use $qdrant-memory to find my review language preference; do not change memories.
+Use $qdrant-memory to report local status; do not retry or delete anything.
+Use $qdrant-memory to plan a dry-run from my authorized JSON export; do not import yet.
+```
+
+原生工具强制 caller scope 和 exact-ID 检查。CLI list/export 未指定 `--user` 时可能暴露整个 collection；CLI scope 是操作员权限边界，不自动限定当前用户。retry 会修改持久状态，export 会写出敏感本地文件。删除需明确 scope、dry-run 与授权，不自动加确认或扩大 all-agents。Embedded 只读命令也可能与 Provider 文件锁冲突；恢复必须保留 Ledger 和 WriterLease。迁移重新 Embedding；`--reuse-vectors` 会被拒绝，没有 scope 重映射参数。
+
+发布后可用 Hermes 原生直接路径安装：
+
+```bash
+hermes skills install cnkang/skills/qdrant-memory
+```
+
+仓库保持根目录布局；`hermes skills tap add cnkang/skills` 默认扫描 `skills/`，不能自动发现根目录包。[非默认路径说明](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)支持编辑当前 profile 的 `skills/.hub/taps.json`，根路径使用空 `path`；这是用户主动配置，不自动执行。优先直接路径安装。fixture 验证与真实 GitHub/host 验收的区别见[兼容性说明](docs/qdrant-memory-compatibility.md)。
 
 ## License
 

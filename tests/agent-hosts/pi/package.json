@@ -1,0 +1,11 @@
+{
+  "name": "skills-pi-host-acceptance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=../../../reports/pi-host.xml acceptance.test.mjs"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "1.1.0"
+  }
+}

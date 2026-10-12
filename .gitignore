@@ -21,3 +21,10 @@ venv/
 .ruff_cache/
 .arts
 .codeartsdoer
+
+# Isolated agent-host acceptance dependencies and reports
+node_modules/
+reports/
+
+# Local implementation notes; not part of published skills or CI
+docs/implementation-report-*.md

@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- **Second agent host:** add MIT Pi Coding Agent 1.1.0 SDK acceptance with a
+  pinned integrity-checked npm lockfile. Eleven tests exercise all five packages'
+  discovery and explicit expansion plus real Qdrant reference reads. Three OS
+  jobs, zero-skip JUnit gates and required-check aggregation need no paid API,
+  account, model download or GPU; model responses are deterministic fixtures.
+
+- **qdrant-memory 0.1.0:** one independent document-only package with
+  usage, maintenance and migration workflows loaded on demand, using the Hermes
+  Qdrant plugin v0.1.0 public tools/CLI.
+  Scope, exact-ID checks, writer ownership, destructive recovery and unsupported
+  vector reuse are explicit. No plugin core, direct write path or auto-setup.
+- **Validation/distribution:** controlled five-skill catalog, document-only
+  package support, 21 bounded selections retaining all 15 legacy subsets,
+  Qdrant Codex/Hermes paths and document-only selective/pinned/source updates.
+  A separate offline CI job checks the immutable plugin release parser/tool
+  contract. Three-platform Hermes Hub and disposable runtime E2E use pinned host
+  and plugin sources, real embedded storage and local HTTP embedding fixtures.
+  JUnit artifacts, rejection of skipped/empty acceptance and a required-checks
+  aggregate complete the CI gates; no production services. Existing skill
+  versions and paths remain.
+
 - **conventional-commit-batcher 4.0.0 (breaking):** one native skill entrypoint;
   legacy hidden adapters and AGENTS/CLAUDE files move to opt-in templates. Existing
   external adapters require deliberate migration. Safety checks read index blob
