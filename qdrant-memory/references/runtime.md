@@ -7,7 +7,7 @@ Install the standalone-capable source in a dedicated Python 3.11+ environment:
 ```bash
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@8fd42572738b15a1abcad62aeecd0de9b1877e3a'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@331cdef4dda8ef75b265a6fa304eb444a37e1025'
 /private/path/qdrant-env/bin/qdrant-memory --help
 ```
 
@@ -31,6 +31,11 @@ The installer installs the pinned backend with its official MCP SDK in a new ven
 then verifies imports and the CLI. A working existing environment is reused without
 an upgrade; an incomplete or incompatible environment fails and is retained.
 Choose a new path to retry rather than deleting another installation.
+
+On POSIX, choose an ordinary private path; spaces are supported, but shell
+metacharacters and control characters are rejected before installation. pip's
+generated CLI entrypoint may use a shell wrapper, so unsafe interpreter paths
+must be rejected even though the installer passes subprocess arguments as lists.
 
 Use the returned absolute `command` for CLI and MCP configuration. This does not
 install Hermes, change an existing Hermes plugin, download embedding models,

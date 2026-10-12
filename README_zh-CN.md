@@ -133,7 +133,7 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # 按需要选择其他支持的 agent ID，或多个 ID。
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@8fd42572738b15a1abcad62aeecd0de9b1877e3a'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@331cdef4dda8ef75b265a6fa304eb444a37e1025'
 ```
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
