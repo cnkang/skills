@@ -29,7 +29,7 @@ tool allowlist. It never executes package scripts or memory operations.
 |---|---|
 | Project `.pi/skills` and global `<agentDir>/skills` discovery | Exact five-package catalog, names/descriptions, expected paths and no diagnostics. |
 | Independent Qdrant installation | Only Qdrant is present; no sibling dependencies. |
-| Explicit invocation of all five skills | Actual `/skill:name` expansion sends the installed body to the fixture model. |
+| Explicit invocation of all five skills | Actual `/skill:name` expansion sends the installed body to the fixture model, including CRLF normalization exercised on every OS. |
 | Qdrant progressive disclosure | Initial prompt contains catalog metadata, not the full skill body. |
 | Usage, maintenance and migration | Real read-tool loop reads the entrypoint and selected reference; full file content appears in subsequent model requests. |
 
