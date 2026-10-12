@@ -80,7 +80,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
         assert "git@" + checkouts[0]["ref"] in (ROOT / document).read_text(encoding="utf-8")
     assert any('[mcp]' in step.get("run", "") for step in job["steps"])
     assert any("tests/standalone" in step.get("run", "") for step in job["steps"])
-    assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 8" in step["run"] for step in job["steps"])
+    assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 27" in step["run"] for step in job["steps"])
     assert any("test_installed_pi_discovers_scoped_mcp" in step.get("run", "") for step in job["steps"])
     assert any("pi-mcp.xml --minimum-tests 1" in step.get("run", "") for step in job["steps"])
     assert any("test_shared_memory_mcp.py" in step.get("run", "") for step in job["steps"])

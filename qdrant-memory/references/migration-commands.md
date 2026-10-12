@@ -9,6 +9,12 @@ Qdrant source; without it the plugin uses source settings derived from the activ
 configuration. Source and target at the same backend must have different
 collection names. Do not display a source config containing credentials.
 
+For standalone imports, first change to the authorized source directory (for
+example, `cd /private/path`) and supply an absolute `--home PROFILE`. Explicit
+`--source-json` and `--source-config` paths must resolve within that working
+directory; paths or symbolic links that escape it are rejected before services
+open. The existing Hermes interface retains its file path behavior.
+
 Supported options: `--target-collection`, `--reembed` (already the default),
 `--resume`, `--retry-failed`, `--dry-run`, `--verify`, `--oversize reject|truncate`
 (default reject), `--quiet`. `--reuse-vectors` parses but execution refuses it:
