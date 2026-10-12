@@ -71,7 +71,8 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-source is pinned to merged `331cdef4dda8ef75b265a6fa304eb444a37e1025` (backend PR #34);
+source is pinned to `1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4`, including
+the durable transcript-author isolation fix;
 original release v0.1.0 remains the Hermes
 compatibility baseline. Skill installation alone does not create memory tools.
 Connect an authorized MCP process or use the standalone JSON CRUD CLI; Hermes
@@ -82,8 +83,8 @@ interfaces, not evidence that every model or host has been exercised.
 
 Hermes GitHub direct identifiers preserve root paths:
 `hermes skills install cnkang/skills/qdrant-memory`. The local Hub fixture
-validates the consolidated package path without claiming a successful fetch
-of unpublished remote files. Security scanning/confirmation remains part of the
+validates this package path using local transport; remote fetching is a separate
+installation step. Security scanning/confirmation remains part of the
 real host installation workflow.
 
 Default Tap `path: "skills/"` misses this root layout. Hermes supports a stored

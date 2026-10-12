@@ -10,7 +10,7 @@ import subprocess
 import sys
 import venv
 
-REVISION = "331cdef4dda8ef75b265a6fa304eb444a37e1025"
+REVISION = "1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4"
 REQUIREMENT = (
     "hermes-plugin-qdrant-memory[mcp] @ "
     "git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + REVISION
