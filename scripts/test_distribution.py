@@ -29,6 +29,7 @@ AGENTS = {
     "hermes-agent": (".hermes/skills", ".hermes/skills"),
 }
 HELPERS = {
+    "qdrant-memory": "install_runtime.py",
     "conventional-commit-batcher": "validate_conventional_commit.py",
     "dev-jev": "telemetry.py",
     "repository-quality-gate-fixer": "repo_quality_probe.py",
@@ -272,7 +273,7 @@ def update_tests(cli: Path, temp: Path) -> int:
             assert lock["skills"][SKILLS[3]]["sourceUrl"] == second_url
             assert (installed / SKILLS[3] / "references/migration-fixture.md").exists()
             assert hash_folder(installed / SKILLS[0]) == first_updated
-            # A document-only package follows the same pinned/ref and source rules.
+            # The Qdrant package follows the same pinned/ref and source rules.
             name = QDRANT_SKILLS[-1]
             stable = {n: hash_folder(installed / n) for n in SKILLS if n != name}
             add([name], url + "#fixture-v1")

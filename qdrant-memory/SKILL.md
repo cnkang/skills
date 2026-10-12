@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes; existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Qdrant memory
@@ -25,10 +25,14 @@ Read only the reference needed for the request:
 | Mem0 JSON/collection dry-run, import, resume/retry-failed, verification | [Migration](references/migration.md) | Selected CLI's `migrate mem0` command |
 
 Discover compatible scoped tools first. If absent, use the configured standalone
-CLI; Hermes's existing tools/CLI remain compatible. Read [runtime setup](references/runtime.md)
-and [agent setup](references/agent-setup.md) when choosing an interface. If none
-exists, explain the dependency and stop. Installing a skill does not install its
-runtime. Never invent tools, use private Python calls or write directly to Qdrant.
+CLI; Hermes's existing tools/CLI remain compatible. Read [runtime setup](references/runtime.md),
+[MCP capabilities](references/mcp.md) and [agent setup](references/agent-setup.md)
+when choosing an interface. If the backend is missing and the user has authorized
+setup or use that requires installation, follow runtime setup and run the bundled
+[installer](scripts/install_runtime.py) in a dedicated private environment. Otherwise
+explain the missing dependency. `npx skills` distributes this installer alongside
+the instructions; loading the skill alone never executes it. Never invent tools,
+use private Python calls or write directly to Qdrant.
 
 ## Shared boundaries
 
