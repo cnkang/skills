@@ -24,6 +24,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         isolated = tmp_path / "user"
         isolated.mkdir()
         env.update({"HOME": str(isolated), "CODEX_HOME": str(isolated / ".codex"), "XDG_CONFIG_HOME": str(isolated / ".config"), "XDG_DATA_HOME": str(isolated / ".local/share"), "XDG_CACHE_HOME": str(isolated / ".cache"), "NPM_CONFIG_CACHE": str(tmp_path / "npm-cache"), "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull})
+        env.update({"USERPROFILE": str(isolated), "APPDATA": str(isolated / "AppData/Roaming"), "LOCALAPPDATA": str(isolated / "AppData/Local")})
 
         def run(command, timeout=600):
             result = subprocess.run(command, cwd=isolated, env=env, text=True, capture_output=True, timeout=timeout)

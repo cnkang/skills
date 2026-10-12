@@ -67,13 +67,16 @@ def test_direct_root_path_install(host, name):
     source, hub, cli = host
     identifier = "cnkang/skills/" + name
     assert source.fetch(identifier).name == name
-    assert cli.do_install(identifier, console=Console(file=io.StringIO()),
-                          skip_confirm=True, invalidate_cache=False, source_id="github") is True
+    output = io.StringIO()
+    assert cli.do_install(identifier, console=Console(file=output),
+                          skip_confirm=True, invalidate_cache=False, source_id="github") is True, output.getvalue()
     installed = hub._skills_dir() / name
     assert (installed / "LICENSE").read_bytes() == (ROOT / name / "LICENSE").read_bytes()
     assert (installed / "SKILL.md").read_bytes() == (ROOT / name / "SKILL.md").read_bytes()
     for path in (ROOT / name / "references").glob("*.md"):
         assert (installed / "references" / path.name).read_bytes() == path.read_bytes()
+    for path in (ROOT / name / "scripts").glob("*.py"):
+        assert (installed / "scripts" / path.name).read_bytes() == path.read_bytes()
     assert hub.HubLockFile().get_installed(name)["identifier"] == identifier
 
 

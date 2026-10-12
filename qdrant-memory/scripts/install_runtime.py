@@ -27,9 +27,11 @@ def main() -> int:
     scripts = target / ("Scripts" if os.name == "nt" else "bin")
     python = scripts / ("python.exe" if os.name == "nt" else "python")
     console = scripts / ("qdrant-memory.exe" if os.name == "nt" else "qdrant-memory")
-    env = dict(os.environ)
-    for key in ("PYTHONPATH", "PYTHONHOME"):
-        env.pop(key, None)
+    # Public-source installation needs OS essentials, not agent credentials.
+    allowed = ("PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
+               "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA", "TEMP",
+               "TMP", "TMPDIR", "LANG", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR")
+    env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
     try:
         if not target.exists():
             venv.EnvBuilder(with_pip=True).create(target)
