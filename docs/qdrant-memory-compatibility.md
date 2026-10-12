@@ -71,7 +71,8 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-source is pinned to merged `331cdef4dda8ef75b265a6fa304eb444a37e1025` (backend PR #34);
+source is pinned to reviewed `17d97db433f79fa95423bd21cda385106d2c11e4`, including
+the durable transcript-author isolation fix;
 original release v0.1.0 remains the Hermes
 compatibility baseline. Skill installation alone does not create memory tools.
 Connect an authorized MCP process or use the standalone JSON CRUD CLI; Hermes

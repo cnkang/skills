@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+; validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access; private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional; continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.1 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes; existing Hermes integration remains supported. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.2 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes; existing Hermes integration remains supported. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it; there is no mandatory invocation chain.
 
@@ -138,7 +138,7 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@331cdef4dda8ef75b265a6fa304eb444a37e1025'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@17d97db433f79fa95423bd21cda385106d2c11e4'
 ```
 
 The backend retains its original repository/distribution name. Its standalone

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **qdrant-memory 0.2.2:** pin new backend installation and required runtime CI
+  to the reviewed transcript-author isolation fix. Preserve CLI/MCP interfaces;
+  document that receiving the security update requires a fresh private environment
+  because the installer never upgrades an existing runtime.
+
 - **qdrant-memory 0.2.1:** make the four MCP tools, skill/runtime separation,
   local stdio setup and verified host boundaries explicit. Keep Hermes lifecycle
   compatibility and sequential shared scopes. Pin installation and CI to the
