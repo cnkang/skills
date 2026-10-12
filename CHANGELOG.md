@@ -6,7 +6,7 @@
   Exclude local environment secrets while retaining publishable example files.
 
 - **qdrant-memory 0.2.2:** pin new backend installation and required runtime CI
-  to the reviewed transcript-author isolation fix. Preserve CLI/MCP interfaces;
+  to the merged backend PR #35 with the transcript-author isolation fix. Preserve CLI/MCP interfaces;
   document that receiving the security update requires a fresh private environment
   because the installer never upgrades an existing runtime.
 
