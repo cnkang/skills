@@ -1,5 +1,10 @@
 # Ownership, recovery and scoped deletion
 
+The Hermes examples below also apply to standalone profiles: replace
+`hermes qdrant-memory` with `qdrant-memory --home PROFILE`. Select the exact
+profile/ledger and destination that recorded the intent; never create a fresh
+profile to bypass writer ownership or unfinished recovery.
+
 For `writer_busy`, locate the active session/gateway and coordinate stopping it;
 wait for workers and in-flight requests to release ownership. Never remove its
 lock. Stop writers on other machines and profiles too. Embedded storage also

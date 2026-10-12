@@ -1,8 +1,11 @@
 # CLI commands and effects
 
-Interface baseline: plugin v0.1.0. Use `hermes qdrant-memory <command>`;
-there is no separate console-script entry point. Confirm installed `--help` on
-version differences, and stop if a required argument is unavailable.
+Use `qdrant-memory --home PROFILE <command>` without Hermes, or the existing
+`hermes qdrant-memory <command>` for Hermes's profile. The shared maintenance
+options and Hermes examples below apply to both; replace the prefix with the
+selected interface. Confirm installed `--help` on version differences and stop
+if an argument is unavailable. Explicit CRUD is covered in [usage](usage.md);
+only the standalone CLI has those four commands.
 
 | Command | Arguments | Effects and result |
 |---|---|---|

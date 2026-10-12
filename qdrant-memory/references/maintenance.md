@@ -1,8 +1,9 @@
 # Maintenance workflow
 
-1. Confirm `hermes qdrant-memory --help` exists. Missing CLI means stop and
+1. Confirm `qdrant-memory --home PROFILE --help`, or the existing
+   `hermes qdrant-memory --help` when using Hermes. Missing CLI means stop and
    explain [runtime setup](runtime.md), not automatically install/reconfigure.
-2. Identify active `HERMES_HOME`/profile, destination/collection and authorized
+2. Identify the explicit standalone profile (or active Hermes profile), destination/collection and authorized
    user/agent. Start with local `status`; do not print config secrets. Collection
    overrides affect the command only, not saved provider configuration.
 3. Read [command effects](commands.md) before target access. Embedded readers

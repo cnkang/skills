@@ -1,6 +1,7 @@
 # Migration workflow
 
-1. Confirm `hermes qdrant-memory migrate --help` exists and identify active
+1. Confirm `qdrant-memory --home PROFILE migrate --help`, or the existing
+   `hermes qdrant-memory migrate --help` on Hermes, and identify active
    profile, authorized source identities, target destination/collection. If absent,
    explain [runtime setup](runtime.md) and stop; no automatic setup.
 2. Read [migration commands](migration-commands.md). Keep the source read-only
@@ -18,7 +19,7 @@
    restarting prior writers. Check exit status and final stdout JSON; stderr
    progress and matching point counts alone do not prove success.
 
-`--reuse-vectors` is reserved and refused in v0.1.0. Do not bypass deterministic
+`--reuse-vectors` is reserved and refused by the supported backend. Do not bypass deterministic
 IDs, source-ID deduplication, durable manifests or WriterLease. Never clear the
 target or delete state to repair a failure. A fresh import can restore later-deleted
 memories; do not silently switch away from resume. Record sanitized counts/errors,
