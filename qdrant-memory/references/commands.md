@@ -7,6 +7,13 @@ selected interface. Confirm installed `--help` on version differences and stop
 if an argument is unavailable. Explicit CRUD is covered in [usage](usage.md);
 only the standalone CLI has those four commands.
 
+The standalone CLI restricts explicit export and migration file paths to the
+operator's current working directory, including resolved symbolic links. Before
+using `--output`, `--source-json`, or `--source-config`, change to the authorized
+directory (for example, `cd /private/path`) and use a path within it. Keep
+`--home PROFILE` absolute when changing directories. The existing Hermes CLI
+retains its file path behavior.
+
 | Command | Arguments | Effects and result |
 |---|---|---|
 | `status` | optional `--collection` | Local config summary only; no service contact or ledger creation. Returns provider, mode, collection, embedding summary, ledger_exists. |

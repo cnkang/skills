@@ -8,7 +8,8 @@ Hermes and use operator-configured profile identities.
 No dependency is installed or configuration changed by loading a skill.
 
 The additive standalone acceptance includes eight installed CLI/official MCP
-contracts, real Pi CLI tool discovery and cross-client shared-scope/private-agent
+contracts plus public API/protocol tests for file boundaries and startup cleanup,
+real Pi CLI tool discovery and cross-client shared-scope/private-agent
 isolation. Installed local Codex/OpenCode/Pi acceptance is opt-in; see
 `agent-host-acceptance.md` for exact versions, interface coverage and limits.
 
@@ -61,7 +62,7 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-source is pinned to `29c6e0f7872259c3be788f955a0d4d84513dbe27`; original release v0.1.0 remains the Hermes
+source is pinned to `6a15fb4935d9e99ac4adc074c76f2c98db9abc82`; original release v0.1.0 remains the Hermes
 compatibility baseline. Skill installation alone does not create memory tools.
 Connect an authorized MCP process or use the standalone JSON CRUD CLI; Hermes
 native tools remain supported. Do not use private APIs. MCP client names and
