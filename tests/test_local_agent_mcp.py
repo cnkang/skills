@@ -89,6 +89,12 @@ def test_installed_opencode_connects_scoped_mcp(backend_profile):
     assert shutil.which("opencode")
     registered = subprocess.run(["opencode", "mcp", "add", "qdrant-memory", "--global", "--", executable, "--home", str(home), "mcp"], env=env, cwd=home, capture_output=True, text=True, timeout=20)
     assert registered.returncode == 0, (registered.stdout, registered.stderr)
+    config_path = Path(env["XDG_CONFIG_HOME"]) / "opencode" / "opencode.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    server = config["mcp"]["servers"]["qdrant-memory"]
+    assert server["type"] == "local"
+    assert server["command"] == [executable, "--home", str(home), "mcp"]
+    assert server.get("disabled", False) is False
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         port = listener.getsockname()[1]

@@ -70,7 +70,8 @@ results for the exact pushed commit before merging.
 
 The required three-platform standalone job installs the immutable additive
 backend with its MCP extra and runs eight real CLI/official-client contracts
-without Hermes source. It also runs the locked Pi 1.1.0 CLI, requiring successful
+plus 19 public API/protocol boundary tests without Hermes source. It also runs
+the locked Pi 1.1.0 CLI, requiring successful
 stdio connection and discovery of four memory tools, and a cross-client test:
 two different MCP client names share persisted records in the same fixed scope;
 a separate agent scope cannot search/delete them. Every report rejects skips.
@@ -89,8 +90,9 @@ QDRANT_STANDALONE_E2E=1 QDRANT_STANDALONE_ROOT=/path/standalone-backend \
 Local 2026-10-12 results: Codex CLI 0.160.0, OpenCode 2.0.24 and Pi 1.1.0
 passed three tests; shared-scope acceptance passed separately. Codex's actual
 app-server discovers four tools and calls add/search. Pi's actual CLI connects
-and inventories the tools. OpenCode registers in isolated global configuration,
-then explicitly adds/connects the runtime through its API and verifies connected
+and inventories the tools. OpenCode registers in isolated global configuration
+and verifies the saved executable, profile arguments and enabled local entry
+before separately adding/connecting the runtime through its API and verifying connected
 inventory. Its project CLI listing can reflect a different loaded location;
 this test does not certify automatic project-config activation. No paid model,
 account authentication, production profile or real embedding service is used.
