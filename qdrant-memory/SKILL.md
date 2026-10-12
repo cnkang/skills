@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes; existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.2.2"
+  version: "0.2.3"
 ---
 
 # Qdrant memory
@@ -51,6 +51,12 @@ write directly to collections, create another schema/embedding pipeline or bypas
 Runtime/WriterLease. Embedded readers also need exclusive storage access; local
 leases do not exclude other profiles/hosts. Preserve recorded destructive recovery.
 Never automatically add `--confirm`, `--force` or `--all-agents`.
+Use one memory interface for each Hermes profile. Before you register an
+interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory,
+do not register a second interface and tell the user that Hermes needs no
+additional setup. If it does not list the plugin, recommend the Plugin Catalog
+install for Hermes (`hermes plugins install qdrant-memory`). Other agents can
+still use this skill.
 
 ## Verification
 

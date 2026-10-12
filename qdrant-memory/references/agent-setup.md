@@ -61,3 +61,13 @@ has been tested.
 Hermes users can keep native tools and `hermes qdrant-memory` without switching
 profiles. Its CLI provides maintenance/migration; standalone adds scoped CRUD.
 Avoid concurrent embedded writers against the same storage.
+
+Use one memory interface for each Hermes profile: the native plugin or the
+qdrant-memory MCP server, not both. Before you register this MCP server,
+check `hermes plugins list` for qdrant-memory. If the plugin is registered,
+do not add this server for Hermes. Tell the user that Hermes needs no
+additional setup and that other agents can still use this server or the CLI.
+If the plugin is not registered, recommend it for Hermes first: the Plugin
+Catalog provides `hermes plugins install qdrant-memory`. Two interfaces show
+the same tools twice and contend for one writer lease. Loading the skill
+instructions is compatible and adds no tools.
