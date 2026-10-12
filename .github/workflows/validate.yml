@@ -191,7 +191,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: cnkang/hermes-plugin-qdrant-memory
-          ref: 17d97db433f79fa95423bd21cda385106d2c11e4 # reviewed transcript-isolation fix
+          ref: 2f4150bd14fa004f84511ad534b189e088c694b8 # reviewed transcript-isolation fix
           path: .standalone-plugin
           persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5

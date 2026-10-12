@@ -138,7 +138,7 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@17d97db433f79fa95423bd21cda385106d2c11e4'
+  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@2f4150bd14fa004f84511ad534b189e088c694b8'
 ```
 
 The backend retains its original repository/distribution name. Its standalone
