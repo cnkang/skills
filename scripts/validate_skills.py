@@ -10,7 +10,10 @@ from urllib.parse import unquote
 
 import yaml
 
-SKILLS = ("conventional-commit-batcher", "dev-jev", "repository-quality-gate-fixer", "sonarcloud-link-inspector")
+LEGACY_SKILLS = ("conventional-commit-batcher", "dev-jev", "repository-quality-gate-fixer", "sonarcloud-link-inspector")
+QDRANT_SKILLS = ("qdrant-memory",)
+# Deliberate catalog changes only; never discover fixtures or nested packages as skills.
+SKILLS = LEGACY_SKILLS + QDRANT_SKILLS
 FIELDS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
 LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)")
 RESOURCE = re.compile(r"(?<![\w/])(?:scripts|references|examples|assets|agents)/[\w./-]+")
@@ -105,7 +108,7 @@ def validate_repository(root: Path) -> list[str]:
     entries = [p for p in files_under(root) if p.name == "SKILL.md"]
     expected = {root / name / "SKILL.md" for name in SKILLS}
     if set(entries) != expected:
-        errors.append("repository must expose exactly the four unique top-level skill entrypoints")
+        errors.append("repository must expose exactly the controlled unique top-level skill entrypoints: " + ", ".join(SKILLS))
     for name in SKILLS:
         errors.extend(validate_skill(root / name))
     for folder in (root / "scripts", root / "tests"):

@@ -14,7 +14,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from validate_skills import SKILLS, validate_skill
+from validate_skills import LEGACY_SKILLS, QDRANT_SKILLS, SKILLS, validate_skill
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = {
@@ -80,7 +80,8 @@ def verify_package(folder: Path, env: dict[str, str], cwd: Path) -> None:
     errors = validate_skill(folder)
     if errors:
         raise AssertionError("\n".join(errors))
-    run([sys.executable, str(folder / "scripts" / HELPERS[folder.name]), "--help"], cwd, env)
+    if folder.name in HELPERS:
+        run([sys.executable, str(folder / "scripts" / HELPERS[folder.name]), "--help"], cwd, env)
     if folder.name == "dev-jev":
         assert run([sys.executable, str(folder / "scripts/telemetry.py"), "mode"], cwd, env).strip() == "shadow"
     if folder.name == "repository-quality-gate-fixer":
@@ -88,29 +89,39 @@ def verify_package(folder: Path, env: dict[str, str], cwd: Path) -> None:
         assert report["local_skills"] == []
 
 
+def selection_cases() -> list[tuple[str, ...]]:
+    """Preserve legacy exhaustive coverage; grow new coverage linearly."""
+    legacy = [case for size in range(1, len(LEGACY_SKILLS) + 1)
+              for case in itertools.combinations(LEGACY_SKILLS, size)]
+    return legacy + [QDRANT_SKILLS, SKILLS] + [
+        (name, *QDRANT_SKILLS) for name in LEGACY_SKILLS
+    ]
+
+
 def smoke(cli: Path, temp: Path) -> int:
     commands = 0
     node = shutil.which("node")
     assert node
-    # All 15 subsets, each in a fresh project and home.
-    for count in range(1, 5):
-        for number, selected in enumerate(itertools.combinations(SKILLS, count)):
-            base = temp / f"subset-{count}-{number}"
-            cwd = base / "project"
-            cwd.mkdir(parents=True)
-            env = isolated_env(base / "home")
-            run([node, str(cli), "add", str(ROOT), "--skill", *selected, "-a", "codex", "-y"], cwd, env)
-            commands += 1
-            folder = cwd / ".agents/skills"
-            assert {p.name for p in folder.iterdir() if (p / "SKILL.md").exists()} == set(selected)
-            for name in selected:
-                verify_package(folder / name, env, cwd)
-            before = {name: hash_folder(folder / name) for name in selected}
-            run([node, str(cli), "add", str(ROOT), "--skill", *selected, "-a", "codex", "-y"], cwd, env)
-            assert before == {name: hash_folder(folder / name) for name in selected}
-            commands += 1
-    print("PASS: 15 independent selection combinations and repeat installation", flush=True)
-    # Every named host, both scopes, both install methods; only one skill present.
+    listing = run([node, str(cli), "add", str(ROOT), "--list"], temp, isolated_env(temp / "list-home"))
+    assert all(name in listing for name in SKILLS)
+    commands += 1
+    for number, selected in enumerate(selection_cases()):
+        base = temp / f"subset-{number}"
+        cwd = base / "project"
+        cwd.mkdir(parents=True)
+        env = isolated_env(base / "home")
+        run([node, str(cli), "add", str(ROOT), "--skill", *selected, "-a", "codex", "-y"], cwd, env)
+        commands += 1
+        folder = cwd / ".agents/skills"
+        assert {p.name for p in folder.iterdir() if (p / "SKILL.md").exists()} == set(selected)
+        for name in selected:
+            verify_package(folder / name, env, cwd)
+        before = {name: hash_folder(folder / name) for name in selected}
+        run([node, str(cli), "add", str(ROOT), "--skill", *selected, "-a", "codex", "-y"], cwd, env)
+        assert before == {name: hash_folder(folder / name) for name in selected}
+        commands += 1
+    print(f"PASS: {len(selection_cases())} selections and repeat installation (all 15 legacy subsets retained)", flush=True)
+    # Every named host/scope/method; Qdrant packages additionally on Codex/Hermes.
     for agent, paths in AGENTS.items():
         for global_scope in (False, True):
             for copy in (False, True):
@@ -119,11 +130,13 @@ def smoke(cli: Path, temp: Path) -> int:
                 cwd.mkdir(parents=True)
                 env = isolated_env(base / "home")
                 flags = (["-g"] if global_scope else []) + (["--copy"] if copy else [])
-                run([node, str(cli), "add", str(ROOT), "--skill", SKILLS[0], "-a", agent, "-y", *flags], cwd, env)
+                selected = (SKILLS[0], *QDRANT_SKILLS) if agent in {"codex", "hermes-agent"} else (SKILLS[0],)
+                run([node, str(cli), "add", str(ROOT), "--skill", *selected, "-a", agent, "-y", *flags], cwd, env)
                 commands += 1
                 folder = Path(env["HOME"]) / (".agents/skills" if paths[0] == ".agents/skills" else paths[1]) if global_scope else cwd / paths[0]
-                verify_package(folder / SKILLS[0], env, cwd)
-                assert {p.name for p in folder.iterdir() if (p / "SKILL.md").exists()} == {SKILLS[0]}
+                for name in selected:
+                    verify_package(folder / name, env, cwd)
+                assert {p.name for p in folder.iterdir() if (p / "SKILL.md").exists()} == set(selected)
         print(f"PASS: {agent} project/global symlink/copy package installation", flush=True)
     # Prompt output only: no host executable is started or persistent skill installed.
     base = temp / "use"
@@ -142,6 +155,36 @@ def smoke(cli: Path, temp: Path) -> int:
 def commit_fixture(source: Path, env: dict[str, str]) -> None:
     run(["git", "add", "--all"], source, env)
     run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "fixture update"], source, env)
+
+
+def github_identifier_tests(cli: Path, temp: Path) -> int:
+    """Exercise documented cnkang/skills syntax against unpublished local bytes."""
+    base = temp / "github-identifier"
+    cwd = base / "project"
+    cwd.mkdir(parents=True)
+    env = isolated_env(base / "home")
+    preload = base / "offline-fetch.mjs"
+    preload.write_text('globalThis.fetch = async () => new Response("fixture-only", {status: 404});\n')
+    env["NODE_OPTIONS"] = "--import=" + preload.as_uri()
+    source = base / "source"
+    source.mkdir()
+    for name in SKILLS:
+        shutil.copytree(ROOT / name, source / name, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+    run(["git", "init", "-b", "main"], source, env)
+    commit_fixture(source, env)
+    env.update({"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": f"url.{source.as_uri()}.insteadOf",
+                "GIT_CONFIG_VALUE_0": "https://github.com/cnkang/skills.git"})
+    command = [shutil.which("node"), str(cli), "add", "cnkang/skills"]
+    listing = run([*command, "--list"], cwd, env)
+    assert all(name in listing for name in SKILLS)
+    run([*command, "--skill", QDRANT_SKILLS[0], "-a", "hermes-agent", "-y"], cwd, env)
+    run([*command, "--skill", *QDRANT_SKILLS, LEGACY_SKILLS[0], "-a", "hermes-agent", "-y"], cwd, env)
+    installed = cwd / ".hermes/skills"
+    assert {p.name for p in installed.iterdir() if (p / "SKILL.md").exists()} == {*QDRANT_SKILLS, LEGACY_SKILLS[0]}
+    for name in QDRANT_SKILLS:
+        verify_package(installed / name, env, cwd)
+    print("PASS: documented GitHub identifier/list/single/group syntax with local Git transport", flush=True)
+    return 3
 
 
 def update_tests(cli: Path, temp: Path) -> int:
@@ -186,8 +229,12 @@ def update_tests(cli: Path, temp: Path) -> int:
             before = {n: hash_folder(installed / n) for n in SKILLS}
             # Change only references/scripts, never metadata.version: hash-based updates.
             for name in SKILLS:
-                (source / name / "references/update-fixture.md").write_text("new reference\n")
-                (source / name / "scripts/update_fixture.py").write_text('print("new helper")\n')
+                references = source / name / "references"
+                references.mkdir(exist_ok=True)
+                (references / "update-fixture.md").write_text("new reference\n")
+                scripts = source / name / "scripts"
+                if scripts.is_dir():
+                    (scripts / "update_fixture.py").write_text('print("new helper")\n')
             (source / SKILLS[0] / "references/obsolete-fixture.md").unlink()
             commit_fixture(source, env)
             update_output = update([SKILLS[0]])
@@ -196,11 +243,16 @@ def update_tests(cli: Path, temp: Path) -> int:
             for name in SKILLS[1:]:
                 assert hash_folder(installed / name) == before[name]
             first_updated = hash_folder(installed / SKILLS[0])
-            update([SKILLS[1], SKILLS[2]])
+            selected_update = [SKILLS[1], SKILLS[2], *QDRANT_SKILLS]
+            update(selected_update)
             assert hash_folder(installed / SKILLS[0]) == first_updated
             assert hash_folder(installed / SKILLS[3]) == before[SKILLS[3]]
-            for name in SKILLS[1:3]:
-                assert (installed / name / "scripts/update_fixture.py").exists()
+            for name in selected_update:
+                assert (installed / name / "references/update-fixture.md").exists()
+                if name in HELPERS:
+                    assert (installed / name / "scripts/update_fixture.py").exists()
+                else:
+                    assert not (installed / name / "scripts").exists()
             # Pinned ref keeps old content; changing version cannot migrate source/ref.
             add([SKILLS[3]], url + "#fixture-v1")
             pinned = hash_folder(installed / SKILLS[3])
@@ -220,6 +272,18 @@ def update_tests(cli: Path, temp: Path) -> int:
             assert lock["skills"][SKILLS[3]]["sourceUrl"] == second_url
             assert (installed / SKILLS[3] / "references/migration-fixture.md").exists()
             assert hash_folder(installed / SKILLS[0]) == first_updated
+            # A document-only package follows the same pinned/ref and source rules.
+            name = QDRANT_SKILLS[-1]
+            stable = {n: hash_folder(installed / n) for n in SKILLS if n != name}
+            add([name], url + "#fixture-v1")
+            pinned = hash_folder(installed / name)
+            update([name])
+            assert hash_folder(installed / name) == pinned
+            add([name], second_url)
+            lock = json.loads(lock_path.read_text())
+            assert lock["skills"][name]["sourceUrl"] == second_url
+            assert (installed / name / "references/update-fixture.md").exists()
+            assert stable == {n: hash_folder(installed / n) for n in stable}
             for name in SKILLS:
                 verify_package(installed / name, env, cwd)
             print(f"PASS: {scope} {'copy' if copy else 'symlink'} selective updates, hash changes, deletion, pinned ref and source migration", flush=True)
@@ -238,7 +302,7 @@ def main() -> int:
         env = isolated_env(temp / "version-home")
         version = run([shutil.which("node"), str(cli), "--version"], temp, env).strip()
         print(f"Python {sys.version.split()[0]}; Node {run(['node', '--version'], temp, env).strip()}; skills {version}", flush=True)
-        commands = (smoke(cli, temp) if args.only != "update" else 0) + (update_tests(cli, temp) if args.only != "install" else 0)
+        commands = (smoke(cli, temp) + github_identifier_tests(cli, temp) if args.only != "update" else 0) + (update_tests(cli, temp) if args.only != "install" else 0)
         print(f"PASS: {commands} real CLI install/use/update commands in isolated fixtures", flush=True)
     return 0
 

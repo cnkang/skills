@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README_zh-CN.md)
 
-Four development skills that you can install independently and use as needed. Choose one or any combination; each package includes its own entrypoint, scripts, references, and license, without requiring another skill.
+Five skills for development and Qdrant memory workflows that you can install independently and use as needed. Each package includes its own entrypoint, required resources and license, without requiring another skill.
 
 | Skill | Version | Purpose and dependencies |
 |---|---|---|
@@ -10,6 +10,7 @@ Four development skills that you can install independently and use as needed. Ch
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+; validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access; private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional; continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | Scoped recall/explicit edits, maintenance and Mem0 migration through the Hermes Qdrant plugin's native tools/CLI; three workflows loaded on demand. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it; there is no mandatory invocation chain.
 
@@ -113,9 +114,71 @@ python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
 
-Distribution tests use isolated HOME, configuration, and project directories. They verify all 15 nonempty skill combinations, project/global and symlink/copy installations for nine hosts, temporary use, and selective updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable; distinguish packaging defects from upstream CLI changes.
+Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts, the Qdrant package on Codex/Hermes, temporary use and selective updates including document-only packages. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable; distinguish packaging defects from upstream CLI changes.
 
 CI checks both the pinned baseline and the latest CLI. See [behavior scenarios](docs/behavior-scenarios.md) for acceptance of real agent authorization and invocation behavior; structural checks cannot establish model behavior. [Release and rollback guidance](docs/releasing.md) covers the default-branch update channel, versions, tags, and migration.
+
+Required three-platform [agent host acceptance](docs/agent-host-acceptance.md)
+uses Hermes and the MIT-licensed Pi Coding Agent. Pi verifies real skill discovery,
+explicit loading and reference reads with a local deterministic model fixture,
+requiring no paid API or downloaded model. Host loading is distinct from real-model
+judgment and each skill's runtime dependencies.
+
+## Qdrant memory skill
+
+The [Hermes Qdrant plugin](https://github.com/cnkang/hermes-plugin-qdrant-memory)
+owns automatic memory, embedding, storage, scope enforcement and reliable
+persistence. This document-only skill routes to usage, maintenance and migration
+references; it copies no plugin Python and provides no alternate write path. The compatibility
+baseline is release v0.1.0, pinned in the offline CI contract and mandatory
+three-platform Hermes Hub/disposable runtime E2E jobs. Acceptance reports cannot
+pass with skipped tests; `Required checks` aggregates all test jobs. See the
+[compatibility matrix](docs/qdrant-memory-compatibility.md) for coverage and commands.
+
+```bash
+npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent
+npx skills@latest add cnkang/skills --skill qdrant-memory -a codex
+```
+
+Remote commands become usable after the new packages are merged/published.
+Before then, test with the local repository path. Installation on Codex or another
+host supplies instructions, not Hermes native tools. Usage needs the available
+`qdrant_memory_search/add/update/delete` tools; maintenance and migration need
+`hermes qdrant-memory ...`. If a compatible entry point is absent, explain the
+dependency and stop memory work. There is no standalone `qdrant-memory` executable.
+No skill automatically installs the plugin/dependencies or changes configuration.
+See the [official catalog setup](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory).
+
+Independent requests:
+
+```text
+Use $qdrant-memory to find my review language preference; do not change memories.
+Use $qdrant-memory to report local status; do not retry or delete anything.
+Use $qdrant-memory to plan a dry-run from my authorized JSON export; do not import yet.
+```
+
+Native tools enforce caller scope and exact-ID checks. CLI inventory without
+`--user` can expose the entire collection; CLI scope selection is an operator
+permission boundary, not automatic current-user filtering. Retry mutates durable
+state. Export writes sensitive local data. Deletion requires explicit scope,
+dry-run review and authorization; confirmation and all-agent expansion are never
+automatic. Embedded Qdrant readers can conflict with an active provider's file
+lock. Preserve ledger and writer ownership during recovery. Migration re-embeds;
+`--reuse-vectors` is refused and scope remapping is absent.
+
+Hermes native direct-path installation, after publication:
+
+```bash
+hermes skills install cnkang/skills/qdrant-memory
+```
+
+The root layout remains. `hermes skills tap add cnkang/skills` defaults to scanning
+`skills/` and will not discover these packages. The
+[Hermes non-default-path documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)
+describes editing the active profile's `skills/.hub/taps.json`; use an empty
+`path` for the repository root only as a deliberate configuration change.
+Prefer direct-path install. See [compatibility and test boundaries](docs/qdrant-memory-compatibility.md)
+for fixture validation versus live GitHub/host acceptance.
 
 ## License
 

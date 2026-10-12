@@ -1,0 +1,5 @@
+# Only for disposable Hermes Hub/runtime acceptance, not skill runtime packages.
+-r requirements-dev.txt
+rich>=13,<15
+ruamel.yaml>=0.18.16,<0.20
+# Plugin dependencies are installed from the immutable checkout in CI.
