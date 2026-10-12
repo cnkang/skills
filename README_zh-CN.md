@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | 通过 Hermes Qdrant 插件原生工具/CLI 进行检索与显式修改、维护及 Mem0 迁移，三条流程按需加载。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.1.0 | 记忆检索与编辑、维护及 Mem0 迁移流程。需要 Hermes Qdrant Memory 插件运行时；按需加载引用。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -56,6 +56,7 @@ Use $conventional-commit-batcher to split these changes into logical commits and
 Use $repository-quality-gate-fixer to audit this PR. Do not edit, commit, or push.
 Use $sonarcloud-link-inspector to explain this URL without editing code or changing remote state.
 Use $dev-jev for one bounded judgment if compatible tools are available, then continue the task normally.
+Use $qdrant-memory to recall my review preferences without saving or changing memories.
 ```
 
 每条请求可以独立使用，不要求安装其余 skills。想先看提交计划时明确要求 plan only；需要修复、提交或推送时明确该动作。Jev 的默认 `shadow` 模式不能影响实际行动，缺少提供方也不阻塞任务。
@@ -122,32 +123,73 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 
 ## Qdrant 记忆 skill
 
-[Hermes Qdrant 插件](https://github.com/cnkang/hermes-plugin-qdrant-memory)负责自动记忆、Embedding、存储、scope 权限和可靠持久化；一个纯文档 skill 按需加载 usage、maintenance、migration 三条公开接口操作流程，不复制插件 Python，也不引入第二条写入路径。离线 contract 和三平台 Hermes Hub／临时环境 E2E 固定插件 v0.1.0 release SHA 与 Hermes 源码 SHA，使用真实 Embedded 存储和本地 HTTP embedding 测试服务。专用验收拒绝跳过或空报告，`Required checks` 汇总全部检查。覆盖范围与本地命令见[兼容性说明](docs/qdrant-memory-compatibility.md)。
+[qdrant-memory](qdrant-memory/SKILL.md) 是本仓库可独立安装的 skill，用于记忆检索与显式编辑、维护和 Mem0 迁移，按需读取对应的流程文档。
+
+### 安装
 
 ```bash
+# 安装到当前 Hermes 项目
 npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent
-npx skills@latest add cnkang/skills --skill qdrant-memory -a codex
-```
 
-远程命令需在新增包合并/发布后使用；此前以本地路径验证。安装到 Codex 等宿主只获得说明，不会获得 Hermes 原生工具。usage 需要可用的 `qdrant_memory_search/add/update/delete`；维护和迁移需要 `hermes qdrant-memory ...`。没有兼容入口时说明依赖并停止记忆操作，不调用私有 Python API。插件没有独立 `qdrant-memory` 命令。skills 不自动安装插件/依赖或修改配置。安装指引见[官方 Catalog](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory)。
+# 或全局安装到 Hermes
+npx skills@latest add cnkang/skills --skill qdrant-memory -a hermes-agent -g
 
-可独立请求：
+# 全局安装说明到 Codex，运行依赖仍需具备
+npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 
-```text
-Use $qdrant-memory to find my review language preference; do not change memories.
-Use $qdrant-memory to report local status; do not retry or delete anything.
-Use $qdrant-memory to plan a dry-run from my authorized JSON export; do not import yet.
-```
-
-原生工具强制 caller scope 和 exact-ID 检查。CLI list/export 未指定 `--user` 时可能暴露整个 collection；CLI scope 是操作员权限边界，不自动限定当前用户。retry 会修改持久状态，export 会写出敏感本地文件。删除需明确 scope、dry-run 与授权，不自动加确认或扩大 all-agents。Embedded 只读命令也可能与 Provider 文件锁冲突；恢复必须保留 Ledger 和 WriterLease。迁移重新 Embedding；`--reuse-vectors` 会被拒绝，没有 scope 重映射参数。
-
-发布后可用 Hermes 原生直接路径安装：
-
-```bash
+# 也可使用 Hermes 原生安装器
 hermes skills install cnkang/skills/qdrant-memory
 ```
 
-仓库保持根目录布局；`hermes skills tap add cnkang/skills` 默认扫描 `skills/`，不能自动发现根目录包。[非默认路径说明](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)支持编辑当前 profile 的 `skills/.hub/taps.json`，根路径使用空 `path`；这是用户主动配置，不自动执行。优先直接路径安装。fixture 验证与真实 GitHub/host 验收的区别见[兼容性说明](docs/qdrant-memory-compatibility.md)。
+按需要选择项目或全局范围，以上安装方式择一即可。`npx skills` 命令可加 `--copy` 使用独立副本。保留整个 skill 目录，包括 `references/`。
+
+### 使用
+
+安装后，在支持 skill 调用的宿主中显式选择它。例如 Codex 使用 `$qdrant-memory`；Hermes 中要求 agent 使用 `qdrant-memory` skill；Pi 使用 `/skill:qdrant-memory` 加载说明。
+
+| 流程 | 用途示例 | 所需入口 |
+|---|---|---|
+| [Usage](qdrant-memory/references/usage.md) | 检索偏好、保存已授权事实、按准确 ID 更新或删除记忆 | 可用的 `qdrant_memory_search`、`qdrant_memory_add`、`qdrant_memory_update`、`qdrant_memory_delete` 工具 |
+| [Maintenance](qdrant-memory/references/maintenance.md) | 本地状态、诊断、指定 scope 的清单/导出和已授权恢复 | `hermes qdrant-memory` CLI |
+| [Migration](qdrant-memory/references/migration.md) | 规划 Mem0 JSON/collection 导入，执行已授权导入后续跑、重试与校验 | `hermes qdrant-memory migrate mem0` CLI |
+
+请求示例：
+
+```text
+使用 qdrant-memory skill 查找我的代码审查语言偏好，不修改记忆。
+使用 qdrant-memory skill 保存这个偏好：代码审查总结使用中文。
+使用 qdrant-memory skill 找到过时的偏好，编辑前先展示准确的记忆 ID。
+使用 qdrant-memory skill 检查本地状态，不重试或删除数据。
+使用 qdrant-memory skill 对我授权的 JSON 导出做迁移 dry-run，暂不导入。
+```
+
+已配置运行时的操作员可先执行：
+
+```bash
+hermes qdrant-memory --help
+hermes qdrant-memory status
+hermes qdrant-memory migrate mem0 --source-json /private/path/export.json \
+  --target-collection TARGET --dry-run
+```
+
+将源路径与目标 collection 替换为已授权的值。迁移命令仅生成计划；实际导入前，按[迁移指南](qdrant-memory/references/migration-commands.md)检查源身份、目标和写入锁归属。
+
+只更新这个 skill，并使用安装时的范围：
+
+```bash
+npx skills@latest update qdrant-memory -p
+# 全局安装使用 -g 替代 -p
+```
+
+### 运行依赖与边界
+
+本 skill 提供操作流程说明。另一个项目 [Hermes Qdrant Memory plugin](https://github.com/cnkang/hermes-plugin-qdrant-memory) 提供自动记忆、Embedding、存储、scope 权限和持久化。执行记忆操作前，需按[插件安装说明](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme)与[官方 Catalog](https://hermes-agent.nousresearch.com/docs/plugins/qdrant-memory)，在当前 Hermes profile 中安装并配置运行时。加载 skill 不会自动执行安装或修改配置。
+
+将 skill 安装到 Codex 或 Pi，不会提供 Hermes 原生工具。相关工具或 CLI 不可用时，agent 应说明依赖并停止该记忆操作。skill 不提供独立的 `qdrant-memory` 可执行命令，也没有私有 Python 或直接 Qdrant 访问的降级路径。
+
+原生工具强制 caller scope 和 exact-ID 检查。CLI list/export 未指定 `--user` 时可能暴露整个 collection；CLI scope 是操作员权限边界，不自动限定当前用户。retry 会修改持久状态，export 会写出敏感本地文件。删除需明确 scope、dry-run 与授权，不自动加确认或扩大 all-agents。Embedded 只读命令也可能与 Provider 文件锁冲突；恢复必须保留 Ledger 和 WriterLease。迁移重新 Embedding；`--reuse-vectors` 会被拒绝，没有 scope 重映射参数。
+
+仓库保持根目录布局；`hermes skills tap add cnkang/skills` 默认扫描 `skills/`，不能自动发现根目录包。[非默认路径说明](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills#non-default-paths)支持编辑当前 profile 的 `skills/.hub/taps.json`，根路径使用空 `path`；这是用户主动配置，不自动执行。优先直接路径安装。fixture 验证与真实 GitHub/host 验收的区别见[兼容性说明](docs/qdrant-memory-compatibility.md)。已测试的运行时基线为插件 v0.1.0，强制 CI 在三平台覆盖 Hermes 与 Pi。
 
 ## License
 
