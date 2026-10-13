@@ -13,6 +13,7 @@ import re
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
+from os import environ as _process_environ
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -77,7 +78,7 @@ def confidence_band(primitive: str, confidence: Any = None, probability: Any = N
 
 
 def default_log_path(environ: dict[str, str] | None = None) -> Path:
-    env = os.environ if environ is None else environ
+    env = environ if environ is not None else _process_environ
     override = env.get("DEV_JEV_LOG")
     if override:
         return Path(override).expanduser()
