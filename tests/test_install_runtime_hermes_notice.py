@@ -214,6 +214,9 @@ def test_memory_provider_scan_variations(installer):
     assert scan("memory:\n  provider: 'qdrant-memory' # note\n") == "qdrant-memory"
     assert scan("memory: {provider: qdrant-memory}\n") == "qdrant-memory"
     assert scan("memory:\n\n  provider: qdrant-memory\n") == "qdrant-memory"
+    assert scan("memory: {'provider': qdrant-memory}\n") == "qdrant-memory"
+    assert scan('memory: {"provider": "qdrant-memory"}\n') == "qdrant-memory"
+    assert scan("memory: {previous_provider: qdrant-memory}\n") is None
     assert scan("memory:\n  write_approval: false\n") is None
     assert scan("plugins:\n  disabled: []\n") is None
 
@@ -225,3 +228,10 @@ def test_provider_selection_forces_fallback_branch(installer, tmp_path, monkeypa
     (profile / "config.yaml").write_text("memory:\n  provider: qdrant-memory\n", encoding="utf-8")
     monkeypatch.setitem(sys.modules, "yaml", None)  # forces ImportError in the function
     assert "not necessary for Hermes" in installer.hermes_advisory()
+
+
+def test_scan_requires_exact_keys(installer):
+    d = installer._scan_disabled_ids
+    assert d("plugins: {'disabled': [qdrant-memory]}\n") == {"qdrant-memory"}
+    assert d("plugins: {previous_disabled: [qdrant-memory]}\n") == set()
+    assert d("plugins:\n  'disabled':\n    - qdrant-memory\n") == {"qdrant-memory"}
