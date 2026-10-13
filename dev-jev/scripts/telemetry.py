@@ -420,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
             raw = _process_environ.get("DEV_JEV_MODE")
             resolved = resolve_mode(raw)
             if raw and raw.strip().lower() not in MODES:
-                print("invalid DEV_JEV_MODE; failing safe to off", file=sys.stderr)
+                print("invalid DEV_JEV_MODE. Failing safe to off", file=sys.stderr)
             print(resolved)
             return 0
         if args.command == "record":
