@@ -1,4 +1,4 @@
-"""Installer advisory: detect Hermes and its qdrant-memory plugin."""
+"""Installer advisory: detect the Hermes plugin state for the active home."""
 import importlib.util
 import os
 from pathlib import Path
@@ -42,6 +42,38 @@ def test_default_user_home_detected(installer, tmp_path, monkeypatch):
     home = isolate(monkeypatch, tmp_path)
     (home / ".hermes" / "plugins" / "qdrant-memory").mkdir(parents=True)
     assert "not necessary for Hermes" in installer.hermes_advisory()
+
+
+def test_disabled_plugin_asks_to_enable_or_use_mcp(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text(
+        "plugins:\n  disabled:\n    - qdrant-memory\n  enabled: []\n", encoding="utf-8"
+    )
+    advisory = installer.hermes_advisory()
+    assert "disabled" in advisory
+    assert "hermes plugins enable" in advisory
+    assert "MCP server" in advisory
+
+
+def test_inline_disabled_list_detected(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text(
+        "plugins:\n  disabled: [qdrant-memory]\n", encoding="utf-8"
+    )
+    assert "not necessary" not in installer.hermes_advisory()
+
+
+def test_configured_profile_wins_over_default_home(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    (home / ".hermes" / "plugins" / "qdrant-memory").mkdir(parents=True)
+    profile = tmp_path / "other-profile"
+    profile.mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(profile))
+    assert "prefer the plugin" in installer.hermes_advisory()
 
 
 def test_missing_plugin_recommends_catalog_install(installer, tmp_path, monkeypatch):

@@ -2,14 +2,16 @@
 """Install the reviewed standalone backend into an explicitly selected private venv.
 
 Print a Hermes advisory and continue: recommend the native plugin when it is
-missing, and state that the skill is not necessary for Hermes when the plugin
-is installed. Detection reads HERMES_HOME and ~/.hermes only; no Hermes
-command runs. Other agents can still use the runtime.
+missing, note when an installed plugin is disabled, and state that the skill
+is not necessary for Hermes when the plugin is enabled. Detection reads the
+active Hermes profile (HERMES_HOME, or ~/.hermes) and its config.yaml; no
+Hermes command runs. Other agents can still use the runtime.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import shutil
 from pathlib import Path
@@ -18,62 +20,117 @@ import sys
 import venv
 
 REVISION = "1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4"
+PLUGIN_ID = "qdrant-memory"
 REQUIREMENT = (
     "hermes-plugin-qdrant-memory[mcp] @ "
     "git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + REVISION
 )
 
 
-def _hermes_homes() -> list[Path]:
-    """Return candidate Hermes profile homes without failing setup."""
-    homes = []
+def _hermes_home() -> Path | None:
+    """Return the active Hermes home: HERMES_HOME when set, else ~/.hermes."""
     configured = os.environ.get("HERMES_HOME")
     if configured:
         try:
-            homes.append(Path(configured).expanduser())
+            return Path(configured).expanduser()
         except (OSError, RuntimeError, ValueError):
-            pass
+            return None
     try:
-        homes.append(Path.home() / ".hermes")
+        return Path.home() / ".hermes"
     except (OSError, RuntimeError, ValueError):
-        pass
-    return homes
+        return None
 
 
 def hermes_detected() -> bool:
     """Report Hermes on this machine without failing setup."""
     if shutil.which("hermes"):
         return True
-    for home in _hermes_homes():
-        try:
-            if home.is_dir():
-                return True
-        except OSError:
-            continue
-    return False
+    home = _hermes_home()
+    if home is None:
+        return False
+    try:
+        return home.is_dir()
+    except OSError:
+        return False
 
 
-def hermes_plugin_installed() -> bool:
-    """Report an installed Hermes qdrant-memory plugin without failing setup."""
-    for home in _hermes_homes():
+def _scan_disabled_ids(text: str) -> set[str]:
+    """Scan the standard block layout for ``plugins:`` -> ``disabled:`` items."""
+    section = re.search(r"(?m)^plugins:[ \t]*\n((?:[ \t]+[^\n]*\n?)*)", text)
+    if not section:
+        return set()
+    block = re.search(
+        r"(?m)^[ \t]{2}disabled:[ \t]*(.*)\n((?:[ \t]{4}-[^\n]*\n?)*)", section.group(1)
+    )
+    if not block:
+        return set()
+    inline = re.match(r"[ \t]*\[(.*)\][ \t]*$", block.group(1))
+    if inline:
+        return {item.strip().strip("'\"") for item in inline.group(1).split(",") if item.strip()}
+    return {
+        m.group(1).strip().strip("'\"")
+        for m in re.finditer(r"(?m)^[ \t]*-[ \t]*([^\s#]+)", block.group(2))
+    }
+
+
+def _plugin_disabled_in_config(home: Path) -> bool:
+    """True when the profile config explicitly disables the plugin.
+
+    A memory backend is active without a ``plugins.enabled`` entry, so only a
+    ``plugins.disabled`` entry turns it off. Best effort: YAML when available,
+    a scan of the standard block layout otherwise; unreadable configs report
+    False (installed and active).
+    """
+    try:
+        text = (home / "config.yaml").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    try:
+        import yaml  # optional; the venv under construction may not have it
+    except ImportError:
+        yaml = None
+    if yaml is not None:
         try:
-            if (home / "plugins" / "qdrant-memory").is_dir():
-                return True
-        except OSError:
-            continue
-    return False
+            plugins = (yaml.safe_load(text) or {}).get("plugins")
+            if isinstance(plugins, dict) and isinstance(plugins.get("disabled"), list):
+                return PLUGIN_ID in {str(item) for item in plugins["disabled"]}
+        except Exception:
+            pass
+    return PLUGIN_ID in _scan_disabled_ids(text)
+
+
+def hermes_plugin_state() -> str:
+    """Return 'absent', 'enabled' or 'disabled' for the active Hermes home."""
+    home = _hermes_home()
+    if home is None:
+        return "absent"
+    try:
+        if not (home / "plugins" / PLUGIN_ID).is_dir():
+            return "absent"
+    except OSError:
+        return "absent"
+    return "disabled" if _plugin_disabled_in_config(home) else "enabled"
 
 
 def hermes_advisory() -> str:
     """Return the Hermes install advisory, or an empty string when none applies."""
     if not hermes_detected():
         return ""
-    if hermes_plugin_installed():
+    state = hermes_plugin_state()
+    if state == "enabled":
         return (
-            "Note: Hermes on this machine already has the qdrant-memory plugin installed.\n"
+            "Note: Hermes on this machine already has the qdrant-memory plugin enabled.\n"
             "This skill is not necessary for Hermes: use the native qdrant-memory tools\n"
             "and the \"hermes qdrant-memory\" commands. The skill remains usable for other\n"
             "agents, for example Codex, Claude Code, OpenCode or Pi."
+        )
+    if state == "disabled":
+        return (
+            "Note: Hermes on this machine has the qdrant-memory plugin installed but\n"
+            "disabled. Enable it for the native memory tools (\"hermes plugins enable\n"
+            "qdrant-memory\"), or register this skill's MCP server for the profile\n"
+            "instead. Other agents, for example Codex, Claude Code, OpenCode or Pi,\n"
+            "can use the runtime either way."
         )
     return (
         "Note: Hermes is present on this machine, but its qdrant-memory plugin is not\n"
