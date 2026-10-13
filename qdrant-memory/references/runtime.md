@@ -60,7 +60,9 @@ For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
 until an explicit fresh transcript reset. Attributed per-turn writes continue.
 
-On POSIX, choose an ordinary private path. Spaces are supported, but shell
+On POSIX, choose an ordinary private path. Spaces are supported. Interpreter
+links preserve managed Python's shared-library lookup; Windows uses copies
+without requiring symlink privileges. Shell
 metacharacters and control characters are rejected before installation. pip's
 generated CLI entrypoint may use a shell wrapper, so unsafe interpreter paths
 must be rejected even though the installer passes subprocess arguments as lists.

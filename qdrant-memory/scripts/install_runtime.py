@@ -333,7 +333,9 @@ def main() -> int:
     env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
     try:
         if not target.exists():
-            venv.EnvBuilder(with_pip=True).create(target)
+            # Managed POSIX Python builds can resolve libpython relative to the
+            # original executable. Match `python -m venv` rather than copying it.
+            venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
             subprocess.run([str(python), "-m", "pip", "install", requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; import mcp.server.fastmcp; d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
