@@ -52,7 +52,7 @@ For an explicitly authorized candidate/development/fallback source, use
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
 The standalone acceptance checks pin revision
-`2ed69c4e5b65bee12c6352ab9c294ede69c4c246`. The published release tag is the
+`8929693fcccd1efa91bfa062145e35d2369ca9cc`. The published release tag is the
 source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
