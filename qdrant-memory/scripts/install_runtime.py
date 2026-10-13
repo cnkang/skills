@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Install the reviewed standalone backend into an explicitly selected private venv.
 
-Print a Hermes advisory and continue: recommend the native plugin when it is
-missing, note when an installed plugin is disabled, and state that the skill
-is not necessary for Hermes when the plugin is enabled. Detection reads the
-active Hermes profile (HERMES_HOME, or ~/.hermes) and its config.yaml; no
-Hermes command runs. Other agents can still use the runtime.
+Print a Hermes advisory and continue. The advisory recommends the native
+plugin when it is missing. It notes an installed plugin that is disabled, and
+states that the skill is not necessary for Hermes when the plugin is enabled.
+Detection reads the active Hermes profile (HERMES_HOME, or ~/.hermes) and its
+config.yaml. The installer does not run a Hermes command. Other agents can
+still use the runtime.
 """
 from __future__ import annotations
 
@@ -30,8 +31,8 @@ REQUIREMENT = (
 def _hermes_home() -> Path | None:
     """Return the active Hermes home: HERMES_HOME when set, else ~/.hermes.
 
-    A relative or unresolvable value returns None — the default home is not
-    substituted in that case.
+    A relative or unresolvable value returns None. In this case, the default
+    home is not used.
     """
     configured = os.environ.get("HERMES_HOME")
     if configured:
@@ -88,11 +89,11 @@ def _scan_disabled_ids(text: str) -> set[str]:
     Handles the block layout plus single-line flow mappings such as
     ``plugins: {disabled: [qdrant-memory]}``, tolerating trailing comments,
     blank lines, CRLF endings and indentation variations (sequence items may
-    sit at or below the key's indentation); PyYAML stays preferred when
+    sit at or below the key's indentation). PyYAML stays preferred when
     importable. Only list values are recognized, matching Hermes' own
-    parsing; unparsed shapes (for example flow mappings split across lines)
-    yield an empty set — the plugin is then treated as enabled, its default
-    backend state.
+    parsing. Unparsed shapes (for example flow mappings split across lines)
+    yield an empty set. In this case, the plugin keeps its default state:
+    enabled.
     """
     found: set[str] = set()
     sub_indent = None  # indentation of the plugins sub-keys once seen
@@ -138,10 +139,10 @@ def _plugin_disabled_in_config(home: Path) -> bool:
     """True when the profile config explicitly disables the plugin.
 
     A memory backend is active without a ``plugins.enabled`` entry, so only a
-    ``plugins.disabled`` entry turns it off. Best effort: YAML when available,
-    a tolerant scan of the block layout otherwise (comments, blank lines and
-    indentation variations are accepted); unreadable or undecodable configs
-    report False (installed and active).
+    ``plugins.disabled`` entry turns it off. Detection is best effort: prefer
+    YAML when available, and scan the block layout otherwise with tolerance
+    for comments, blank lines and indentation variations. Unreadable or
+    undecodable configs report False (installed and active).
     """
     try:
         text = (home / "config.yaml").read_text(encoding="utf-8")
@@ -183,8 +184,8 @@ def hermes_advisory() -> str:
         return (
             "Note: Hermes on this machine already has the qdrant-memory plugin enabled.\n"
             "This skill is not necessary for Hermes: use the native qdrant-memory tools\n"
-            "and the \"hermes qdrant-memory\" commands. The skill remains usable for other\n"
-            "agents, for example Codex, Claude Code, OpenCode or Pi."
+            "and the \"hermes qdrant-memory\" commands. Other agents can still use the\n"
+            "skill, for example Codex, Claude Code, OpenCode or Pi."
         )
     if state == "disabled":
         return (
@@ -197,8 +198,8 @@ def hermes_advisory() -> str:
     return (
         "Note: Hermes is present on this machine, but its qdrant-memory plugin is not\n"
         "installed. For Hermes, prefer the plugin: install it from the Plugin Catalog\n"
-        "with \"hermes plugins install qdrant-memory\". This runtime and skill remain\n"
-        "usable for other agents, for example Codex, Claude Code, OpenCode or Pi."
+        "with \"hermes plugins install qdrant-memory\". Other agents can still use this\n"
+        "runtime and skill, for example Codex, Claude Code, OpenCode or Pi."
     )
 
 

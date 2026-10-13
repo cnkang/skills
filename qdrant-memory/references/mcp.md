@@ -29,10 +29,10 @@ authorized search. A saved settings entry alone does not verify a connection.
 
 Check `hermes plugins list` before you register this server. If the native
 plugin is enabled for Hermes, do not register this server there. Inform the
-user that Hermes needs no additional setup and that other agents can still use
+user that Hermes needs no additional setup. Other agents can still use
 this server or the CLI. If the plugin is installed but disabled, ask the user
-to enable it (`hermes plugins enable qdrant-memory`) or register this server
-instead. If the plugin is not installed, recommend it for Hermes first
+to enable it (`hermes plugins enable qdrant-memory`). Or register this server
+for that profile. If the plugin is not installed, recommend it for Hermes first
 (`hermes plugins install qdrant-memory`). Register one MCP server for each
 profile. Duplicate registrations contend for one writer lease.
 
