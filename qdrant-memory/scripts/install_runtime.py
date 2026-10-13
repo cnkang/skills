@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import os
+import re
 import shutil
 from pathlib import Path
 import subprocess
@@ -54,23 +54,49 @@ def hermes_detected() -> bool:
         return False
 
 
+def _inline_ids(value: str) -> set[str]:
+    """IDs from an inline list value such as ``[qdrant-memory, other]``."""
+    return {item.strip().strip("'\"") for item in value.strip("[]").split(",") if item.strip()}
+
+
 def _scan_disabled_ids(text: str) -> set[str]:
-    """Scan the standard block layout for ``plugins:`` -> ``disabled:`` items."""
-    section = re.search(r"(?m)^plugins:[ \t]*\n((?:[ \t]+[^\n]*\n?)*)", text)
-    if not section:
-        return set()
-    block = re.search(
-        r"(?m)^[ \t]{2}disabled:[ \t]*(.*)\n((?:[ \t]{4}-[^\n]*\n?)*)", section.group(1)
-    )
-    if not block:
-        return set()
-    inline = re.match(r"[ \t]*\[(.*)\][ \t]*$", block.group(1))
-    if inline:
-        return {item.strip().strip("'\"") for item in inline.group(1).split(",") if item.strip()}
-    return {
-        m.group(1).strip().strip("'\"")
-        for m in re.finditer(r"(?m)^[ \t]*-[ \t]*([^\s#]+)", block.group(2))
-    }
+    """Best-effort scan of the block layout for ``plugins:`` -> ``disabled:`` items.
+
+    Tolerates comments, blank lines, CRLF endings and indentation variations;
+    PyYAML stays preferred when importable. Unknown shapes yield an empty set
+    (the plugin is then treated as enabled, its default backend state).
+    """
+    found: set[str] = set()
+    sub_indent = None  # indentation of the plugins sub-keys once seen
+    in_disabled = False
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if sub_indent is None:
+            if re.fullmatch(r"plugins:[ \t]*", line):
+                sub_indent = -1  # marker: awaiting the first indented line
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line[:1].isspace():
+            break  # left the plugins mapping
+        indent = len(line) - len(line.lstrip())
+        if sub_indent == -1:
+            sub_indent = indent
+        if indent < sub_indent:
+            break
+        if indent > sub_indent:
+            if in_disabled and stripped.startswith("-"):
+                item = stripped[1:].split("#", 1)[0].strip().strip("'\"")
+                if item:
+                    found.add(item)
+            continue
+        key, _, value = stripped.partition(":")
+        value = value.split("#", 1)[0].strip()
+        in_disabled = key == "disabled"
+        if in_disabled and value.startswith("["):
+            found.update(_inline_ids(value))
+    return found
 
 
 def _plugin_disabled_in_config(home: Path) -> bool:
@@ -78,8 +104,9 @@ def _plugin_disabled_in_config(home: Path) -> bool:
 
     A memory backend is active without a ``plugins.enabled`` entry, so only a
     ``plugins.disabled`` entry turns it off. Best effort: YAML when available,
-    a scan of the standard block layout otherwise; unreadable configs report
-    False (installed and active).
+    a tolerant scan of the block layout otherwise (comments, blank lines and
+    indentation variations are accepted); unreadable configs report False
+    (installed and active).
     """
     try:
         text = (home / "config.yaml").read_text(encoding="utf-8")

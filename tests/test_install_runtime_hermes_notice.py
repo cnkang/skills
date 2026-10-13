@@ -92,3 +92,35 @@ def test_unresolvable_hermes_home_does_not_break(installer, tmp_path, monkeypatc
     isolate(monkeypatch, tmp_path)
     monkeypatch.setenv("HERMES_HOME", "~hpv-no-such-user-xyz/home")
     assert installer.hermes_advisory() == ""
+
+
+def test_fallback_scan_tolerates_layout_variations(installer):
+    scan = installer._scan_disabled_ids
+    assert scan("plugins:\n\n  disabled:\n    - qdrant-memory\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  disabled: [qdrant-memory] # note\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  disabled:\n    - qdrant-memory # note\n") == {"qdrant-memory"}
+    assert scan("plugins:\r\n  disabled:\r\n    - qdrant-memory\r\n") == {"qdrant-memory"}
+    assert scan("plugins:\n    disabled:\n        - qdrant-memory\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  # comment\n  disabled:\n    # reason\n    - qdrant-memory\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  disabled: []\n  enabled:\n    - other\n") == set()
+    assert scan("plugins:\n  enabled:\n    - qdrant-memory\n") == set()
+
+
+def test_blank_line_and_crlf_configs_disable(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text(
+        "plugins:\n\n  disabled:\n    - qdrant-memory\n", encoding="utf-8"
+    )
+    assert "disabled" in installer.hermes_advisory()
+    (profile / "config.yaml").write_bytes(b"plugins:\r\n  disabled: [qdrant-memory] # note\r\n")
+    assert "disabled" in installer.hermes_advisory()
+
+
+def test_non_mapping_plugins_value_keeps_advisory(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text("plugins: not-a-mapping\n", encoding="utf-8")
+    assert "not necessary for Hermes" in installer.hermes_advisory()
