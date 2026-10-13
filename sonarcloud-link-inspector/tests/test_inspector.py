@@ -1,8 +1,7 @@
 """Offline tests: requests are mocked; no tokens or live projects are required."""
 import json
-import os
-from os import environ
 import sys
+from os import environ
 from pathlib import Path
 from unittest.mock import Mock, patch
 

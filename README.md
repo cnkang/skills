@@ -22,7 +22,7 @@ Requires Node.js/npm. The verified baseline is `skills 1.7.0`, which requires No
 # List available skills without installing
 npx skills@latest add cnkang/skills --list
 
-# Choose skills, agents, and installation mode interactively; project scope is the default
+# Choose skills, agents, and installation mode interactively. Project scope is the default
 npx skills@latest add cnkang/skills
 
 # Install just one skill for the current project
@@ -37,7 +37,7 @@ npx skills@latest add cnkang/skills --skill dev-jev -a codex -g
 
 `-a` selects the agent without requiring a separate adapter package. Available IDs include `codex`, `claude-code`, `opencode`, `cursor`, `gemini-cli`, `kiro-cli`, `kimi-code-cli`, `qwen-code`, and `hermes-agent`. Supply multiple IDs to install for multiple hosts.
 
-The default installation uses shared copies and symlinks. Add `--copy` for independent copies or filesystems that do not support links. The current CLI shares project or user-level directories for universal hosts using `.agents/skills`. Check its output for the actual location. Other hosts use their corresponding installation directories. A successful installation verifies file availability; host discovery and behavior still require live verification.
+The default installation uses shared copies and symlinks. Add `--copy` for independent copies or filesystems that do not support links. The current CLI shares project or user-level directories for universal hosts using `.agents/skills`. Check its output for the actual location. Other hosts use their corresponding installation directories. A successful installation verifies file availability. Host discovery and behavior still require live verification.
 
 OpenCode supports global installation. PromptScript is a separate agent that supports only project installation. Its restriction does not apply to OpenCode. See [CLI supported agents](https://github.com/vercel-labs/skills#supported-agents) for other host restrictions.
 
