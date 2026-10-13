@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **qdrant-memory 0.2.3:** require one memory interface for each Hermes
+- **qdrant-memory 0.2.3:** recommend one memory interface for each Hermes
   profile in the skill guidance and MCP/Hermes setup notes. The bundled
   installer detects Hermes and prints an advisory: recommend the native plugin
   when it is missing, report an installed plugin that is explicitly disabled,
