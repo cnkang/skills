@@ -1,4 +1,4 @@
-"""Real Git regression tests for index inspection; no mutation of the user's repo."""
+"""Real Git regression tests for index inspection. The tests do not mutate the user's repository."""
 import os
 import subprocess
 import sys
