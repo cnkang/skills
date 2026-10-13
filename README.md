@@ -157,7 +157,7 @@ python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /privat
 ```
 
 Use the actual skill directory printed by the CLI. By default the installer needs only Python 3.11+ and PyPI. Source installs also
-need Git. It returns the absolute runtime command and verifies CLI/MCP imports.
+need Git and GitHub access. It returns the absolute runtime command and verifies CLI/MCP imports.
 It leaves existing installations and Hermes settings intact. `npx skills` itself
 does not execute it. CI exercises real npx distribution, fresh pinned-source
 backend installation, CLI CRUD and MCP discovery/calls using isolated profiles.
