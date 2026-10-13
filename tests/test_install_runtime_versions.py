@@ -93,6 +93,23 @@ def test_python_below_runtime_minimum_refused(installer, tmp_path, monkeypatch):
     assert not target.exists()
 
 
+@pytest.mark.parametrize("source", [None, {"vcs_info": {"commit_id": "b" * 40}}])
+def test_existing_source_mismatch_refused_without_upgrade(installer, tmp_path, monkeypatch, source):
+    target = tmp_path / "existing"
+    target.mkdir()
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.1", "source": source}))
+
+    monkeypatch.setattr(installer.subprocess, "run", run)
+    monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--revision", "a" * 40])
+    assert installer.main() == 1
+    assert not any("install" in call for call in calls)
+
+
 @pytest.mark.parametrize("option,value", [("--version", "main"), ("--revision", "main"), ("--revision", "abcdef")])
 def test_unpinned_selection_refused(installer, tmp_path, monkeypatch, option, value):
     target = tmp_path / "absent"
