@@ -4,7 +4,7 @@
 
 Fetch only signals relevant to the PR or requested gate. For GitHub, review
 comments and checks. For SonarCloud/SonarQube, issues, hotspots, and gate status.
-for CodeRabbit or another reviewer, the applicable review result.
+For CodeRabbit or another reviewer, fetch the applicable review result.
 
 Record target branch/PR/SHA and run or analysis identity. Verify findings against
 current source. Historical reviews may guide diagnosis but do not prove current
