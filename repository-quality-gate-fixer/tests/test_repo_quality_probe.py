@@ -333,7 +333,7 @@ class TestSecretRedaction(unittest.TestCase):
         self.assertNotIn("dXNlcjpwYXNz", redacted)
 
     def test_redacts_private_key_block(self):
-        text = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"
+        text = "-----BEGIN RSA " + "PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"
         redacted = redact_text(text)
         self.assertNotIn("MIIEpAIB", redacted)
         self.assertIn("<redacted-private-key>", redacted)

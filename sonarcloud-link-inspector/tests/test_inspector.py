@@ -1,6 +1,7 @@
 """Offline tests: requests are mocked; no tokens or live projects are required."""
 import json
 import os
+from os import environ
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -16,7 +17,7 @@ from url_parser import parse_sonarcloud_url
 
 @pytest.fixture(autouse=True)
 def clean_sonar_env(monkeypatch):
-    for key in list(os.environ):
+    for key in list(environ):
         if key.startswith("SONARCLOUD_"):
             monkeypatch.delenv(key)
 

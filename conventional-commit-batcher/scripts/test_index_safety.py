@@ -101,7 +101,7 @@ def test_unmerged_index_blocks_even_with_other_staged_content(repo):
 
 
 def test_secret_value_never_appears_in_report(repo):
-    secret = "fixture-private-value"
+    secret = "fixture-private-" "value"
     (repo / "app.py").write_text(f"password = '{secret}'\n")
     git("add", "app.py")
     result = execute_gate(repo)

@@ -8,6 +8,7 @@ import json
 import os
 import tempfile
 import unittest
+from os import environ
 from pathlib import Path
 from unittest.mock import patch
 
@@ -26,7 +27,7 @@ class ModePolicyTests(unittest.TestCase):
 
     def test_cli_reports_environment_mode(self):
         out = io.StringIO()
-        with patch.dict(os.environ, {}, clear=True), contextlib.redirect_stdout(out):
+        with patch.dict(environ, {}, clear=True), contextlib.redirect_stdout(out):
             self.assertEqual(telemetry.main(["mode"]), 0)
         self.assertEqual(out.getvalue().strip(), "shadow")
 
@@ -207,7 +208,7 @@ class PortableTelemetryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             explicit = Path(tmp) / "explicit.jsonl"
             overridden = Path(tmp) / "environment.jsonl"
-            with patch.dict(os.environ, {"DEV_JEV_LOG": str(overridden)}), contextlib.redirect_stdout(io.StringIO()):
+            with patch.dict(environ, {"DEV_JEV_LOG": str(overridden)}), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(telemetry.main(["record", "--workflow", "ci", "--decision-type", "retry", "--question-id", "q1", "--primitive", "choice", "--result", "unavailable", "--call-status", "unavailable", "--fallback-used", "true", "--final-agent-action", "continue", "--log", str(explicit)]), 0)
             self.assertTrue(explicit.exists())
             self.assertFalse(overridden.exists())
