@@ -128,8 +128,8 @@ judgment and each skill's runtime dependencies.
 ## Qdrant memory skill
 
 [qdrant-memory](qdrant-memory/SKILL.md) supplies agent-neutral memory search,
-explicit edits, maintenance and Mem0 migration instructions for Codex, OpenCode,
-Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
+explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
+OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
 runtime separately (0.2.1 commands pin a PyPI release, and
 Runtime 0.2.0 / MCP 0.1.0 are the previous public releases):
