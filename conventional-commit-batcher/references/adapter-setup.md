@@ -7,10 +7,10 @@ then deliberately retire old wrappers or replace them with the templates below.
 Normal skill installation never installs or enables a hook or specialist agent.
 
 For an explicitly requested adapter, use only a template supported by that host
-version. Replace `{{SKILL_DIR}}` with the absolute installed package directory;
-quote paths with spaces as the host requires. Inspect the completed configuration
+version. Replace `{{SKILL_DIR}}` with the absolute installed package directory.
+Quote paths with spaces as the host requires. Inspect the completed configuration
 before copying it to its destination. Keep templates inside the installed skill
-as examples; updating the skill does not update external deployed copies.
+as examples. Updating the skill does not update external deployed copies.
 
 | Package template under `assets/adapters/` | Optional project destination |
 |---|---|
@@ -26,5 +26,5 @@ as examples; updating the skill does not update external deployed copies.
 
 The Kiro hook is advisory agent guidance, not a deterministic security boundary.
 Do not overwrite unrelated host configuration. Verify host discovery and the
-requested action boundary after deployment; template syntax alone is not proof
+requested action boundary after deployment. Template syntax alone is not proof
 of compatibility with every host release.

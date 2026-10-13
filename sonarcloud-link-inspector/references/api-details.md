@@ -13,7 +13,7 @@
 | /project/issues?id=... or /code?id=... | Project |
 
 Preserve `branch` and `pullRequest` when present. Treat URL parameters as data,
-not shell syntax; quote complete URLs.
+not shell syntax. Quote complete URLs.
 
 ## Authentication and configuration
 
@@ -38,9 +38,9 @@ Only GET requests are made. A mixed EU/US batch uses region-matched clients.
 ## Failures
 
 Inspect structured errors and partial results. Invalid URLs or missing resources
-need context correction; 401/403 require authentication/access review. Do not
+need context correction. Codes 401/403 require authentication/access review. Do not
 reinterpret permission failures as no issues. Network failures and rate limits
-use bounded retries; report remaining failures and a concrete next step.
+use bounded retries. Report remaining failures and a concrete next step.
 
 Normalize and redact evidence rather than pasting raw payloads that could contain
 credentials. A successful fetch is not proof that the current code is correct or
@@ -48,7 +48,7 @@ that an issue was fixed remotely.
 
 ## Result and process status
 
-Existing JSON fields remain; `fetch_status` is `complete`, `partial`, or `failed`.
+Existing JSON fields remain. `fetch_status` is `complete`, `partial`, or `failed`.
 Partial results keep successful data and warnings. Batch results contain every
 item and an aggregate fetch status. `request_context` retains the URL region,
 branch and PR. Hotspot-key lookups cannot verify branch/PR association and say so.

@@ -2,11 +2,11 @@
 
 The Hermes examples below also apply to standalone profiles: replace
 `hermes qdrant-memory` with `qdrant-memory --home PROFILE`. Select the exact
-profile/ledger and destination that recorded the intent; never create a fresh
+profile/ledger and destination that recorded the intent. Never create a fresh
 profile to bypass writer ownership or unfinished recovery.
 
-For `writer_busy`, locate the active session/gateway and coordinate stopping it;
-wait for workers and in-flight requests to release ownership. Never remove its
+For `writer_busy`, locate the active session/gateway and coordinate stopping it.
+Wait for workers and in-flight requests to release ownership. Never remove its
 lock. Stop writers on other machines and profiles too. Embedded storage also
 rejects concurrent read clients while a provider holds its file lock.
 
@@ -33,15 +33,15 @@ If `scope_delete_recovery_required` or `scope_delete_incomplete` appears, preser
 the ledger and resume the recorded scope through `delete-all --confirm` under
 the original authorization. Do not change scope, clear the collection or bypass
 recovery. A legacy ambiguous intent requires operator disambiguation using
-`--resolve-legacy single_agent|all_agents`; it is incompatible with dry-run and
+`--resolve-legacy single_agent|all_agents`. The flag is incompatible with dry-run and
 requires explicit confirmation. Stop for user choice if that intent is unclear.
 
 For `reset_recovery_required`, the plugin requires `init` with the same destination
 to finish an already authorized collection reset. Explain that this resumes a
-destructive intent; confirm its authorization before doing so. New `init
+destructive intent. Confirm its authorization before doing so. New `init
 --existing clear` is collection-wide destruction and is outside ordinary scoped
 deletion. Never select it to fix a diagnostic failure.
 
 Do not expose secrets, private service response bodies or unnecessary memory
-text when diagnosing errors. Check nonzero exits and structured error codes;
-a dry-run proves neither target readiness nor ability to acquire a future lease.
+text when diagnosing errors. Check nonzero exits and structured error codes.
+A dry-run proves neither target readiness nor ability to acquire a future lease.

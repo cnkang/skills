@@ -25,9 +25,9 @@ From any working directory, use the actual installed skill path:
 python3 <skill-dir>/scripts/inspect_sonarcloud_link.py "<url>"
 ```
 
-Multiple quoted URLs are supported. Output defaults to JSON; add
+Multiple quoted URLs are supported. Output defaults to JSON. Add
 `--format markdown` for a readable report. Preserve the URL's branch or PR
-context; do not silently substitute the default branch.
+context. Do not silently substitute the default branch.
 
 ## Interpret and act
 
@@ -41,7 +41,7 @@ For requested remediation, make a scoped fix and validate affected behavior.
 Neither request authorizes posting comments, reviewing hotspots, or transitioning
 issues on SonarCloud.
 
-Use `SONARCLOUD_TOKEN` via the environment when authentication is needed; never
+Use `SONARCLOUD_TOKEN` via the environment when authentication is needed. Never
 print or copy its value into files or the conversation. Report API failures as
 limitations, not empty findings or passed gates.
 

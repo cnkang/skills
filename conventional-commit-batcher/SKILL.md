@@ -2,7 +2,7 @@
 name: conventional-commit-batcher
 description: Split mixed Git changes into logical Conventional Commits when independent changes need separate commits or the user requests batching.
 license: MIT
-compatibility: Requires Git. Python 3.10+ for bundled checks; manual fallback is documented.
+compatibility: Requires Git. Python 3.10+ for bundled checks. Manual fallback is documented.
 metadata:
   version: "4.0.0"
 ---
@@ -10,15 +10,15 @@ metadata:
 # Conventional Commit Batcher
 
 Produce reviewable commits grouped by purpose. A single cohesive change needs
-only one commit; staging-only and push-only tasks do not need a batching workflow.
+only one commit. Staging-only and push-only tasks do not need a batching workflow.
 
 This skill is independently installable. Its workflow does not require any other
-skill; optional collaboration must remain within the user's requested scope.
+skill. Optional collaboration must remain within the user's requested scope.
 
 ## Scope and authorization
 
-- Follow the requested action. A plan does not authorize staging or committing;
-  staging does not authorize committing; committing does not authorize pushing.
+- Follow the requested action. A plan does not authorize staging or committing.
+  Staging does not authorize committing. Committing does not authorize pushing.
 - When commits are requested, execute the agreed scope without an extra plan
   approval. If the user requests a plan or review first, stop at that boundary.
 - Preserve unrelated staged and unstaged work. Do not reset the index or sweep
@@ -39,7 +39,7 @@ skill; optional collaboration must remain within the user's requested scope.
    Python is unavailable. Never treat a nonzero gate result as a pass.
 4. Validate the message with
    `python3 <skill-dir>/scripts/validate_conventional_commit.py "<message>"`
-   and commit normally. Use project message conventions; the bundled validator
+   and commit normally. Use project message conventions. The bundled validator
    checks Conventional Commits with a 72-character subject and 100-character
    header by default.
 5. If a hook fails, diagnose it. Fix failures caused by this task within the
@@ -59,6 +59,6 @@ A requested plan should list batch intent, files/hunks, and proposed messages.
   [examples](references/plan-examples.md): ambiguous batch boundaries.
 - [Hook example](references/commit-msg-hook-example.md): only when installing hooks.
 - [Optional adapters](references/adapter-setup.md): only for requested host commands,
-  specialist agents, or hooks; ordinary installation does not deploy them.
-- Agent installation instructions live in `references/*-setup.md`; read only
+  specialist agents, or hooks. Ordinary installation does not deploy them.
+- Agent installation instructions live in `references/*-setup.md`. Read only
   the guide for the requested host.

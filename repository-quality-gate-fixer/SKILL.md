@@ -2,7 +2,7 @@
 name: repository-quality-gate-fixer
 description: Diagnose and close repository or PR quality-gate failures when the user requests remediation or a quality-gate audit.
 license: MIT
-compatibility: Python 3.10+ for the optional probe; Git and project toolchains as needed.
+compatibility: Python 3.10+ for the optional probe. Git and project toolchains as needed.
 metadata:
   version: "0.8.0"
 ---
@@ -10,10 +10,10 @@ metadata:
 # Repository Quality Gate Fixer
 
 Deliver scoped, verified quality-gate results. A narrow failure needs a focused
-diagnosis; a requested full audit needs a complete gate inventory.
+diagnosis. A requested full audit needs a complete gate inventory.
 
 This skill is independently installable. Its workflow does not require any other
-skill; optional collaboration must remain within the user's requested scope.
+skill. Optional collaboration must remain within the user's requested scope.
 
 ## Scope and authorization
 
@@ -28,7 +28,7 @@ Infer the mode from the request, not from loading this skill:
 
 Honor explicit read-only restrictions, including restrictions on test artifacts.
 A requested report may be written to its agreed destination. Reuse existing
-authorization for the same scope; ask only when a material decision or new
+authorization for the same scope. Ask only when a material decision or new
 permission is needed. PR comments, resolving conversations, merging, and remote
 settings changes require their own authorization.
 
@@ -50,10 +50,10 @@ A requested policy change is a separate change, not proof the original gate pass
 - [NGINX checks](references/nginx.md): C/NGINX changes where lifecycle or memory
   safety matters.
 - [Report template](references/report-template.md): full audits or explicitly
-  requested detailed evidence reports; omit inapplicable sections.
+  requested detailed evidence reports. Omit inapplicable sections.
 
 Read only what the current task requires. Use an available related skill when it
-adds needed expertise; do not scan every installed skill or recursively load
+adds needed expertise. Do not scan every installed skill or recursively load
 generic review and verification workflows.
 
 ## Diagnose, fix, verify
@@ -61,28 +61,28 @@ generic review and verification workflows.
 1. Establish repository, branch/HEAD, worktree state, applicable instructions, and
    task scope. For PRs, identify the intended base and changed files.
 2. Identify required gates from the relevant project commands and workflow
-   context. Record each gate's scope, command/tool, and expected evidence;
-   a short checklist suffices for a narrow fix.
+   context. Record each gate's scope, command/tool, and expected evidence.
+   A short checklist suffices for a narrow fix.
 3. Verify reported issues against current code. Distinguish real issues, false
    positives, already-fixed findings, blockers, and out-of-scope debt.
 4. In an authorized fix mode, make root-cause repairs with affected tests, docs,
    and config kept consistent. Continue until the requested scope is handled.
 5. Run affected checks and required final gates. Reuse results that still apply
-   to unchanged content and environment; rerun after relevant changes or new
+   to unchanged content and environment. Rerun after relevant changes or new
    failures. Do not repeat full validation solely to satisfy multiple checklists.
 
 Use a user-specified retry/wait budget. Otherwise, allow up to three unsuccessful
 repair cycles for the same failure and 30 minutes of total remote waiting.
 Successful resolution of a distinct issue is not a failed cycle. Stop repeated
 attempts without progress, report the blocker, and continue independent work.
-These budgets prevent loops; they do not turn incomplete work into success.
+These budgets prevent loops. They do not turn incomplete work into success.
 
 ## Completion
 
 An audit is complete when verified findings, evidence, and limitations are
 reported. A fix is complete when in-scope issues are addressed and required
-checks have valid evidence. Commit/push claims must match actual Git state;
-remote closure requires results for the final pushed SHA.
+checks have valid evidence. Commit/push claims must match actual Git state.
+Remote closure requires results for the final pushed SHA.
 
 Use precise statuses: Passed, Failed, Blocked, Unavailable, Not executed, Running,
 or Unknown. Queued/running checks, missing prerequisites, absent checks, and
