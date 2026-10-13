@@ -28,12 +28,14 @@ Verify a connected server and discovery of all four tools, then perform an
 authorized search. A saved settings entry alone does not verify a connection.
 
 Check `hermes plugins list` before you register this server. If the native
-plugin is enabled for Hermes, do not register this server there. Inform the
-user that Hermes needs no additional setup. Other agents can still use
-this server or the CLI. If the plugin is installed but disabled, ask the user
-to enable it (`hermes plugins enable qdrant-memory`). Or register this server
-for that profile. If the plugin is not installed, recommend it for Hermes first
-(`hermes plugins install qdrant-memory`). Register one MCP server for each
+plugin is installed for Hermes, ask the user to enable it when needed
+(`hermes plugins enable qdrant-memory`), then run `hermes memory setup` and
+select qdrant-memory as the memory provider. After that, do not register this
+server there. Inform the user that Hermes needs no further setup. Other agents
+can still use this server or the CLI. If the plugin cannot be used for that
+profile, register this server for that profile instead. If the plugin is not
+installed, recommend it for Hermes first (`hermes plugins install
+qdrant-memory`) and the same setup step. Register one MCP server for each
 profile. Duplicate registrations contend for one writer lease.
 
 The transport is local stdio. The backend advertises tools, with no resources

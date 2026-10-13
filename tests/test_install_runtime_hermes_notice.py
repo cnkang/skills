@@ -33,6 +33,7 @@ def isolate(monkeypatch, tmp_path):
 def test_configured_hermes_home_detected(installer, tmp_path, monkeypatch):
     profile = tmp_path / "profile"
     (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text("memory:\n  provider: 'qdrant-memory'\n", encoding="utf-8")
     isolate(monkeypatch, tmp_path)
     monkeypatch.setenv("HERMES_HOME", str(profile))
     assert "not necessary for Hermes" in installer.hermes_advisory()
@@ -40,7 +41,9 @@ def test_configured_hermes_home_detected(installer, tmp_path, monkeypatch):
 
 def test_default_user_home_detected(installer, tmp_path, monkeypatch):
     home = isolate(monkeypatch, tmp_path)
-    (home / ".hermes" / "plugins" / "qdrant-memory").mkdir(parents=True)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text("memory:\n  provider: qdrant-memory\n", encoding="utf-8")
     assert "not necessary for Hermes" in installer.hermes_advisory()
 
 
@@ -122,7 +125,9 @@ def test_non_mapping_plugins_value_keeps_advisory(installer, tmp_path, monkeypat
     home = isolate(monkeypatch, tmp_path)
     profile = home / ".hermes"
     (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
-    (profile / "config.yaml").write_text("plugins: not-a-mapping\n", encoding="utf-8")
+    (profile / "config.yaml").write_text(
+        "plugins: not-a-mapping\nmemory:\n  provider: qdrant-memory\n", encoding="utf-8"
+    )
     assert "not necessary for Hermes" in installer.hermes_advisory()
 
 
@@ -160,7 +165,7 @@ def test_non_utf8_config_keeps_advisory(installer, tmp_path, monkeypatch):
     profile = home / ".hermes"
     (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
     (profile / "config.yaml").write_bytes(b"plugins:\n  disabled: [\xff]\n")
-    assert "not necessary for Hermes" in installer.hermes_advisory()
+    assert "not selected as its memory provider" in installer.hermes_advisory()
 
 
 def test_fallback_branch_used_without_pyyaml(installer, tmp_path, monkeypatch):
@@ -190,3 +195,33 @@ def test_hermes_on_path_detected_windows(installer, tmp_path, monkeypatch):
     (bins / "hermes.bat").write_text("@echo off\r\n", encoding="utf-8")
     monkeypatch.setenv("PATH", str(bins))
     assert "prefer the plugin" in installer.hermes_advisory()
+
+
+def test_inactive_plugin_asks_to_select_provider(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text("memory:\n  provider: other-provider\n", encoding="utf-8")
+    advisory = installer.hermes_advisory()
+    assert "not selected as its memory provider" in advisory
+    assert "hermes memory setup" in advisory
+    assert "MCP server" in advisory
+
+
+def test_memory_provider_scan_variations(installer):
+    scan = installer._scan_memory_provider
+    assert scan("memory:\n  provider: qdrant-memory\n") == "qdrant-memory"
+    assert scan("memory:\n  provider: 'qdrant-memory' # note\n") == "qdrant-memory"
+    assert scan("memory: {provider: qdrant-memory}\n") == "qdrant-memory"
+    assert scan("memory:\n\n  provider: qdrant-memory\n") == "qdrant-memory"
+    assert scan("memory:\n  write_approval: false\n") is None
+    assert scan("plugins:\n  disabled: []\n") is None
+
+
+def test_provider_selection_forces_fallback_branch(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text("memory:\n  provider: qdrant-memory\n", encoding="utf-8")
+    monkeypatch.setitem(sys.modules, "yaml", None)  # forces ImportError in the function
+    assert "not necessary for Hermes" in installer.hermes_advisory()
