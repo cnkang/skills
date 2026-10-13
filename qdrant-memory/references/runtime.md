@@ -51,7 +51,7 @@ For an explicitly authorized candidate/development/fallback source, use
 `--version 0.2.1 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The documented revision for source installs is
+The standalone acceptance checks pin revision
 `2ed69c4e5b65bee12c6352ab9c294ede69c4c246`. The published release tag is the
 source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
