@@ -87,12 +87,12 @@ Add `-y` for automation. Use explicit names and `-p`/`-g` to avoid updating unre
 
 `skills@latest` selects the latest published CLI. Skill content updates follow the recorded source, path, and ref. `metadata.version` documents a release. It is not the CLI's version comparison mechanism. Changes to scripts or references can also trigger updates. Installations pinned to a tag/ref continue to follow that ref and do not automatically switch to the default branch. See the [upstream update implementation](https://github.com/vercel-labs/skills/blob/main/src/update.ts).
 
-Updates may replace the entire installed package. Back up intentional local changes first. The CLI may restore the shared symlink installation mode, so environments using `--copy` should check the resulting layout and reinstall with the original command plus `--copy` if needed. Updating optional adapter templates inside a package does not update commands or hooks deployed elsewhere.
+Updates may replace the entire installed package. Back up intentional local changes first. The CLI may restore the shared symlink installation mode. Environments using `--copy` should check the resulting layout and reinstall with the original command plus `--copy` if needed. Updating optional adapter templates inside a package does not update commands or hooks deployed elsewhere.
 
 ## Migration and advanced installation
 
 - To migrate from the old `cnkang/conventional-commit-batcher` source, rerun `add cnkang/skills --skill conventional-commit-batcher` with the required agent and scope. A regular `update` does not change the source.
-- For manually copied packages, old locks missing a path/source, or installations that updates cannot identify, back up customizations and reinstall the selected skill with `add` to record its source. Do not edit version fields to simulate an update.
+- For manually copied packages, old locks missing a path/source, or installations that updates cannot identify, back up customizations. Reinstall the selected skill with `add` to record its source. Do not edit version fields to simulate an update.
 - Commit batcher **v4** removes legacy entrypoints in hidden directories and automatically discovered package AGENTS/CLAUDE files. Optional commands, dedicated agents, steering, and hooks are now templates. See [adapter setup](conventional-commit-batcher/references/adapter-setup.md) for migration. Do not automatically delete external custom configuration.
 - Jev still accepts legacy telemetry arguments and reads historical logs. See [dev-jev](dev-jev/SKILL.md) for neutral paths and optional Hermes configuration.
 
@@ -115,7 +115,7 @@ python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
 
-Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts, the Qdrant package on Codex/Hermes, temporary use and selective reference/helper updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable. Distinguish packaging defects from upstream CLI changes.
+Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts. They also cover the Qdrant package on Codex/Hermes, temporary use and selective reference/helper updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable. Distinguish packaging defects from upstream CLI changes.
 
 CI checks both the pinned baseline and the latest CLI. See [behavior scenarios](docs/behavior-scenarios.md) for acceptance of real agent authorization and invocation behavior. Structural checks cannot establish model behavior. [Release and rollback guidance](docs/releasing.md) covers the default-branch update channel, versions, tags, and migration.
 
@@ -131,8 +131,8 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions for Codex, OpenCode,
 Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately (0.2.1 commands are for after its publication; public Runtime
-0.2.0 / MCP 0.1.0 already exist):
+runtime separately (0.2.1 commands pin a PyPI release, and
+Runtime 0.2.0 / MCP 0.1.0 are the previous public releases):
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
@@ -146,7 +146,7 @@ The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
 release does not contain these interfaces. The command pins a PyPI release.
 For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.1
-qdrant-memory-mcp --home /private/path/profile mcp`; configure
+qdrant-memory-mcp --home /private/path/profile mcp`. Configure
 and initialize the profile first. Both install choices share the Runtime.
 
 If the backend is missing, an agent authorized to set it up can instead run the
