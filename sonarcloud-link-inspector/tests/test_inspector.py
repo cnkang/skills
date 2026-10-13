@@ -1,4 +1,4 @@
-"""Offline tests: requests are mocked; no tokens or live projects are required."""
+"""Offline tests: requests are mocked. No tokens or live projects are required."""
 import json
 import sys
 from os import environ
