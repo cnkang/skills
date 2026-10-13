@@ -6,13 +6,13 @@ Five skills for development and Qdrant memory workflows that you can install ind
 
 | Skill | Version | Purpose and dependencies |
 |---|---|---|
-| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.0 | Split independent changes into Conventional Commits. Requires Git; helper scripts require Python 3.10+. Manual checks are available as a fallback. |
-| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+; validation uses the project's own toolchain. |
-| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access; private data requires an authorized token supplied through an environment variable. |
-| [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional; continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
+| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.0 | Split independent changes into Conventional Commits. Requires Git. Helper scripts require Python 3.10+. Manual checks are available as a fallback. |
+| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
+| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
+| [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
 | [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.3 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
 
-Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it; there is no mandatory invocation chain.
+Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
 ## Install one or several skills
 
@@ -37,9 +37,9 @@ npx skills@latest add cnkang/skills --skill dev-jev -a codex -g
 
 `-a` selects the agent without requiring a separate adapter package. Available IDs include `codex`, `claude-code`, `opencode`, `cursor`, `gemini-cli`, `kiro-cli`, `kimi-code-cli`, `qwen-code`, and `hermes-agent`. Supply multiple IDs to install for multiple hosts.
 
-The default installation uses shared copies and symlinks. Add `--copy` for independent copies or filesystems that do not support links. The current CLI shares project or user-level directories for universal hosts using `.agents/skills`; check its output for the actual location. Other hosts use their corresponding installation directories. A successful installation verifies file availability; host discovery and behavior still require live verification.
+The default installation uses shared copies and symlinks. Add `--copy` for independent copies or filesystems that do not support links. The current CLI shares project or user-level directories for universal hosts using `.agents/skills`. Check its output for the actual location. Other hosts use their corresponding installation directories. A successful installation verifies file availability; host discovery and behavior still require live verification.
 
-OpenCode supports global installation. PromptScript is a separate agent that supports only project installation; its restriction does not apply to OpenCode. See [CLI supported agents](https://github.com/vercel-labs/skills#supported-agents) for other host restrictions.
+OpenCode supports global installation. PromptScript is a separate agent that supports only project installation. Its restriction does not apply to OpenCode. See [CLI supported agents](https://github.com/vercel-labs/skills#supported-agents) for other host restrictions.
 
 The CLI does not install Python dependencies, a Jev provider, or legacy commands/hooks. Install SonarCloud dependencies in the virtual environment used for your task:
 
@@ -85,9 +85,9 @@ npx skills@latest update repository-quality-gate-fixer sonarcloud-link-inspector
 
 Add `-y` for automation. Use explicit names and `-p`/`-g` to avoid updating unrelated skills or guessing the installation scope. An `update` without names updates all skills in the selected scope.
 
-`skills@latest` selects the latest published CLI. Skill content updates follow the recorded source, path, and ref. `metadata.version` documents a release; it is not the CLI's version comparison mechanism. Changes to scripts or references can also trigger updates. Installations pinned to a tag/ref continue to follow that ref and do not automatically switch to the default branch. See the [upstream update implementation](https://github.com/vercel-labs/skills/blob/main/src/update.ts).
+`skills@latest` selects the latest published CLI. Skill content updates follow the recorded source, path, and ref. `metadata.version` documents a release. It is not the CLI's version comparison mechanism. Changes to scripts or references can also trigger updates. Installations pinned to a tag/ref continue to follow that ref and do not automatically switch to the default branch. See the [upstream update implementation](https://github.com/vercel-labs/skills/blob/main/src/update.ts).
 
-Updates may replace the entire installed package; back up intentional local changes first. The CLI may restore the shared symlink installation mode, so environments using `--copy` should check the resulting layout and reinstall with the original command plus `--copy` if needed. Updating optional adapter templates inside a package does not update commands or hooks deployed elsewhere.
+Updates may replace the entire installed package. Back up intentional local changes first. The CLI may restore the shared symlink installation mode, so environments using `--copy` should check the resulting layout and reinstall with the original command plus `--copy` if needed. Updating optional adapter templates inside a package does not update commands or hooks deployed elsewhere.
 
 ## Migration and advanced installation
 
@@ -115,9 +115,9 @@ python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
 
-Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts, the Qdrant package on Codex/Hermes, temporary use and selective reference/helper updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable; distinguish packaging defects from upstream CLI changes.
+Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts, the Qdrant package on Codex/Hermes, temporary use and selective reference/helper updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable. Distinguish packaging defects from upstream CLI changes.
 
-CI checks both the pinned baseline and the latest CLI. See [behavior scenarios](docs/behavior-scenarios.md) for acceptance of real agent authorization and invocation behavior; structural checks cannot establish model behavior. [Release and rollback guidance](docs/releasing.md) covers the default-branch update channel, versions, tags, and migration.
+CI checks both the pinned baseline and the latest CLI. See [behavior scenarios](docs/behavior-scenarios.md) for acceptance of real agent authorization and invocation behavior. Structural checks cannot establish model behavior. [Release and rollback guidance](docs/releasing.md) covers the default-branch update channel, versions, tags, and migration.
 
 Required three-platform [agent host acceptance](docs/agent-host-acceptance.md)
 uses Hermes and the MIT-licensed Pi Coding Agent. Pi verifies real skill discovery,
@@ -143,7 +143,7 @@ python3 -m venv /private/path/qdrant-env
 
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
-release does not contain these additive interfaces; the command pins their
+release does not contain these additive interfaces. The command pins their
 source.
 
 If the backend is missing, an agent authorized to set it up can instead run the
@@ -178,7 +178,7 @@ scope comes from the operator's fixed profile configuration.
 ### MCP capabilities
 
 The skill supplies operating instructions. The separately installed runtime
-supplies a local stdio MCP server; a client can use that server without loading
+supplies a local stdio MCP server. A client can use that server without loading
 the skill. Agents that support skill instructions can use them together with
 MCP tools or the JSON CLI.
 
@@ -190,16 +190,16 @@ MCP tools or the JSON CLI.
 | `qdrant_memory_delete` | Delete an authorized memory by exact ID. |
 
 Verify a connected server and discovery of all four tools before requesting an
-authorized search. MCP exposes explicit memory operations; maintenance/migration
-uses the CLI and automatic conversation extraction remains a Hermes feature.
+authorized search. MCP exposes explicit memory operations. Maintenance/migration
+uses the CLI. Automatic conversation extraction remains a Hermes feature.
 See [MCP capabilities and verification](qdrant-memory/references/mcp.md) for
 transport, permissions, sharing and host-specific validation boundaries.
 
 ### Shared memory and workflows
 
 For [cross-agent sharing](qdrant-memory/references/shared-memory.md), configure
-the same user/profile and `agent_id: null`. This is one shared partition;
-explicit agent IDs remain private. Current embedded/MCP writers access it
+the same user/profile and `agent_id: null`. This is one shared partition.
+Explicit agent IDs remain private. Current embedded/MCP writers access it
 sequentially under the profile lease.
 
 | Workflow | Examples | Interface |
@@ -226,10 +226,10 @@ Update only this skill using `npx skills@latest update qdrant-memory -p` (use
 `-g` for global scope). Keep its complete reference directory.
 
 Maintenance list/export can select all collection users when no user selector
-is provided; check operator authorization and selectors. Preserve ledger and
+is provided. Check operator authorization and selectors. Preserve ledger and
 ownership during recovery. Embedded storage requires exclusive access.
 WriterLease is not a distributed lock across independent profiles. Migration
-re-embeds; vector reuse and scope remapping remain unsupported.
+re-embeds. Vector reuse and scope remapping remain unsupported.
 See [compatibility and validation boundaries](docs/qdrant-memory-compatibility.md).
 
 ## License

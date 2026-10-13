@@ -2,10 +2,10 @@
 
 Use `qdrant-memory --home PROFILE <command>` without Hermes, or the existing
 `hermes qdrant-memory <command>` for Hermes's profile. The shared maintenance
-options and Hermes examples below apply to both; replace the prefix with the
+options and Hermes examples below apply to both. Replace the prefix with the
 selected interface. Confirm installed `--help` on version differences and stop
-if an argument is unavailable. Explicit CRUD is covered in [usage](usage.md);
-only the standalone CLI has those four commands.
+if an argument is unavailable. Explicit CRUD is covered in [usage](usage.md).
+Only the standalone CLI has those four commands.
 
 The standalone CLI restricts explicit export and migration file paths to the
 operator's current working directory, including resolved symbolic links. Before
@@ -19,27 +19,27 @@ replacement of files or directory links.
 
 | Command | Arguments | Effects and result |
 |---|---|---|
-| `status` | optional `--collection` | Local config summary only; no service contact or ledger creation. Returns provider, mode, collection, embedding summary, ledger_exists. |
-| `doctor` | optional `--collection` | Opens target and ledger; probes embedding and collection readiness. Returns diagnostics and `ok`. |
-| `stats` | optional `--collection` | Opens target/ledger and embedding client; returns points_count, vector_dim, ledger, metrics, embedding_fingerprint. |
-| `verify` | optional `--collection` | Opens target/ledger and embedding client; checks payloads and latest manifest, returns `ok`. |
-| `list` | optional `--collection`, `--user`, `--agent`, `--limit` (default 200) | Reads target without embedding; returns scope, bounded memories, total/returned/truncated counts and pending/failed operation counts. |
-| `export` | required `--output`; optional `--collection`, `--user`, `--agent`, `--force` | Reads target without embedding; writes sensitive local JSON. Returns count, scope, collection, output. Default publication refuses an existing file. |
+| `status` | optional `--collection` | Local config summary only. No service contact or ledger creation. Returns provider, mode, collection, embedding summary, ledger_exists. |
+| `doctor` | optional `--collection` | Opens target and ledger. Probes embedding and collection readiness. Returns diagnostics and `ok`. |
+| `stats` | optional `--collection` | Opens target/ledger and embedding client. Returns points_count, vector_dim, ledger, metrics, embedding_fingerprint. |
+| `verify` | optional `--collection` | Opens target/ledger and embedding client. Checks payloads and the latest manifest. Returns `ok`. |
+| `list` | optional `--collection`, `--user`, `--agent`, `--limit` (default 200) | Reads target without embedding. Returns scope, bounded memories, total/returned/truncated counts and pending/failed operation counts. |
+| `export` | required `--output` plus optional `--collection`, `--user`, `--agent`, `--force` | Reads target without embedding. Writes sensitive local JSON. Returns count, scope, collection, output. Default publication refuses an existing file. |
 | `retry` | optional `--collection` | Acquires WriterLease, requeues failed ledger work and commits prepared operations. Raw events need trusted provider LLM context on later startup. |
-| `delete-all` | `--user` for new deletion; optional `--agent`, `--collection`, `--dry-run`, `--confirm`, `--all-agents`, `--resolve-legacy` | Acquires WriterLease even for dry-run; destructive execution records durable scoped deletion intent. |
+| `delete-all` | `--user` for new deletion plus optional `--agent`, `--collection`, `--dry-run`, `--confirm`, `--all-agents`, `--resolve-legacy` | Acquires WriterLease even for dry-run. Destructive execution records durable scoped deletion intent. |
 
 Only `status` is fully local and side-effect-free. The diagnostic and inventory
 commands do not intentionally mutate Qdrant, but open SQLite Ledger (which may
 create/migrate local state). They are not fully local or guaranteed side-effect-free.
 Export additionally writes a local file. Embedded clients need exclusive file
-access even on reads; remote read diagnostics may run alongside a provider but
+access even on reads. Remote read diagnostics may run alongside a provider but
 are not an atomic snapshot. Collection/embedding initialization validates schema
-and pipeline compatibility; never repair incompatibility by silently clearing.
+and pipeline compatibility. Never repair incompatibility by silently clearing.
 
 `--agent` requires `--user`. Without `--user`, list/export use no filter and may
 expose every user. `--user USER` without `--agent` selects the no-agent scope,
 not every agent. CLI scope flags are operator selections, not host-authenticated
-identity; only choose scopes the user authorized. A literal `--agent '*'` is one
+identity. Only choose scopes the user authorized. A literal `--agent '*'` is one
 literal agent ID, not a wildcard.
 
 After selecting the correct profile and coordinating embedded access:

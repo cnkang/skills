@@ -1,6 +1,6 @@
 # Runtime availability
 
-This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution; standalone CLI and stdio MCP do not require Hermes.
+This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
 Install the standalone-capable source in a dedicated Python 3.11+ environment:
 
@@ -24,20 +24,20 @@ python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
-uses `~/.agents/skills/qdrant-memory`). Python 3.11+ and Git must be available;
-installation requires access to GitHub and Python package indexes. On Windows use
+uses `~/.agents/skills/qdrant-memory`). Python 3.11+ and Git must be available.
+Installation requires access to GitHub and Python package indexes. On Windows use
 `py -3.11` or an available newer Python and the returned `Scripts` executable.
 The installer installs the pinned backend with its official MCP SDK in a new venv,
 then verifies imports and the CLI. A working existing environment is reused without
-an upgrade; an incomplete or incompatible environment fails and is retained.
+an upgrade. An incomplete or incompatible environment fails and is retained.
 Choose a new path to retry rather than deleting another installation.
 Use a new private environment to receive this pinned backend security update:
 verification of an existing environment does not upgrade or attest its revision.
-For Hermes users, the pin preserves transcript-author isolation across restarts;
-unknown historical attribution disables whole-transcript supplementary extraction
-until an explicit fresh transcript reset, while attributed per-turn writes continue.
+For Hermes users, the pin preserves transcript-author isolation across restarts.
+Unknown historical attribution disables whole-transcript supplementary extraction
+until an explicit fresh transcript reset. Attributed per-turn writes continue.
 
-On POSIX, choose an ordinary private path; spaces are supported, but shell
+On POSIX, choose an ordinary private path. Spaces are supported, but shell
 metacharacters and control characters are rejected before installation. pip's
 generated CLI entrypoint may use a shell wrapper, so unsafe interpreter paths
 must be rejected even though the installer passes subprocess arguments as lists.
@@ -63,7 +63,7 @@ Choose an operator-authorized private profile. Its `qdrant-memory.json` uses exi
 }
 ```
 
-Select an available embedding service and its actual dimensions; this example does not install Ollama or download models. OpenAI-compatible embeddings and server/cloud Qdrant are also supported. Keep credentials in runtime environment variables, outside skill text and URLs.
+Select an available embedding service and its actual dimensions. This example does not install Ollama or download models. OpenAI-compatible embeddings and server/cloud Qdrant are also supported. Keep credentials in runtime environment variables, outside skill text and URLs.
 
 ```bash
 qdrant-memory --home /private/path/profile init
@@ -73,6 +73,6 @@ qdrant-memory --home /private/path/profile search --query 'review preferences'
 
 Initialize only an authorized target. `--help` proves interface availability, not service readiness. Connect MCP via [agent setup](agent-setup.md), or use the supported standalone CLI. Never substitute private Python calls or direct Qdrant access.
 
-Existing Hermes users can retain their MemoryProvider and `hermes qdrant-memory` maintenance/migration commands. Follow [Hermes setup](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme) for that integration. Automatic extraction and prefetch remain Hermes lifecycle features; standalone exposes explicit operations.
+Existing Hermes users can retain their MemoryProvider and `hermes qdrant-memory` maintenance/migration commands. Follow [Hermes setup](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme) for that integration. Automatic extraction and prefetch remain Hermes lifecycle features. Standalone exposes explicit operations.
 
-MCP and CRUD use one fixed operator-configured profile scope. MCP client names and model arguments cannot select identities. Separate users' profiles and process credentials. Operator maintenance can select broader scopes; check every selector. Embedded storage requires exclusive access. WriterLease coordinates a profile's writers, not distributed writers across independent profiles.
+MCP and CRUD use one fixed operator-configured profile scope. MCP client names and model arguments cannot select identities. Separate users' profiles and process credentials. Operator maintenance can select broader scopes. Check every selector. Embedded storage requires exclusive access. WriterLease coordinates a profile's writers, not distributed writers across independent profiles.

@@ -1,7 +1,7 @@
 # MCP memory capabilities
 
 Use this skill from an agent that can load its instructions and call compatible
-MCP tools or the standalone CLI. The skill guides operations; a separately
+MCP tools or the standalone CLI. The skill guides operations. A separately
 configured backend provides the MCP server and persistent storage. The server
 can also be used directly by a compatible client without installing the skill.
 
@@ -46,14 +46,14 @@ extraction/prefetch belongs to the Hermes plugin lifecycle.
 ## Sharing and supported clients
 
 [Shared memory](shared-memory.md) uses the same authorized user/profile/pipeline
-and `agent_id: null`; explicit agent IDs remain private. One active MCP process
+and `agent_id: null`. Explicit agent IDs remain private. One active MCP process
 holds the profile writer lease. Close it before another agent opens that profile.
 Do not describe this as a concurrent distributed memory service.
 
 Local integration was verified with Codex CLI 0.160.0 (discovery and add/search),
 OpenCode 2.0.24 (CLI registration plus explicit API connection), and Pi 1.1.0
 (CLI tool discovery). Pi SDK skill loading and shared/private scope E2E are also
-covered. Claude Code setup is documented; it has no recorded local acceptance.
+covered. Claude Code setup is documented. It has no recorded local acceptance.
 Other clients qualify by stdio MCP or CLI compatibility, not by a blanket claim
 that every host/model was tested. See the
 [host acceptance record](https://github.com/cnkang/skills/blob/main/docs/agent-host-acceptance.md)

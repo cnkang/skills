@@ -35,7 +35,7 @@ opencode mcp add qdrant-memory -- /private/path/qdrant-env/bin/qdrant-memory \
 opencode mcp list
 ```
 
-For manual config, V1 puts entries directly under `mcp` with `enabled`; V2 uses
+For manual config, V1 puts entries directly under `mcp` with `enabled`. V2 uses
 `mcp.servers` and optional `disabled`. Consult the matching
 [V1 guide](https://opencode.ai/docs/mcp-servers/) or
 [V2 guide](https://dev.opencode.ai/v2/docs/mcp-servers/) before editing.
@@ -53,13 +53,13 @@ Load the skill with `/skill:qdrant-memory` after installation/discovery.
 
 ## Other agents and Hermes
 
-Compatible stdio MCP clients can discover four `qdrant_memory_*` tools; hosts
+Compatible stdio MCP clients can discover four `qdrant_memory_*` tools. Hosts
 may prefix their names. Agents with command execution can use the JSON CLI via
 [usage](usage.md). Interface compatibility is not a claim that every host/model
 has been tested.
 
 Hermes users can keep native tools and `hermes qdrant-memory` without switching
-profiles. Its CLI provides maintenance/migration; standalone adds scoped CRUD.
+profiles. Its CLI provides maintenance/migration. Standalone adds scoped CRUD.
 Avoid concurrent embedded writers against the same storage.
 
 Use one memory interface for each Hermes profile: the native plugin or the
