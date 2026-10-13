@@ -131,8 +131,8 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately (0.2.1 commands pin a PyPI release, and
-Runtime 0.2.0 / MCP 0.1.0 are the previous public releases):
+runtime separately. Skill 0.2.4 uses Runtime 0.2.1 or MCP distribution 0.1.1.
+The commands pin exact PyPI versions:
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
