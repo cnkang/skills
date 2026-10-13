@@ -172,7 +172,7 @@ def _record(args: argparse.Namespace) -> int:
         # Missing confidence is allowed and intentionally maps to LOW.
         pass
 
-    env_mode = resolve_mode(os.environ.get("DEV_JEV_MODE"))
+    env_mode = resolve_mode(_process_environ.get("DEV_JEV_MODE"))
     mode = args.mode or env_mode
     event = {
         "schema_version": 1,
@@ -417,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "mode":
-            raw = os.environ.get("DEV_JEV_MODE")
+            raw = _process_environ.get("DEV_JEV_MODE")
             resolved = resolve_mode(raw)
             if raw and raw.strip().lower() not in MODES:
                 print("invalid DEV_JEV_MODE; failing safe to off", file=sys.stderr)
