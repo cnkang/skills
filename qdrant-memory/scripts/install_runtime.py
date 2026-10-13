@@ -32,9 +32,10 @@ def _hermes_home() -> Path | None:
     configured = os.environ.get("HERMES_HOME")
     if configured:
         try:
-            return Path(configured).expanduser()
+            home = Path(configured).expanduser()
         except (OSError, RuntimeError, ValueError):
             return None
+        return home if home.is_absolute() else None
     try:
         return Path.home() / ".hermes"
     except (OSError, RuntimeError, ValueError):
@@ -56,15 +57,36 @@ def hermes_detected() -> bool:
 
 def _inline_ids(value: str) -> set[str]:
     """IDs from an inline list value such as ``[qdrant-memory, other]``."""
-    return {item.strip().strip("'\"") for item in value.strip("[]").split(",") if item.strip()}
+    inner = value.strip().lstrip("[").rstrip("]")
+    items: list[str] = []
+    buf = ""
+    quote = ""
+    for char in inner:
+        if quote:
+            if char == quote:
+                quote = ""
+            else:
+                buf += char
+        elif char in "'\"":
+            quote = char
+        elif char == ",":
+            items.append(buf)
+            buf = ""
+        else:
+            buf += char
+    items.append(buf)
+    return {item.strip() for item in items if item.strip()}
 
 
 def _scan_disabled_ids(text: str) -> set[str]:
-    """Best-effort scan of the block layout for ``plugins:`` -> ``disabled:`` items.
+    """Best-effort scan for ``plugins:`` -> ``disabled:`` items.
 
-    Tolerates comments, blank lines, CRLF endings and indentation variations;
-    PyYAML stays preferred when importable. Unknown shapes yield an empty set
-    (the plugin is then treated as enabled, its default backend state).
+    Handles the block layout plus single-line flow mappings such as
+    ``plugins: {disabled: [qdrant-memory]}``, tolerating comments, blank
+    lines, CRLF endings and indentation variations; PyYAML stays preferred
+    when importable. Unparsed shapes (for example flow mappings split across
+    lines) yield an empty set — the plugin is then treated as enabled, its
+    default backend state.
     """
     found: set[str] = set()
     sub_indent = None  # indentation of the plugins sub-keys once seen
@@ -74,6 +96,11 @@ def _scan_disabled_ids(text: str) -> set[str]:
         if sub_indent is None:
             if re.fullmatch(r"plugins:[ \t]*", line):
                 sub_indent = -1  # marker: awaiting the first indented line
+            else:
+                flow = re.fullmatch(r"plugins:[ \t]*\{(.*)\}[ \t]*", line)
+                inner = re.search(r"disabled:[ \t]*\[(.*?)\]", flow.group(1)) if flow else None
+                if inner:
+                    found.update(_inline_ids("[" + inner.group(1) + "]"))
             continue
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
@@ -105,12 +132,12 @@ def _plugin_disabled_in_config(home: Path) -> bool:
     A memory backend is active without a ``plugins.enabled`` entry, so only a
     ``plugins.disabled`` entry turns it off. Best effort: YAML when available,
     a tolerant scan of the block layout otherwise (comments, blank lines and
-    indentation variations are accepted); unreadable configs report False
-    (installed and active).
+    indentation variations are accepted); unreadable or undecodable configs
+    report False (installed and active).
     """
     try:
         text = (home / "config.yaml").read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, ValueError):
         return False
     try:
         import yaml  # optional; the venv under construction may not have it

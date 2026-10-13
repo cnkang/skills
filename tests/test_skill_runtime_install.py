@@ -85,6 +85,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         advisory = subprocess.run([sys.executable, str(installer), "--venv", str(venv)], cwd=isolated, env=env, capture_output=True, text=True, timeout=60)
         assert advisory.returncode == 0
         assert "not necessary for Hermes" in advisory.stderr
+        assert json.loads(advisory.stdout)["ok"]
         unrelated = tmp_path / "unrelated-environment"
         unrelated.mkdir()
         sentinel = unrelated / "keep.txt"
