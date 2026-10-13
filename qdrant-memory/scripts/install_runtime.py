@@ -28,7 +28,11 @@ REQUIREMENT = (
 
 
 def _hermes_home() -> Path | None:
-    """Return the active Hermes home: HERMES_HOME when set, else ~/.hermes."""
+    """Return the active Hermes home: HERMES_HOME when set, else ~/.hermes.
+
+    A relative or unresolvable value returns None — the default home is not
+    substituted in that case.
+    """
     configured = os.environ.get("HERMES_HOME")
     if configured:
         try:

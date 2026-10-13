@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.3 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.3 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。在 Hermes 上，每个 profile 使用单一记忆接口。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 

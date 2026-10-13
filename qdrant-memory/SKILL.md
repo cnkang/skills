@@ -51,6 +51,9 @@ write directly to collections, create another schema/embedding pipeline or bypas
 Runtime/WriterLease. Embedded readers also need exclusive storage access; local
 leases do not exclude other profiles/hosts. Preserve recorded destructive recovery.
 Never automatically add `--confirm`, `--force` or `--all-agents`.
+
+## Hermes interface choice
+
 Use one memory interface for each Hermes profile. Before you register an
 interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory as
 enabled, do not register a second interface. Inform the user that Hermes needs
