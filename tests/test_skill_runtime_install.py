@@ -82,6 +82,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         assert json.loads(run([sys.executable, str(installer), "--venv", str(venv)]))["command"] == executable
         # A registered Hermes plugin produces the advisory on the verify path.
         (isolated / ".hermes/plugins/qdrant-memory").mkdir(parents=True)
+        (isolated / ".hermes/config.yaml").write_text("memory:\n  provider: qdrant-memory\n", encoding="utf-8")
         empty_bin = tmp_path / "empty-bin"
         empty_bin.mkdir()
         advisory = subprocess.run([sys.executable, str(installer), "--venv", str(venv)], cwd=isolated, env={**env, "PATH": str(empty_bin)}, capture_output=True, text=True, timeout=60)

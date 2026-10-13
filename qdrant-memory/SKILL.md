@@ -55,13 +55,15 @@ Never automatically add `--confirm`, `--force` or `--all-agents`.
 ## Hermes interface choice
 
 Use one memory interface for each Hermes profile. Before you register an
-interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory as
-enabled, do not register a second interface. Inform the user that Hermes needs
-no additional setup. If the plugin is installed but disabled, ask the user to
-enable it (`hermes plugins enable qdrant-memory`). Or register this skill's
-MCP server for that profile. If the plugin is not installed, recommend the
-Plugin Catalog install for Hermes (`hermes plugins install qdrant-memory`).
-Other agents can still use this skill.
+interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory,
+do not register a second interface. Ask the user to enable it when needed
+(`hermes plugins enable qdrant-memory`), then run `hermes memory setup` and
+select qdrant-memory as the memory provider. Inform the user that Hermes
+needs no further setup. If the plugin cannot be used for that profile,
+register this skill's MCP server for that profile instead. If the plugin is
+not installed, recommend the Plugin Catalog install for Hermes
+(`hermes plugins install qdrant-memory`) and the same setup step. Other
+agents can still use this skill.
 
 ## Verification
 

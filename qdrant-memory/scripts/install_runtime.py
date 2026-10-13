@@ -2,11 +2,12 @@
 """Install the reviewed standalone backend into an explicitly selected private venv.
 
 Print a Hermes advisory and continue. The advisory recommends the native
-plugin when it is missing. It notes an installed plugin that is disabled, and
-states that the skill is not necessary for Hermes when the plugin is enabled.
-Detection reads the active Hermes profile (HERMES_HOME, or ~/.hermes) and its
-config.yaml. The installer does not run a Hermes command. Other agents can
-still use the runtime.
+plugin when it is missing. It notes an installed plugin that is disabled or
+not selected as the memory provider, and states that the skill is not
+necessary for Hermes when the plugin is enabled and selected. Detection reads
+the active Hermes profile (HERMES_HOME, or ~/.hermes) and its config.yaml.
+The installer does not run a Hermes command. Other agents can still use the
+runtime.
 """
 from __future__ import annotations
 
@@ -162,8 +163,71 @@ def _plugin_disabled_in_config(home: Path) -> bool:
     return PLUGIN_ID in _scan_disabled_ids(text)
 
 
+def _scan_memory_provider(text: str) -> str | None:
+    """Best-effort scan for a top-level ``memory:`` -> ``provider:`` value.
+
+    Handles the block layout plus single-line flow mappings such as
+    ``memory: {provider: qdrant-memory}``, with the same tolerance as
+    ``_scan_disabled_ids``.
+    """
+    sub_indent = None
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if sub_indent is None:
+            if re.fullmatch(r"memory:[ \t]*(?:#.*)?", line):
+                sub_indent = -1
+            else:
+                flow = re.fullmatch(r"memory:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
+                inner = re.search(r"provider:[ \t]*([^,}\s]+)", flow.group(1)) if flow else None
+                if inner:
+                    return inner.group(1).strip("'\"") or None
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line[:1].isspace():
+            break
+        indent = len(line) - len(line.lstrip())
+        if sub_indent == -1:
+            sub_indent = indent
+        if indent < sub_indent:
+            break
+        if indent > sub_indent:
+            continue
+        key, _, value = stripped.partition(":")
+        if key == "provider":
+            value = value.split("#", 1)[0].strip().strip("'\"")
+            return value or None
+    return None
+
+
+def _plugin_provider_selected(home: Path) -> bool:
+    """True when the profile selects the plugin as its memory provider.
+
+    Detection is best effort and mirrors ``_plugin_disabled_in_config``. An
+    unreadable config or a missing ``memory.provider`` value reports False:
+    the plugin is then installed but not active.
+    """
+    try:
+        text = (home / "config.yaml").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return False
+    try:
+        import yaml  # optional; the venv under construction may not have it
+    except ImportError:
+        yaml = None
+    if yaml is not None:
+        try:
+            memory = (yaml.safe_load(text) or {}).get("memory")
+            if isinstance(memory, dict):
+                return str(memory.get("provider") or "") == PLUGIN_ID
+        except Exception:
+            pass
+    return _scan_memory_provider(text) == PLUGIN_ID
+
+
 def hermes_plugin_state() -> str:
-    """Return 'absent', 'enabled' or 'disabled' for the active Hermes home."""
+    """Return 'absent', 'disabled', 'inactive' or 'enabled' for the active profile."""
     home = _hermes_home()
     if home is None:
         return "absent"
@@ -172,7 +236,11 @@ def hermes_plugin_state() -> str:
             return "absent"
     except OSError:
         return "absent"
-    return "disabled" if _plugin_disabled_in_config(home) else "enabled"
+    if _plugin_disabled_in_config(home):
+        return "disabled"
+    if not _plugin_provider_selected(home):
+        return "inactive"
+    return "enabled"
 
 
 def hermes_advisory() -> str:
@@ -182,18 +250,26 @@ def hermes_advisory() -> str:
     state = hermes_plugin_state()
     if state == "enabled":
         return (
-            "Note: Hermes on this machine already has the qdrant-memory plugin enabled.\n"
-            "This skill is not necessary for Hermes: use the native qdrant-memory tools\n"
-            "and the \"hermes qdrant-memory\" commands. Other agents can still use the\n"
-            "skill, for example Codex, Claude Code, OpenCode or Pi."
+            "Note: Hermes on this machine already has the qdrant-memory plugin enabled\n"
+            "and selected as its memory provider. This skill is not necessary for Hermes:\n"
+            "use the native qdrant-memory tools and the \"hermes qdrant-memory\" commands.\n"
+            "Other agents can still use the skill, for example Codex, Claude Code,\n"
+            "OpenCode or Pi."
+        )
+    if state == "inactive":
+        return (
+            "Note: Hermes on this machine has the qdrant-memory plugin installed but\n"
+            "not selected as its memory provider. Run \"hermes memory setup\" and\n"
+            "select qdrant-memory, or register this skill's MCP server for the profile\n"
+            "instead. Other agents can still use the runtime."
         )
     if state == "disabled":
         return (
             "Note: Hermes on this machine has the qdrant-memory plugin installed but\n"
             "disabled. Enable it for the native memory tools (\"hermes plugins enable\n"
-            "qdrant-memory\"), or register this skill's MCP server for the profile\n"
-            "instead. Other agents, for example Codex, Claude Code, OpenCode or Pi,\n"
-            "can use the runtime either way."
+            "qdrant-memory\"). Then run \"hermes memory setup\" and select\n"
+            "qdrant-memory, or register this skill's MCP server for the profile\n"
+            "instead. Other agents can use the runtime either way."
         )
     return (
         "Note: Hermes is present on this machine, but its qdrant-memory plugin is not\n"
