@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.3 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.4 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
@@ -156,8 +156,8 @@ bundled installer from the installed skill directory:
 python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /private/path/qdrant-env
 ```
 
-Use the actual skill directory printed by the CLI. The installer needs Python
-3.11+ and Git, returns the absolute runtime command, and verifies CLI/MCP imports.
+Use the actual skill directory printed by the CLI. By default the installer needs only Python 3.11+ and PyPI. Source installs also
+need Git. It returns the absolute runtime command and verifies CLI/MCP imports.
 It leaves existing installations and Hermes settings intact. `npx skills` itself
 does not execute it. CI exercises real npx distribution, fresh pinned-source
 backend installation, CLI CRUD and MCP discovery/calls using isolated profiles.
