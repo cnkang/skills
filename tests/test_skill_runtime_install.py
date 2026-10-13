@@ -68,6 +68,12 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         assert json.loads(run([executable, "--home", str(home), "init"]))["ok"]
         assert json.loads(run([executable, "--home", str(home), "doctor"]))["ok"]
         saved = json.loads(run([executable, "--home", str(home), "add", "--text", "Installation acceptance remembers this fact"]))
+        similar = []
+        for text in ("similarity-fixture: cats preferred", "similarity-fixture: cats avoided"):
+            added = json.loads(run([executable, "--home", str(home), "add", "--text", text]))
+            assert added["action"] == "ADD"
+            similar.append(added["id"])
+        assert len(set(similar)) == 2
 
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
@@ -79,13 +85,20 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
                     await session.initialize()
                     tools = await session.list_tools()
                     assert {tool.name for tool in tools.tools} == {"qdrant_memory_" + name for name in ("search", "add", "update", "delete")}
+                    response = await session.call_tool("qdrant_memory_add", {"text": "similarity-fixture: cats preferred"})
+                    assert not response.isError
+                    assert json.loads(response.content[0].text) == {"action": "SKIP", "id": similar[0]}
                     response = await session.call_tool("qdrant_memory_search", {"query": "Installation acceptance remembers this fact"})
                     assert not response.isError
                     assert json.loads(response.content[0].text)["memories"][0]["id"] == saved["id"]
+                    response = await session.call_tool("qdrant_memory_update", {"id": saved["id"], "text": "Installation updated fact"})
+                    assert not response.isError
                     response = await session.call_tool("qdrant_memory_delete", {"id": saved["id"]})
                     assert not response.isError
 
         asyncio.run(check())
+        found = json.loads(run([executable, "--home", str(home), "search", "--query", "similarity-fixture: cats"]))
+        assert set(similar) <= {memory["id"] for memory in found["memories"]}
         # Reuse a verified installation without another pip invocation.
         assert json.loads(run([sys.executable, str(installer), "--venv", str(venv), *selection]))["command"] == executable
         # A registered Hermes plugin produces the advisory on the verify path.
