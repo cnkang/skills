@@ -3,7 +3,7 @@
 | MCP or Hermes tool | Arguments | Result |
 |---|---|---|
 | `qdrant_memory_search` | Required `query: string` and optional `category: string` | `memories` array, including `id`, `score` and payload provenance |
-| `qdrant_memory_add` | Required `text: string` | Plugin result describing the saved or deduplicated memory |
+| `qdrant_memory_add` | Required `text: string` | `ADD` or exact canonical-text `SKIP` in scope; distinct similar texts are retained without LLM review in Runtime 0.2.1 |
 | `qdrant_memory_update` | Required `id: string`, `text: string` | `id`, `action: UPDATE` on success |
 | `qdrant_memory_delete` | Required `id: string` | `id`, `action: DELETE` on success |
 

@@ -126,18 +126,22 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装：
+作用域。skill 和运行时分别安装（0.2.1 命令在正式发布后使用；公网已有 Runtime
+0.2.0 / MCP 0.1.0）：
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # 按需要选择其他支持的 agent ID，或多个 ID。
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4'
+  'hermes-plugin-qdrant-memory[mcp]==0.2.1'
 ```
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
-原 v0.1.0 发布版本没有这些新增入口，以上命令固定安装对应源码。
+原 v0.1.0 没有这些入口，以上命令固定安装 PyPI 发行版本。
+主要使用 MCP 的 agent 可在发布后优先选择 `uvx --from qdrant-memory-mcp==0.1.1
+qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
+两种安装方式共用 Runtime，已有用户无需强制切换分发包。
 
 后端缺失时，获得安装授权的 agent 也可以执行安装后的 skill 自带脚本：
 
@@ -145,8 +149,9 @@ python3 -m venv /private/path/qdrant-env
 python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /private/path/qdrant-env
 ```
 
-以 CLI 输出的实际 skill 目录为准。脚本需要 Python 3.11+ 和 Git，返回运行时
-命令的绝对路径，并验证 CLI/MCP 导入；保留已有安装及 Hermes 设置。
+以 CLI 输出的实际 skill 目录为准。默认只需 Python 3.11+ 与 PyPI，显式完整 SHA
+源码安装才需要 Git/GitHub。脚本验证固定版本、CLI/MCP 导入并返回命令绝对路径；
+保留已有安装及 Hermes 设置，不匹配时建议新建环境，不自动升级。
 `npx skills` 本身不会执行脚本。CI 使用隔离 profile 验证真实 npx 分发、全新
 环境中安装固定源码后端、CLI 读写，以及 MCP 工具发现和调用。
 

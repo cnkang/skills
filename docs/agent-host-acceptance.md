@@ -1,5 +1,11 @@
 # Agent host acceptance
 
+Skill 0.2.4 prepares pinned PyPI Runtime 0.2.1 / MCP distribution 0.1.1 use.
+Until publication, CI explicitly selects the immutable candidate recorded in
+the workflow and runtime reference. Historical host results below retain their
+original revisions and dates; they do not certify the new release or all agents.
+No installer configures an agent, initializes storage or upgrades an existing venv.
+
 Two independent open-source hosts have mandatory acceptance jobs: Hermes and Pi.
 The existing skills CLI distribution matrix separately checks nine installation
 layouts. A layout check alone is not evidence that a host loads instructions.

@@ -21,12 +21,8 @@ import subprocess
 import sys
 import venv
 
-REVISION = "1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4"
+VERSION = "0.2.1"
 PLUGIN_ID = "qdrant-memory"
-REQUIREMENT = (
-    "hermes-plugin-qdrant-memory[mcp] @ "
-    "git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + REVISION
-)
 
 
 def _hermes_home() -> Path | None:
@@ -289,10 +285,10 @@ def main() -> int:
     """Install or verify the runtime selected by the required ``--venv`` CLI path.
 
     Expand ``~`` and resolve the absolute path. If absent, create a venv and
-    install the pinned backend with MCP support; otherwise, only verify imports
-    and CLI availability, without upgrading or checking the installed revision.
+    install a pinned PyPI release with MCP support, or an explicitly selected
+    full Git SHA. Existing environments are verified without upgrading.
     On success, print JSON containing ``ok``, absolute ``python`` and ``command``
-    paths, and ``requested_revision``, then return 0.
+    paths, requested and installed versions and the optional revision, then return 0.
 
     Return 1 with a stderr diagnostic for OSError or CalledProcessError during
     creation, installation, or verification, retaining any partial installation.
@@ -301,7 +297,16 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--venv", required=True, type=Path, help="new private environment, or an already working installation")
+    parser.add_argument("--version", default=VERSION, help="exact Runtime release version (default: %(default)s)")
+    parser.add_argument("--revision", help="optional full immutable Git SHA for candidate/development installation")
     args = parser.parse_args()
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.version):
+        parser.error("--version must be an exact three-part release version")
+    if args.revision and not re.fullmatch(r"[0-9a-f]{40}", args.revision):
+        parser.error("--revision must be a full lowercase 40-character Git SHA")
+    requirement = f"hermes-plugin-qdrant-memory[mcp]=={args.version}"
+    if args.revision:
+        requirement = "hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + args.revision
     if sys.version_info < (3, 11):
         parser.error("Python 3.11+ is required")
     target = args.venv.expanduser().resolve()
@@ -329,14 +334,19 @@ def main() -> int:
     try:
         if not target.exists():
             venv.EnvBuilder(with_pip=True).create(target)
-            subprocess.run([str(python), "-m", "pip", "install", REQUIREMENT], env=env, cwd=target, check=True, stdout=sys.stderr)
+            subprocess.run([str(python), "-m", "pip", "install", requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
-        subprocess.run([str(python), "-I", "-c", "import qdrant_memory.standalone; import mcp.server.fastmcp"], env=env, cwd=target, check=True, stdout=sys.stderr)
+        probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; import mcp.server.fastmcp; d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
+        installed = json.loads(probe.stdout)
+        if installed["version"] != args.version:
+            raise ValueError(f"Installed Runtime {installed['version']} differs from requested {args.version}")
+        if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:
+            raise ValueError("Installed Runtime source does not match the requested immutable revision")
         subprocess.run([str(console), "--help"], env=env, cwd=target, check=True, stdout=sys.stderr)
-    except (OSError, subprocess.CalledProcessError) as exc:
+    except (OSError, subprocess.CalledProcessError, ValueError, KeyError) as exc:
         print(f"Runtime installation/verification failed: {exc}. Existing files were retained; choose a new --venv path to retry a partial installation.", file=sys.stderr)
         return 1
-    print(json.dumps({"ok": True, "python": str(python), "command": str(console), "requested_revision": REVISION}))
+    print(json.dumps({"ok": True, "python": str(python), "command": str(console), "requested_version": args.version, "installed_version": installed["version"], "requested_revision": args.revision}))
     return 0
 
 

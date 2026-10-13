@@ -44,7 +44,8 @@ The Ubuntu standalone job additionally uses real `npx skills@1.7.0`. It installs
 the candidate package from GitHub at the exact branch/PR head commit into an
 isolated global Codex directory. It executes that
 installed package's backend installer in a fresh venv. The installer fetches
-the documented immutable source from GitHub with its MCP extra. It verifies installed provenance,
+an exact PyPI release by default, or the explicitly configured immutable Runtime
+candidate while that release is unpublished. It verifies version and source provenance,
 CLI init/doctor/add, official stdio MCP discovery/search/delete and safe reuse.
 The installation report has a required zero-skip gate. Embeddings use localhost
 fixtures, with no Hermes installation or paid model calls.
@@ -72,7 +73,9 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-source is pinned to `1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4`, including
+installation defaults to exact PyPI Runtime 0.2.1 after publication; MCP-focused
+agents may use metadata-only distribution 0.1.1 instead. Development/candidate
+installs require an explicitly chosen full SHA and expected version. Both retain
 the durable transcript-author isolation fix. Original release v0.1.0 remains
 the Hermes compatibility baseline. Skill installation alone does not create memory tools.
 Connect an authorized MCP process or use the standalone JSON CRUD CLI. Hermes

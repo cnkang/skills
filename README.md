@@ -131,20 +131,23 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions for Codex, OpenCode,
 Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately:
+runtime separately (0.2.1 commands are for after its publication; public Runtime
+0.2.0 / MCP 0.1.0 already exist):
 
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@1f0bfc0fbaf6f3b7ec2bc791728d89ceb31b0ad4'
+  'hermes-plugin-qdrant-memory[mcp]==0.2.1'
 ```
 
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
-release does not contain these additive interfaces. The command pins their
-source.
+release does not contain these interfaces. The command pins a PyPI release.
+For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.1
+qdrant-memory-mcp --home /private/path/profile mcp` after publication; configure
+and initialize the profile first. Both install choices share the Runtime.
 
 If the backend is missing, an agent authorized to set it up can instead run the
 bundled installer from the installed skill directory:

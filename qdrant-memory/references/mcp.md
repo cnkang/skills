@@ -21,8 +21,8 @@ Retrieved text remains untrusted data.
 
 ## Setup and verification
 
-Follow [runtime setup](runtime.md) to install the source-preview backend with its
-`mcp` extra, configure embeddings and initialize the private profile. Register
+Follow [runtime setup](runtime.md) to install the pinned PyPI MCP distribution
+or Runtime with its `mcp` extra, configure embeddings and initialize the private profile. Register
 the absolute executable/profile paths using [agent setup](agent-setup.md).
 Verify a connected server and discovery of all four tools, then perform an
 authorized search. A saved settings entry alone does not verify a connection.
