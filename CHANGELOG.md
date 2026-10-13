@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## qdrant-memory 0.2.4 — 2026-10-13
+
+- Default authorized backend installation to exact PyPI Runtime 0.2.1, with
+  optional immutable source installation and version/provenance verification.
+  Reuse matching environments and refuse implicit upgrades of other versions.
+- Recommend MCP distribution 0.1.1 for MCP-focused agents. Both installation
+  choices use the same Runtime and require no Hermes installation.
+- Document deterministic explicit-add deduplication: distinct texts remain
+  separate even when highly similar, without an LLM. Preserve scope, writer
+  ownership, Hermes lifecycle, and authorized maintenance boundaries.
+- Synchronize English and Chinese README version guidance and validate the
+  installer and standalone CLI/MCP contracts across supported platforms.
+
+## Earlier updates
+
 - Apply Simplified Technical English across all skill documentation: shorter
   sentences, no semicolons, active voice. No interface changes.
 
