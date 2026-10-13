@@ -1,7 +1,7 @@
 # Claude setup
 
 Use the native Agent Skills installation through `npx skills@latest add cnkang/skills --skill conventional-commit-batcher -a claude-code`.
-Choose the CLI agent ID for your host; consult `npx skills@latest --help` and the upstream supported-agent list.
+Choose the CLI agent ID for your host. Consult `npx skills@latest --help` and the upstream supported-agent list.
 Keep the complete package so scripts and references resolve from its actual location.
 
 Native skill installation does not deploy commands, specialist agents, steering,

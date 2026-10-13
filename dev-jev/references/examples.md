@@ -1,6 +1,6 @@
 # dev-jev examples
 
-These are direct payload shapes for the installed the current agent `jev_evaluate` plugin tool. Keep `state` short; do not copy sensitive source, secrets, or a whole conversation. The JSON below is illustrative input, not an assertion about what Jev will answer.
+These are direct payload shapes for the installed `jev_evaluate` plugin tool. Keep `state` short. Do not copy sensitive source, secrets, or a whole conversation. The JSON below is illustrative input, not an assertion about what Jev will answer.
 
 ## 1. Task intake: one batched request
 
@@ -91,14 +91,14 @@ Keep the ID-to-path lookup locally. If confidence is LOW/missing, retain that ca
 }
 ```
 
-The example state is already summarized. Never substitute a full CI log. A likely regression sends the current agent to inspect the diff and test; an uncertain answer sends the current agent to gather evidence.
+The example state is already summarized. Never substitute a full CI log. A likely regression sends the current agent to inspect the diff and test. An uncertain answer sends the current agent to gather evidence.
 
 ## 4. Debug loop
 
-Send only the controller fields: `goal`, `current_hypothesis`, `last_action`, `last_result`, `failure_signature`, `attempt_count`, `files_changed`, `tests_run`. Ask one Choice from the defined action set in `SKILL.md`. At attempt 2 with the same normalized signature, explicitly ask whether to change strategy. At attempt 3, do not call Jev again; let the current agent re-plan.
+Send only the controller fields: `goal`, `current_hypothesis`, `last_action`, `last_result`, `failure_signature`, `attempt_count`, `files_changed`, `tests_run`. Ask one Choice from the defined action set in `SKILL.md`. At attempt 2 with the same normalized signature, explicitly ask whether to change strategy. At attempt 3, do not call Jev again. Let the current agent re-plan.
 
 ## 5. Review and release
 
-For a short changed-file/hunk summary, batch separate Nouls for behavior change, security relevance, memory safety, concurrency, performance, compatibility, test gap, and docs contract. HIGH/critical prioritizes code reading and call-path review; LOW never skips review.
+For a short changed-file/hunk summary, batch separate Nouls for behavior change, security relevance, memory safety, concurrency, performance, compatibility, test gap, and docs contract. HIGH/critical prioritizes code reading and call-path review. LOW never skips review.
 
-Near release, ask separate questions such as “Is there evidence of an untested behavior change?” and “Does the current evidence indicate manual testing is still needed?” Do not ask whether to merge, release, or approve. Verify every gate independently.
+Near release, ask separate questions. Examples are “Is there evidence of an untested behavior change?” and “Does the current evidence indicate manual testing is still needed?” Do not ask whether to merge, release, or approve. Verify every gate independently.

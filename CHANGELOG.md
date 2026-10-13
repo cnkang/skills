@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Apply Simplified Technical English across all skill documentation: shorter
+  sentences, no semicolons, active voice. No interface changes.
+
 - **qdrant-memory 0.2.3:** recommend one memory interface for each Hermes
   profile in the skill guidance and MCP/Hermes setup notes. Direct users to
   enable the native plugin when needed, then select it with `hermes memory
@@ -17,31 +20,31 @@
   Exclude local environment secrets while retaining publishable example files.
 
 - **qdrant-memory 0.2.2:** pin new backend installation and required runtime CI
-  to the merged backend PR #35 with the transcript-author isolation fix. Preserve CLI/MCP interfaces;
-  document that receiving the security update requires a fresh private environment
-  because the installer never upgrades an existing runtime.
+  to the merged backend PR #35 with the transcript-author isolation fix. Preserve
+  CLI/MCP interfaces. Document that receiving the security update requires a fresh
+  private environment because the installer never upgrades an existing runtime.
 
 - **qdrant-memory 0.2.1:** make the four MCP tools, skill/runtime separation,
   local stdio setup and verified host boundaries explicit. Keep Hermes lifecycle
   compatibility and sequential shared scopes. Pin installation and CI to the
   tested merged backend snapshot, refreshed after backend PR #34. Bundle an
-  authorized missing-backend installer;
-  reject shell-sensitive POSIX environment paths before pip creates CLI wrappers,
-  with literal-path and space-path regression checks in installation acceptance;
-  require real npx distribution, fresh VCS installation and CLI/MCP acceptance
-  in CI. No backend runtime interface changes.
+  authorized missing-backend installer. Reject shell-sensitive POSIX environment
+  paths before pip creates CLI wrappers, with literal-path and space-path
+  regression checks in installation acceptance. Require real npx distribution,
+  fresh VCS installation and CLI/MCP acceptance in CI. No backend runtime
+  interface changes.
 
 - **qdrant-memory 0.2.0:** agent-neutral standalone JSON CLI and stdio MCP
   instructions, fixed-profile scope, Codex/Claude Code/OpenCode/Pi setup, and
-  no-Hermes runtime acceptance. Preserve the original Hermes tools and CLI;
-  automatic extraction remains its lifecycle feature. Pin the additive backend
+  no-Hermes runtime acceptance. Preserve the original Hermes tools and CLI.
+  Automatic extraction remains its lifecycle feature. Pin the additive backend
   source until a release includes standalone support.
 
 - **Second agent host:** add MIT Pi Coding Agent 1.1.0 SDK acceptance with a
   pinned integrity-checked npm lockfile. Eleven tests exercise all five packages'
   discovery and explicit expansion plus real Qdrant reference reads. Three OS
   jobs, zero-skip JUnit gates and required-check aggregation need no paid API,
-  account, model download or GPU; model responses are deterministic fixtures.
+  account, model download or GPU. Model responses are deterministic fixtures.
 
 - **qdrant-memory 0.1.0:** one independent document-only package with
   usage, maintenance and migration workflows loaded on demand, using the Hermes
@@ -55,24 +58,24 @@
   contract. Three-platform Hermes Hub and disposable runtime E2E use pinned host
   and plugin sources, real embedded storage and local HTTP embedding fixtures.
   JUnit artifacts, rejection of skipped/empty acceptance and a required-checks
-  aggregate complete the CI gates; no production services. Existing skill
+  aggregate complete the CI gates. No production services. Existing skill
   versions and paths remain.
 
-- **conventional-commit-batcher 4.0.0 (breaking):** one native skill entrypoint;
-  legacy hidden adapters and AGENTS/CLAUDE files move to opt-in templates. Existing
+- **conventional-commit-batcher 4.0.0 (breaking):** one native skill entrypoint.
+  Legacy hidden adapters and AGENTS/CLAUDE files move to opt-in templates. Existing
   external adapters require deliberate migration. Safety checks read index blob
   sizes, handle special paths and unresolved index entries, and withhold secret
   snippets from reports.
 - **repository-quality-gate-fixer 0.8.0:** local installed-skill scanning is off by
-  default. Opt in with `--skill-scan`; `--no-skill-scan` remains supported.
-  Home-path display handles Windows separators, case and UNC paths; Git fixtures
+  default. Opt in with `--skill-scan`. The `--no-skill-scan` flag remains supported.
+  Home-path display handles Windows separators, case and UNC paths. Git fixtures
   use an explicit identity so tests do not depend on user configuration.
 - **sonarcloud-link-inspector 1.1.0:** EU/US routing, precise URL/endpoint validation,
   bounded transient-only retries, retained batch failures, fetch statuses and
-  process exit codes. Existing data fields remain; callers should now handle
+  process exit codes. Existing data fields remain. Callers should now handle
   nonzero exits for partial/failed results or invalid input/configuration.
-- **dev-jev 0.2.0:** host-neutral instructions and optional Hermes provider setup;
-  neutral telemetry arguments/platform paths with legacy argument, field and
+- **dev-jev 0.2.0:** host-neutral instructions and optional Hermes provider setup.
+  Neutral telemetry arguments and platform paths keep legacy argument, field and
   log-reading compatibility. Missing providers never block the main task.
 - **Distribution:** individual/selected installation and updates, self-contained
   licenses, native UI metadata, package validation and isolated CLI regressions.
