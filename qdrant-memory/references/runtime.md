@@ -2,9 +2,8 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-Runtime 0.2.0 and MCP distribution 0.1.0 are already published. This skill
-prepares Runtime 0.2.1 / MCP 0.1.1 support. The commands below require those new
-versions to be published first. For MCP-focused agents, prefer the metadata-only
+Runtime 0.2.1 and MCP distribution 0.1.1 are the current releases. The commands
+below use those pinned versions. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
 
 ```bash
@@ -51,11 +50,10 @@ destination and retain the same collection, scope and embedding pipeline.
 For an explicitly authorized candidate/development/fallback source, use
 `--version 0.2.1 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
-are optional and never the production default. Before 0.2.1 publication, use the
-reviewed candidate SHA explicitly. Never silently fall back from PyPI.
-Preparation CI uses candidate `2ed69c4e5b65bee12c6352ab9c294ede69c4c246`
+are optional and never the production default. Never silently fall back from PyPI.
+Preparation CI validated revision `2ed69c4e5b65bee12c6352ab9c294ede69c4c246`
 ([Runtime PR #37](https://github.com/cnkang/hermes-plugin-qdrant-memory/pull/37)).
-This is a candidate reference, not the final merged/released commit.
+The published release tag is the source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
 until an explicit fresh transcript reset. Attributed per-turn writes continue.

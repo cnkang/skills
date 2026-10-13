@@ -146,7 +146,7 @@ The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
 release does not contain these interfaces. The command pins a PyPI release.
 For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.1
-qdrant-memory-mcp --home /private/path/profile mcp` after publication; configure
+qdrant-memory-mcp --home /private/path/profile mcp`; configure
 and initialize the profile first. Both install choices share the Runtime.
 
 If the backend is missing, an agent authorized to set it up can instead run the

@@ -126,7 +126,7 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装（0.2.1 命令在正式发布后使用；公网已有 Runtime
+作用域。skill 和运行时分别安装（0.2.1 命令使用固定 PyPI 版本；公网已有 Runtime
 0.2.0 / MCP 0.1.0）：
 
 ```bash
@@ -139,7 +139,7 @@ python3 -m venv /private/path/qdrant-env
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
 原 v0.1.0 没有这些入口，以上命令固定安装 PyPI 发行版本。
-主要使用 MCP 的 agent 可在发布后优先选择 `uvx --from qdrant-memory-mcp==0.1.1
+主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.1.1
 qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
 两种安装方式共用 Runtime，已有用户无需强制切换分发包。
 
