@@ -53,8 +53,8 @@ For an explicitly authorized candidate/development/fallback source, use
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Before 0.2.1 publication, use the
 reviewed candidate SHA explicitly; never silently fall back from PyPI.
-Preparation CI uses candidate `b7b42799f29ee3ba83b91aa4f7cec3b30cc4dd21`
-([Runtime PR](https://github.com/cnkang/hermes-plugin-qdrant-memory/pulls)).
+Preparation CI uses candidate `2ed69c4e5b65bee12c6352ab9c294ede69c4c246`
+([Runtime PR #37](https://github.com/cnkang/hermes-plugin-qdrant-memory/pull/37)).
 This is a candidate reference, not the final merged/released commit.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
