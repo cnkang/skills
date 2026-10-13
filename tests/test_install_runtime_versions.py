@@ -11,10 +11,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture
-def installer():
+def installer(monkeypatch):
     spec = importlib.util.spec_from_file_location("release_installer", ROOT / "qdrant-memory/scripts/install_runtime.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    # Unit probes mock target processes; exercise supported-interpreter paths
+    # even in the skill package's Python 3.10 static validation job.
+    monkeypatch.setattr(module.sys, "version_info", (3, 11))
     return module
 
 
@@ -58,6 +61,36 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
     assert installer.main() == 0
     assert calls[0][-1] == "hermes-plugin-qdrant-memory[mcp]==0.2.1"
     assert json.loads(capsys.readouterr().out)["installed_version"] == "0.2.1"
+
+
+def test_posix_venv_links_managed_interpreter(installer, tmp_path, monkeypatch):
+    """Copied macOS managed executables cannot resolve their relative libpython."""
+    import os
+
+    options = []
+
+    class Builder:
+        def __init__(self, **kwargs):
+            options.append(kwargs)
+
+        def create(self, path):
+            raise OSError("stop after observing interpreter configuration")
+
+    monkeypatch.setattr(installer.venv, "EnvBuilder", Builder)
+    monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(tmp_path / "fresh")])
+    assert installer.main() == 1
+    assert options == [{"with_pip": True, "symlinks": os.name != "nt"}]
+
+
+def test_python_below_runtime_minimum_refused(installer, tmp_path, monkeypatch):
+    target = tmp_path / "absent"
+    monkeypatch.setattr(installer.sys, "version_info", (3, 10))
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
+    with pytest.raises(SystemExit) as exc:
+        installer.main()
+    assert exc.value.code == 2
+    assert not target.exists()
 
 
 @pytest.mark.parametrize("option,value", [("--version", "main"), ("--revision", "main"), ("--revision", "abcdef")])
