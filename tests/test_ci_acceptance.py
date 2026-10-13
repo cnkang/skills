@@ -76,8 +76,9 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     assert checkouts[0]["repository"] == "cnkang/hermes-plugin-qdrant-memory"
     import re
     assert re.fullmatch(r"[0-9a-f]{40}", checkouts[0]["ref"])
+    assert checkouts[0]["ref"] in (ROOT / "qdrant-memory/references/runtime.md").read_text(encoding="utf-8")
     for document in ("README.md", "README_zh-CN.md", "qdrant-memory/references/runtime.md"):
-        assert "git@" + checkouts[0]["ref"] in (ROOT / document).read_text(encoding="utf-8")
+        assert "hermes-plugin-qdrant-memory[mcp]==0.2.1" in (ROOT / document).read_text(encoding="utf-8")
     assert any('[mcp]' in step.get("run", "") for step in job["steps"])
     assert any("tests/standalone" in step.get("run", "") for step in job["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 27" in step["run"] for step in job["steps"])
@@ -88,6 +89,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     installer = next(step for step in job["steps"] if "test_skill_runtime_install.py" in step.get("run", ""))
     assert installer["if"] == "runner.os == 'Linux'"
     assert installer["env"]["QDRANT_SKILL_INSTALL_E2E"] == "1"
+    assert installer["env"]["QDRANT_SKILL_INSTALL_REVISION"] == checkouts[0]["ref"]
     assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/tree/${{ github.event.pull_request.head.sha || github.sha }}"
     gate = next(step for step in job["steps"] if "skill-runtime-install.xml --minimum-tests 1" in step.get("run", ""))
     assert gate["if"] == installer["if"]
