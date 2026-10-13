@@ -79,14 +79,16 @@ def _inline_ids(value: str) -> set[str]:
 
 
 def _scan_disabled_ids(text: str) -> set[str]:
-    """Best-effort scan for ``plugins:`` -> ``disabled:`` items.
+    """Best-effort scan for a top-level ``plugins:`` -> ``disabled:`` items.
 
     Handles the block layout plus single-line flow mappings such as
-    ``plugins: {disabled: [qdrant-memory]}``, tolerating comments, blank
-    lines, CRLF endings and indentation variations; PyYAML stays preferred
-    when importable. Unparsed shapes (for example flow mappings split across
-    lines) yield an empty set — the plugin is then treated as enabled, its
-    default backend state.
+    ``plugins: {disabled: [qdrant-memory]}``, tolerating trailing comments,
+    blank lines, CRLF endings and indentation variations (sequence items may
+    sit at or below the key's indentation); PyYAML stays preferred when
+    importable. Only list values are recognized, matching Hermes' own
+    parsing; unparsed shapes (for example flow mappings split across lines)
+    yield an empty set — the plugin is then treated as enabled, its default
+    backend state.
     """
     found: set[str] = set()
     sub_indent = None  # indentation of the plugins sub-keys once seen
@@ -94,10 +96,10 @@ def _scan_disabled_ids(text: str) -> set[str]:
     for raw in text.splitlines():
         line = raw.rstrip()
         if sub_indent is None:
-            if re.fullmatch(r"plugins:[ \t]*", line):
+            if re.fullmatch(r"plugins:[ \t]*(?:#.*)?", line):
                 sub_indent = -1  # marker: awaiting the first indented line
             else:
-                flow = re.fullmatch(r"plugins:[ \t]*\{(.*)\}[ \t]*", line)
+                flow = re.fullmatch(r"plugins:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
                 inner = re.search(r"disabled:[ \t]*\[(.*?)\]", flow.group(1)) if flow else None
                 if inner:
                     found.update(_inline_ids("[" + inner.group(1) + "]"))
@@ -112,11 +114,13 @@ def _scan_disabled_ids(text: str) -> set[str]:
             sub_indent = indent
         if indent < sub_indent:
             break
-        if indent > sub_indent:
-            if in_disabled and stripped.startswith("-"):
+        if stripped.startswith("-"):
+            if in_disabled:
                 item = stripped[1:].split("#", 1)[0].strip().strip("'\"")
                 if item:
                     found.add(item)
+            continue
+        if indent > sub_indent:
             continue
         key, _, value = stripped.partition(":")
         value = value.split("#", 1)[0].strip()

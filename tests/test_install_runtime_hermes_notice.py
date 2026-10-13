@@ -26,7 +26,7 @@ def isolate(monkeypatch, tmp_path):
     monkeypatch.delenv("HERMES_HOME", raising=False)
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("USERPROFILE", str(home))
-    monkeypatch.setenv("PATH", "")
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-bin"))
     return home
 
 
@@ -172,3 +172,21 @@ def test_fallback_branch_used_without_pyyaml(installer, tmp_path, monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "yaml", None)  # forces ImportError in the function
     assert "disabled" in installer.hermes_advisory()
+
+
+def test_fallback_scan_comment_and_indent_edges(installer):
+    scan = installer._scan_disabled_ids
+    assert scan("plugins: # note\n  disabled:\n    - qdrant-memory\n") == {"qdrant-memory"}
+    assert scan("plugins: {disabled: [qdrant-memory]} # note\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  disabled:\n  - qdrant-memory\n") == {"qdrant-memory"}
+    assert scan("plugins:\n  disabled:\n    qdrant-memory: true\n") == set()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows PATHEXT resolution")
+def test_hermes_on_path_detected_windows(installer, tmp_path, monkeypatch):
+    isolate(monkeypatch, tmp_path)
+    bins = tmp_path / "bin"
+    bins.mkdir()
+    (bins / "hermes.bat").write_text("@echo off\r\n", encoding="utf-8")
+    monkeypatch.setenv("PATH", str(bins))
+    assert "prefer the plugin" in installer.hermes_advisory()
