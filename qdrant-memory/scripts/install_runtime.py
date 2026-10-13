@@ -106,7 +106,10 @@ def _scan_disabled_ids(text: str) -> set[str]:
                 sub_indent = -1  # marker: awaiting the first indented line
             else:
                 flow = re.fullmatch(r"plugins:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
-                inner = re.search(r"disabled:[ \t]*\[(.*?)\]", flow.group(1)) if flow else None
+                inner = (
+                    re.search(r"""(?:^|[,\s])['"]?disabled['"]?[ \t]*:[ \t]*\[(.*?)\]""", flow.group(1))
+                    if flow else None
+                )
                 if inner:
                     found.update(_inline_ids("[" + inner.group(1) + "]"))
             continue
@@ -130,7 +133,7 @@ def _scan_disabled_ids(text: str) -> set[str]:
             continue
         key, _, value = stripped.partition(":")
         value = value.split("#", 1)[0].strip()
-        in_disabled = key == "disabled"
+        in_disabled = key.strip().strip("'\"") == "disabled"
         if in_disabled and value.startswith("["):
             found.update(_inline_ids(value))
     return found
@@ -178,7 +181,10 @@ def _scan_memory_provider(text: str) -> str | None:
                 sub_indent = -1
             else:
                 flow = re.fullmatch(r"memory:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
-                inner = re.search(r"provider:[ \t]*([^,}\s]+)", flow.group(1)) if flow else None
+                inner = (
+                    re.search(r"""(?:^|[,\s])['"]?provider['"]?[ \t]*:[ \t]*([^,}\s]+)""", flow.group(1))
+                    if flow else None
+                )
                 if inner:
                     return inner.group(1).strip("'\"") or None
             continue
@@ -195,7 +201,7 @@ def _scan_memory_provider(text: str) -> str | None:
         if indent > sub_indent:
             continue
         key, _, value = stripped.partition(":")
-        if key == "provider":
+        if key.strip().strip("'\"") == "provider":
             value = value.split("#", 1)[0].strip().strip("'\"")
             return value or None
     return None
