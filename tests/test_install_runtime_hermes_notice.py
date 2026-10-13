@@ -124,3 +124,51 @@ def test_non_mapping_plugins_value_keeps_advisory(installer, tmp_path, monkeypat
     (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
     (profile / "config.yaml").write_text("plugins: not-a-mapping\n", encoding="utf-8")
     assert "not necessary for Hermes" in installer.hermes_advisory()
+
+
+def test_inline_ids_keeps_quoted_commas(installer):
+    assert installer._inline_ids("['qdrant-memory', 'some, name']") == {"qdrant-memory", "some, name"}
+
+
+def test_flow_mapping_scan(installer):
+    scan = installer._scan_disabled_ids
+    assert scan("plugins: {disabled: [qdrant-memory]}\n") == {"qdrant-memory"}
+    assert scan("plugins: {disabled: [qdrant-memory], enabled: [other]}\n") == {"qdrant-memory"}
+    assert scan("plugins: {enabled: [other]}\n") == set()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX executable bit")
+def test_hermes_on_path_detected_without_home(installer, tmp_path, monkeypatch):
+    isolate(monkeypatch, tmp_path)
+    bins = tmp_path / "bin"
+    bins.mkdir()
+    stub = bins / "hermes"
+    stub.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    stub.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bins))
+    assert "prefer the plugin" in installer.hermes_advisory()
+
+
+def test_relative_hermes_home_ignored(installer, tmp_path, monkeypatch):
+    isolate(monkeypatch, tmp_path)
+    monkeypatch.setenv("HERMES_HOME", "relative-profile")
+    assert installer.hermes_advisory() == ""
+
+
+def test_non_utf8_config_keeps_advisory(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_bytes(b"plugins:\n  disabled: [\xff]\n")
+    assert "not necessary for Hermes" in installer.hermes_advisory()
+
+
+def test_fallback_branch_used_without_pyyaml(installer, tmp_path, monkeypatch):
+    home = isolate(monkeypatch, tmp_path)
+    profile = home / ".hermes"
+    (profile / "plugins" / "qdrant-memory").mkdir(parents=True)
+    (profile / "config.yaml").write_text(
+        "plugins:\n\n  disabled:\n    - qdrant-memory\n", encoding="utf-8"
+    )
+    monkeypatch.setitem(sys.modules, "yaml", None)  # forces ImportError in the function
+    assert "disabled" in installer.hermes_advisory()
