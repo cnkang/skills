@@ -3,7 +3,7 @@
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
 Runtime 0.2.0 and MCP distribution 0.1.0 are already published. This skill
-prepares Runtime 0.2.1 / MCP 0.1.1 support; the commands below require those new
+prepares Runtime 0.2.1 / MCP 0.1.1 support. The commands below require those new
 versions to be published first. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
 
@@ -12,7 +12,7 @@ uvx --from qdrant-memory-mcp==0.1.1 qdrant-memory-mcp --home /private/path/profi
 ```
 
 Configure and initialize the profile first. Both distribution choices share the
-same Runtime; existing Runtime installations need not switch distributions.
+same Runtime. Existing Runtime installations need not switch distributions.
 For direct CLI use, install Runtime in a dedicated Python 3.11+ environment:
 
 ```bash
@@ -22,7 +22,7 @@ python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/qdrant-memory --help
 ```
 
-The original v0.1.0 release predates standalone interfaces; PyPI Runtime 0.2.0
+The original v0.1.0 release predates standalone interfaces. PyPI Runtime 0.2.0
 includes them. Version 0.2.1 fixes highly similar explicit adds without an LLM.
 `npx skills` distributes instructions and the bundled installer, not Python
 dependencies. Do not install dependencies or change settings merely on skill load.
@@ -39,7 +39,7 @@ python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
 uses `~/.agents/skills/qdrant-memory`). Python 3.11+ must be available.
-Default installation requires PyPI access; optional source installation also needs Git/GitHub. On Windows use
+Default installation requires PyPI access. Optional source installation also needs Git/GitHub. On Windows use
 `py -3.11` or an available newer Python and the returned `Scripts` executable.
 The installer installs an exact PyPI version with its official MCP SDK in a new
 venv, then verifies package version, imports and CLI. A matching existing environment
@@ -49,10 +49,10 @@ Choose a new path to retry rather than deleting another installation.
 Use a new private environment for an authorized upgrade. Back up the profile and
 destination and retain the same collection, scope and embedding pipeline.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.2.1 --revision FULL_40_CHARACTER_SHA`; the installer verifies both
+`--version 0.2.1 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Before 0.2.1 publication, use the
-reviewed candidate SHA explicitly; never silently fall back from PyPI.
+reviewed candidate SHA explicitly. Never silently fall back from PyPI.
 Preparation CI uses candidate `2ed69c4e5b65bee12c6352ab9c294ede69c4c246`
 ([Runtime PR #37](https://github.com/cnkang/hermes-plugin-qdrant-memory/pull/37)).
 This is a candidate reference, not the final merged/released commit.
@@ -61,7 +61,7 @@ Unknown historical attribution disables whole-transcript supplementary extractio
 until an explicit fresh transcript reset. Attributed per-turn writes continue.
 
 On POSIX, choose an ordinary private path. Spaces are supported. Interpreter
-links preserve managed Python's shared-library lookup; Windows uses copies
+links preserve managed Python's shared-library lookup. Windows uses copies
 without requiring symlink privileges. Shell
 metacharacters and control characters are rejected before installation. pip's
 generated CLI entrypoint may use a shell wrapper, so unsafe interpreter paths
