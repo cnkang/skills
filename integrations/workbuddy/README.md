@@ -112,7 +112,9 @@ checks use `release.py --snapshot-tag TAG --check-source` in a clean exact-tag
 checkout with `origin/main` available. Actions runs those checks automatically.
 
 `workbuddy-preview.yml` runs on PRs, `codex/**` pushes and manual dispatch, using
-read-only permissions. Its 14-day artifact explicitly says `preview`. Existing
+read-only permissions. A manual run can build one selected catalog skill through
+the `skill` input. An empty input builds every catalog skill. Its 14-day
+artifact explicitly says `preview`. Existing
 required package CI also executes these tests through the `tests` directory;
 the existing required job dependencies remain intact.
 

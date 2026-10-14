@@ -5,6 +5,12 @@ on:
   push:
     branches: ['codex/**']
   workflow_dispatch:
+    inputs:
+      skill:
+        description: 'Build one catalog skill only (empty builds all catalog skills)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -28,7 +34,15 @@ jobs:
       - run: python scripts/validate_skills.py
       - run: python -m pytest -q tests/test_workbuddy_package.py tests/test_workbuddy_release.py
       - run: python integrations/workbuddy/build.py --check
-      - run: python integrations/workbuddy/build.py
+      - name: Build packages
+        env:
+          SKILL_INPUT: ${{ inputs.skill }}
+        run: |
+          if [ -z "$SKILL_INPUT" ]; then
+            python integrations/workbuddy/build.py
+          else
+            python integrations/workbuddy/build.py --skill "$SKILL_INPUT"
+          fi
       - name: Verify checksum
         working-directory: dist/workbuddy
         run: sha256sum --check ./*-preview.zip.sha256
