@@ -10,6 +10,12 @@
 
 ## Unreleased
 
+- **WorkBuddy distribution:** separate reproducible preview ZIPs and checksums
+  for every controlled catalog skill, including future skills registered in the catalog,
+  plus annotated snapshot-tag automation that prepares verified Draft Release
+  assets before manual publication. Bilingual metadata exists only in the
+  generated package; canonical skills and runtime versions remain unchanged.
+
 ## qdrant-memory 0.2.4 — 2026-10-13
 
 - Default authorized backend installation to exact PyPI Runtime 0.2.1, with

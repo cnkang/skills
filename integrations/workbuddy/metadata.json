@@ -1,0 +1,21 @@
+{
+  "conventional-commit-batcher": {
+    "description_zh": "将混合 Git 改动按用途拆分为可审查的 Conventional Commits，支持独立变更和用户指定的分批提交。",
+    "author": "cnkang"
+  },
+  "dev-jev": {
+    "description_zh": "在任务路由、上下文相关性或失败分类不明确时，使用可用的 Jev 服务辅助有限范围的语义判断；未配置服务时正常继续任务。"
+  },
+  "repository-quality-gate-fixer": {
+    "description_zh": "根据用户授权诊断并修复仓库或 PR 的质量门禁失败，支持质量门禁审计和结果验证。",
+    "author": "cnkang"
+  },
+  "sonarcloud-link-inspector": {
+    "description_zh": "读取 SonarCloud 问题、安全热点或项目链接的详细信息，支持问题诊断和用户请求的代码修复。",
+    "author": "cnkang"
+  },
+  "qdrant-memory": {
+    "description_zh": "通过 MCP 或独立命令行检索、保存和管理 Qdrant 长期记忆，支持记忆维护和 Mem0 迁移。使用前需配置运行环境。",
+    "author": "cnkang"
+  }
+}
