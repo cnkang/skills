@@ -1,6 +1,11 @@
 # OS
 .DS_Store
 Thumbs.db
+._*
+
+# Editors
+.idea/
+.vscode/
 
 # Python
 __pycache__/
@@ -8,6 +13,10 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 .venv/
 venv/
 .env/
@@ -20,9 +29,14 @@ venv/
 *.log
 *.tmp
 *.swp
+*.swo
+*.orig
+*.rej
+*.bak
 
 # Linter cache
 .ruff_cache/
+.mypy_cache/
 .arts
 .codeartsdoer
 
@@ -34,3 +48,10 @@ dist/
 # Local implementation notes; not part of published skills or CI
 docs/implementation-report-*.md
 docs/plans/
+
+# Local probe, scratch and recording directories
+__pyprobe__/
+.scratch/
+scratch/
+.code-review-graph/
+*.cast
