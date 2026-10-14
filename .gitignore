@@ -29,6 +29,8 @@ venv/
 # Isolated agent-host acceptance dependencies and reports
 node_modules/
 reports/
+dist/
 
 # Local implementation notes; not part of published skills or CI
 docs/implementation-report-*.md
+docs/plans/
