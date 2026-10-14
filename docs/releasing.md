@@ -30,6 +30,19 @@ The default branch is the continuous-update channel. CLI updates follow recorded
 source/path/ref and folder content, not `metadata.version` ordering. Documentation
 outside a skill does not change that skill's runtime package hash.
 
+## Release order and pins
+
+Update this repository after the Runtime and MCP releases are public. Write
+the pinned revisions in `.github/workflows/validate.yml` and
+`qdrant-memory/references/runtime.md` only after the corresponding tags
+exist. These are cross-repository pins, so one pass is enough. A commit
+cannot contain its own SHA. Do not pin a commit that does not exist yet.
+
+Release order across the related repositories: the Runtime
+(`hermes-plugin-qdrant-memory`), then the MCP distribution
+(`qdrant-memory-mcp`), then this repository. The upstream Hermes catalog
+re-pin can follow later.
+
 ## Snapshot tags
 
 After an approved merge, create an annotated repository snapshot tag named
