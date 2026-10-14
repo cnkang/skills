@@ -1,11 +1,11 @@
 // Real Pi discovery, prompt expansion and read-tool loop; scripted model transport.
 import assert from 'node:assert/strict';
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after, test } from 'node:test';
+import { createModelServer } from './model-server.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const home = await mkdtemp(join(tmpdir(), 'skills-pi-'));
@@ -59,34 +59,12 @@ test('Pi loads a singleton without sibling skill dependencies', async (t) => {
 });
 
 async function agent(t, files, replies) {
-  const requests = [];
-  const server = createServer(async (req, res) => {
-    try {
-      assert.equal(req.url, '/v1/chat/completions');
-      let text = '';
-      for await (const chunk of req) text += chunk;
-      const request = JSON.parse(text);
-      assert.equal(request.stream, true);
-      assert.equal(request.model, 'ci-fixture');
-      const index = requests.push(request) - 1;
-      assert.ok(index < replies.length, 'Unexpected model request or retry');
-      const reply = replies[index];
-      const delta = typeof reply === 'string' ? { role: 'assistant', content: reply } : {
-        role: 'assistant', tool_calls: [{ index: 0, id: `call_${index}`, type: 'function',
-          function: { name: 'read', arguments: JSON.stringify({ path: reply.path }) } }] };
-      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
-      for (const [content, finish_reason] of [[delta, null], [{}, typeof reply === 'string' ? 'stop' : 'tool_calls']]) {
-        res.write(`data: ${JSON.stringify({ id: `ci_${index}`, object: 'chat.completion.chunk',
-          created: 0, model: 'ci-fixture', choices: [{ index: 0, delta: content, finish_reason }] })}\n\n`);
-      }
-      res.end('data: [DONE]\n\n');
-    } catch (error) {
-      res.writeHead(500);
-      res.end(String(error));
-    }
-  });
+  const { server, requests, errors } = createModelServer(replies);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+  t.after(async () => {
+    await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
+    assert.deepEqual(errors, [], 'Fixture model requests must not fail');
+  });
   const runtime = await ModelRuntime.create({ authPath: join(files.agentDir, 'auth.json'),
     modelsPath: null, modelsStorePath: join(files.agentDir, 'models-cache.json'),
     allowModelNetwork: false, refreshOnCreate: false });

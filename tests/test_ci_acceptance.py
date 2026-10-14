@@ -56,7 +56,7 @@ def test_pi_host_is_locked_required_and_rejects_skips():
     pi = jobs["pi-host"]
     assert set(pi["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
     assert any("npm ci" in step.get("run", "") and "--ignore-scripts" in step["run"] for step in pi["steps"])
-    assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 11" in step["run"]
+    assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 14" in step["run"]
                for step in pi["steps"])
     directory = ROOT / "tests/agent-hosts/pi"
     package = json.loads((directory / "package.json").read_text(encoding="utf-8"))

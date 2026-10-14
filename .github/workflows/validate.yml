@@ -145,7 +145,7 @@ jobs:
       - name: Run real Pi skill discovery, expansion and read-tool acceptance
         run: npm test --prefix tests/agent-hosts/pi
       - name: Reject skipped or empty Pi acceptance
-        run: python scripts/check_test_report.py reports/pi-host.xml --minimum-tests 11
+        run: python scripts/check_test_report.py reports/pi-host.xml --minimum-tests 14
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:

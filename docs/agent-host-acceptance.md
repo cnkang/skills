@@ -39,7 +39,11 @@ tool allowlist. It never executes package scripts or memory operations.
 | Qdrant progressive disclosure | Initial prompt contains catalog metadata, not the full skill body. |
 | Usage, maintenance and migration | Real read-tool loop reads the entrypoint and selected reference. Full file content appears in subsequent model requests. |
 
-These are 11 required tests. They establish host loading and deterministic tool
+These are 11 host tests plus three fixture transport regression tests. The
+transport tests check that malformed JSON and assertion failures receive only a
+fixed HTTP 500 body, while original errors stay in the test process and cause
+acceptance teardown to fail. Valid text and read-tool streams remain covered.
+They establish host loading and deterministic tool
 transport compatibility. They do not establish autonomous skill selection,
 reasoning quality, execution of all workflows or support for every model/version.
 Package loading on Pi supplies instructions. Qdrant operations still require the
@@ -51,7 +55,7 @@ the backend protocol.
 
 `Pi skill host acceptance` runs on Ubuntu, macOS and Windows, alongside the pinned
 Hermes Hub/disposable Qdrant runtime jobs. Both hosts feed `Required checks`.
-Pi reports must contain at least 11 cases with zero skips, failures or errors.
+Pi reports must contain at least 14 cases with zero skips, failures or errors.
 JUnit artifacts are kept for 14 days, including failed runs. No account secrets
 are required by this job.
 
@@ -59,7 +63,7 @@ are required by this job.
 npm ci --prefix tests/agent-hosts/pi --ignore-scripts --no-audit --no-fund
 python3 -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
 npm test --prefix tests/agent-hosts/pi
-python3 scripts/check_test_report.py reports/pi-host.xml --minimum-tests 11
+python3 scripts/check_test_report.py reports/pi-host.xml --minimum-tests 14
 ```
 
 When upgrading Pi, deliberately change the exact SDK version and regenerate its
