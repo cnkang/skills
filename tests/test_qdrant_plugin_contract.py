@@ -1,7 +1,7 @@
 """Offline public-parser/tool contracts; no production services or host lifecycle.
 
 Set QDRANT_MEMORY_PLUGIN_ROOT to a checkout with its declared dependencies installed.
-CI checks the immutable v0.1.0 release; an absent opt-in is an explicit skip.
+CI checks the pinned Runtime source; an absent opt-in is an explicit skip.
 """
 import argparse
 import importlib
@@ -16,7 +16,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-PLUGIN_RELEASE_SHA = "5babd3e4b4c022aad38a2b6db82cbd5b601f1ef8"
+PLUGIN_RELEASE_SHA = "c85d2bce788b117dddd854bb124971f7de8e564c"
 
 
 def test_ci_contract_uses_immutable_release():

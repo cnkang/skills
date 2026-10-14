@@ -21,7 +21,7 @@ def installer(monkeypatch):
     return module
 
 
-@pytest.mark.parametrize("installed,expected", [("0.2.1", 0), ("0.2.0", 1), ("0.3.0", 1)])
+@pytest.mark.parametrize("installed,expected", [("0.2.2", 0), ("0.2.0", 1), ("0.3.0", 1)])
 def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, capsys, installed, expected):
     target = tmp_path / "existing"
     target.mkdir()
@@ -43,7 +43,7 @@ def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, 
     if expected:
         assert "new --venv" in output.err
     else:
-        assert json.loads(output.out)["installed_version"] == "0.2.1"
+        assert json.loads(output.out)["installed_version"] == "0.2.2"
 
 
 def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, capsys):
@@ -54,13 +54,13 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.1", "source": None}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.2", "source": None}))
 
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
     assert installer.main() == 0
-    assert calls[0][-1] == "hermes-plugin-qdrant-memory[mcp]==0.2.1"
-    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.2.1"
+    assert calls[0][-1] == "hermes-plugin-qdrant-memory[mcp]==0.2.2"
+    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.2.2"
 
 
 def test_posix_venv_links_managed_interpreter(installer, tmp_path, monkeypatch):
@@ -101,7 +101,7 @@ def test_existing_source_mismatch_refused_without_upgrade(installer, tmp_path, m
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.1", "source": source}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.2", "source": source}))
 
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
