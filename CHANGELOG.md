@@ -1,5 +1,13 @@
 # Changelog
 
+## qdrant-memory 0.2.5
+
+- Pin Runtime 0.2.2 and MCP distribution 0.1.2 with MCP Python SDK 1.x/2.x
+  support. Keep the four scoped tools and stdio configuration unchanged.
+- Verify installation through the Runtime server adapter instead of the
+  SDK 1.x-only FastMCP import. Exercise both SDK majors in standalone acceptance.
+- Synchronize English and Chinese installation guidance and version references.
+
 ## Unreleased
 
 ## qdrant-memory 0.2.4 — 2026-10-13

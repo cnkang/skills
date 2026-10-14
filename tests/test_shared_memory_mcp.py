@@ -27,7 +27,7 @@ def test_two_client_names_share_only_the_fixed_operator_scope(backend_profile):
             async with ClientSession(read, write, client_info=Implementation(name=client_name, version="fixture")) as session:
                 await session.initialize()
                 result = await session.call_tool(tool, arguments)
-                return result.isError, json.loads(result.content[0].text)
+                return result.model_dump(by_alias=True)["isError"], json.loads(result.content[0].text)
 
     async def check():
         error, saved = await call("agent-a", "qdrant_memory_add", {"text": "Shared review summaries use Chinese"})

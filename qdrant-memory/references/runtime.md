@@ -2,12 +2,12 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-Runtime 0.2.1 and MCP distribution 0.1.1 are the current releases. The commands
+Runtime 0.2.2 and MCP distribution 0.1.2 are the current releases. The commands
 below use those pinned versions. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
 
 ```bash
-uvx --from qdrant-memory-mcp==0.1.1 qdrant-memory-mcp --home /private/path/profile mcp
+uvx --from qdrant-memory-mcp==0.1.2 qdrant-memory-mcp --home /private/path/profile mcp
 ```
 
 Configure and initialize the profile first. Both distribution choices share the
@@ -17,12 +17,26 @@ For direct CLI use, install Runtime in a dedicated Python 3.11+ environment:
 ```bash
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp]==0.2.1'
+  'hermes-plugin-qdrant-memory[mcp]==0.2.2'
 /private/path/qdrant-env/bin/qdrant-memory --help
 ```
 
 The original v0.1.0 release predates standalone interfaces. PyPI Runtime 0.2.0
 includes them. Version 0.2.1 fixes highly similar explicit adds without an LLM.
+Runtime 0.2.2 supports MCP Python SDK 1.x and 2.x (`mcp>=1.30,<3`).
+No prerelease selector is required. The four tools and stdio launch arguments
+are the same for both SDK majors.
+
+If your private environment specifically requires SDK 2.x, install both
+constraints together:
+
+```bash
+/private/path/qdrant-env/bin/python -m pip install \
+  'hermes-plugin-qdrant-memory[mcp]==0.2.2' 'mcp>=2,<3'
+```
+
+For SDK 1.x use `mcp>=1.30,<2` instead. This selects the server process's Python
+SDK; a client running in another process can use its own compatible SDK.
 `npx skills` distributes instructions and the bundled installer, not Python
 dependencies. Do not install dependencies or change settings merely on skill load.
 
@@ -33,7 +47,7 @@ available, the agent can run the installed skill's [installer](../scripts/instal
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-env --version 0.2.1
+  --venv /private/path/qdrant-env --version 0.2.2
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
@@ -48,11 +62,11 @@ Choose a new path to retry rather than deleting another installation.
 Use a new private environment for an authorized upgrade. Back up the profile and
 destination and retain the same collection, scope and embedding pipeline.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.2.1 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
+`--version 0.2.2 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
 The standalone acceptance checks pin revision
-`8929693fcccd1efa91bfa062145e35d2369ca9cc`. The published release tag is the
+`2fd43ad2259bd98d039394b8b714e5e89b5ab3a8`. The published release tag is the
 source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction

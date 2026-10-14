@@ -35,7 +35,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         run(["npx", "--yes", "skills@1.7.0", "add", source, "--skill", "qdrant-memory", "-a", "codex", "-g", "-y"])
         installed = isolated / ".agents/skills/qdrant-memory"
         installer = installed / "scripts/install_runtime.py"
-        selection = ["--version", "0.2.1"]
+        selection = ["--version", "0.2.2"]
         candidate = os.environ.get("QDRANT_SKILL_INSTALL_REVISION")
         if candidate:
             selection += ["--revision", candidate]
@@ -57,13 +57,17 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         # Candidate provenance is explicit; default release installation uses PyPI.
         origin = json.loads(run([result["python"], "-I", "-c", "import importlib.metadata as m, json, qdrant_memory; d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'origin': qdrant_memory.__file__, 'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"]))
         assert Path(origin["origin"]).is_relative_to(venv)
-        assert origin["version"] == result["installed_version"] == "0.2.1"
+        assert origin["version"] == result["installed_version"] == "0.2.2"
         if candidate:
             revision = origin["source"]["vcs_info"]["commit_id"]
             assert revision == result["requested_revision"] == candidate
             assert revision in (installed / "references/runtime.md").read_text()
         else:
             assert origin["source"] is None
+        sdk_requirement = os.environ.get("QDRANT_SKILL_MCP_REQUIREMENT")
+        if sdk_requirement:
+            run([result["python"], "-m", "pip", "install", sdk_requirement])
+            assert json.loads(run([sys.executable, str(installer), "--venv", str(venv), *selection]))["ok"]
         executable = result["command"]
         assert json.loads(run([executable, "--home", str(home), "init"]))["ok"]
         assert json.loads(run([executable, "--home", str(home), "doctor"]))["ok"]
@@ -86,15 +90,15 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
                     tools = await session.list_tools()
                     assert {tool.name for tool in tools.tools} == {"qdrant_memory_" + name for name in ("search", "add", "update", "delete")}
                     response = await session.call_tool("qdrant_memory_add", {"text": "similarity-fixture: cats preferred"})
-                    assert not response.isError
+                    assert not response.model_dump(by_alias=True)["isError"]
                     assert json.loads(response.content[0].text) == {"action": "SKIP", "id": similar[0]}
                     response = await session.call_tool("qdrant_memory_search", {"query": "Installation acceptance remembers this fact"})
-                    assert not response.isError
+                    assert not response.model_dump(by_alias=True)["isError"]
                     assert json.loads(response.content[0].text)["memories"][0]["id"] == saved["id"]
                     response = await session.call_tool("qdrant_memory_update", {"id": saved["id"], "text": "Installation updated fact"})
-                    assert not response.isError
+                    assert not response.model_dump(by_alias=True)["isError"]
                     response = await session.call_tool("qdrant_memory_delete", {"id": saved["id"]})
-                    assert not response.isError
+                    assert not response.model_dump(by_alias=True)["isError"]
 
         asyncio.run(check())
         found = json.loads(run([executable, "--home", str(home), "search", "--query", "similarity-fixture: cats"]))

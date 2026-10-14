@@ -21,7 +21,7 @@ import subprocess
 import sys
 import venv
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 PLUGIN_ID = "qdrant-memory"
 
 
@@ -338,7 +338,7 @@ def main() -> int:
             venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
             subprocess.run([str(python), "-m", "pip", "install", requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
-        probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; import mcp.server.fastmcp; d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
+        probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
         installed = json.loads(probe.stdout)
         if installed["version"] != args.version:
             raise ValueError(f"Installed Runtime {installed['version']} differs from requested {args.version}")

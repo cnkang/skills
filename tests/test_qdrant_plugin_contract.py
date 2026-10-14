@@ -16,7 +16,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-PLUGIN_RELEASE_SHA = "5babd3e4b4c022aad38a2b6db82cbd5b601f1ef8"
+PLUGIN_RELEASE_SHA = "2fd43ad2259bd98d039394b8b714e5e89b5ab3a8"
 
 
 def test_ci_contract_uses_immutable_release():
