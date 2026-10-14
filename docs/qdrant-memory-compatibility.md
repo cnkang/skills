@@ -27,7 +27,7 @@ shared-scope/private-agent isolation. Installed local Codex/OpenCode/Pi acceptan
 
 CI retains Ubuntu/macOS/Windows and Python 3.10/3.14 package jobs and pinned/latest
 skills CLI jobs. A separate Ubuntu job checks plugin release commit
-`2fd43ad2259bd98d039394b8b714e5e89b5ab3a8` (Runtime 0.2.2). Offline contracts skip
+`c85d2bce788b117dddd854bb124971f7de8e564c` (Runtime 0.2.2). Offline contracts skip
 explicitly when no plugin checkout is supplied. A supplied but invalid checkout
 fails. A mandatory Ubuntu/macOS/Windows job runs Hub fixtures and disposable
 runtime E2E with Hermes pinned to `4787e4d56fc8d9265d4c7d3c0fe5accee86b4078`
@@ -121,5 +121,5 @@ finish through recorded plugin recovery. No direct state-file repair.
   direct GitHub identifiers and non-default Tap paths.
 - [skills CLI](https://github.com/vercel-labs/skills): selection and host paths.
   Local tests verify actual released CLI behavior.
-- [Runtime source](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/2fd43ad2259bd98d039394b8b714e5e89b5ab3a8):
+- [Runtime source](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/c85d2bce788b117dddd854bb124971f7de8e564c):
   tools, CLI parser/dispatch and ownership contract, not planned README features.

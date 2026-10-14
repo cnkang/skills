@@ -38,7 +38,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     refs = {step["with"]["repository"]: step["with"]["ref"] for step in runtime["steps"]
             if "repository" in step.get("with", {})}
     assert refs == {"cnkang/hermes-agent": "4787e4d56fc8d9265d4c7d3c0fe5accee86b4078",
-                    "cnkang/hermes-plugin-qdrant-memory": "2fd43ad2259bd98d039394b8b714e5e89b5ab3a8"}
+                    "cnkang/hermes-plugin-qdrant-memory": "c85d2bce788b117dddd854bb124971f7de8e564c"}
     execution = next(step for step in runtime["steps"] if "--junitxml" in step.get("run", ""))
     assert execution["env"]["QDRANT_RUNTIME_E2E"] == "1"
     assert execution["env"]["HERMES_SKILL_HOST_ROOT"] and execution["env"]["QDRANT_MEMORY_PLUGIN_ROOT"]
