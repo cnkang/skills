@@ -121,6 +121,9 @@ def test_workflow_permissions_and_triggers():
     release = workflow('workbuddy-release.yml')
     assert preview['permissions'] == {'contents': 'read'}
     assert set(preview['on']) == {'push', 'pull_request', 'workflow_dispatch'}
+    assert preview['on']['workflow_dispatch']['inputs']['skill'] == {
+        'description': 'Build one catalog skill only (empty builds all catalog skills)',
+        'required': 'false', 'default': '', 'type': 'string'}
     assert release['on'] == {'push': {'tags': ['skills-*']}}
     assert release['permissions'] == {'contents': 'read'}
     assert release['jobs']['draft']['permissions'] == {'contents': 'write'}
