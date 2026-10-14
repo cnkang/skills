@@ -19,6 +19,8 @@
 - **WorkBuddy preview:** a manual workflow run can build one selected catalog
   skill through the `skill` input. An empty input builds every catalog skill.
 
+- CI: enable grouped weekly Dependabot version updates for the GitHub Actions pins.
+
 ## qdrant-memory 0.2.4 — 2026-10-13
 
 - Default authorized backend installation to exact PyPI Runtime 0.2.1, with
