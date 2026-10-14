@@ -1,7 +1,7 @@
 """Offline public-parser/tool contracts; no production services or host lifecycle.
 
 Set QDRANT_MEMORY_PLUGIN_ROOT to a checkout with its declared dependencies installed.
-CI checks the immutable v0.1.0 release; an absent opt-in is an explicit skip.
+CI checks the pinned Runtime source; an absent opt-in is an explicit skip.
 """
 import argparse
 import importlib

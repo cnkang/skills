@@ -55,7 +55,7 @@ plugin into an isolated environment, then run:
 
 ```bash
 HERMES_SKILL_HOST_ROOT=/path/hermes-agent \
-QDRANT_MEMORY_PLUGIN_ROOT=/path/plugin-at-v0.1.0 \
+QDRANT_MEMORY_PLUGIN_ROOT=/path/runtime-at-0.2.2 \
 QDRANT_RUNTIME_E2E=1 python -m pytest -q \
   tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py \
   --junitxml=reports/runtime-e2e.xml
@@ -73,8 +73,9 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-installation defaults to exact PyPI Runtime 0.2.1 after publication; MCP-focused
-agents may use metadata-only distribution 0.1.1 instead. Development/candidate
+installation defaults to exact PyPI Runtime 0.2.2; MCP-focused
+agents may use metadata-only distribution 0.1.2 instead. Both support MCP Python
+SDK 1.x and 2.x. Development/candidate
 installs require an explicitly chosen full SHA and expected version. Both retain
 the durable transcript-author isolation fix. Original release v0.1.0 remains
 the Hermes compatibility baseline. Skill installation alone does not create memory tools.
@@ -120,5 +121,5 @@ finish through recorded plugin recovery. No direct state-file repair.
   direct GitHub identifiers and non-default Tap paths.
 - [skills CLI](https://github.com/vercel-labs/skills): selection and host paths.
   Local tests verify actual released CLI behavior.
-- [Plugin source](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/v0.1.0):
+- [Runtime source](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/2fd43ad2259bd98d039394b8b714e5e89b5ab3a8):
   tools, CLI parser/dispatch and ownership contract, not planned README features.
