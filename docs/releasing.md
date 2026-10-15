@@ -7,9 +7,10 @@ cross-skill dependencies or automatic installation chains.
 
 ## Release checks
 
-1. Run repository validation, unit regressions, fixed/latest CLI jobs, the pinned
-   plugin contract, three-platform Hermes Hub/disposable runtime E2E jobs and
-   Pi skill host acceptance and three-platform no-Hermes CLI/MCP acceptance.
+1. Run repository validation and unit regressions. Then run the fixed/latest
+   CLI jobs, the pinned plugin contract, three-platform Hermes Hub/disposable
+   runtime E2E jobs, Pi skill host acceptance and three-platform no-Hermes
+   CLI/MCP acceptance.
    See `agent-host-acceptance.md` for Pi reproduction
    and its pinned npm dependency upgrade procedure.
    Inspect failures against the recorded Node, Python and CLI versions. CI installs
@@ -64,18 +65,18 @@ and independent version. See [build, inspection and future-skill registration](.
    tests and the preview ZIP/checksum artifact. Review the preview.
 2. Merge the reviewed source into `main`.
 3. Create an annotated `skills-YYYYMMDD.N` snapshot tag at that merged SHA using
-   the existing UTC-date convention; list all catalog skill versions in its
+   the existing UTC-date convention. List all catalog skill versions in its
    English annotation. Do not bump unrelated skills or convert to unified SemVer.
-4. Push the approved tag and wait for **WorkBuddy draft release assets** to
+4. Push the approved tag. Wait for **WorkBuddy draft release assets** to
    validate exact tag source, build and attach every skill's assets to a Draft Release.
    Do not publish while this job runs. A new draft uses the English annotation
-   as release notes; existing draft notes and unrelated assets are preserved.
+   as release notes. Existing draft notes and unrelated assets are preserved.
 5. Download and inspect each ZIP and verify its `.zip.sha256` checksum. Its name
    includes both the canonical skill version and repository snapshot, for example
    `qdrant-memory-workbuddy-skill-v0.2.4-skills-20261020.1.zip`.
 6. The maintainer manually publishes the complete Draft Release after review.
    The workflow never publishes. Attaching assets first supports Immutable
-   Releases; published releases are only verified, never repaired in place.
+   Releases. Published releases are only verified, never repaired in place.
 7. Download the desired skill ZIPs from Release Assets and submit each separately
    to the WorkBuddy Open Platform through its manual review process. Actual marketplace/client
    acceptance remains distinct from automated structural validation.
@@ -83,8 +84,8 @@ and independent version. See [build, inspection and future-skill registration](.
 The workflow uses only `GITHUB_TOKEN`, read-only build permissions and a separate
 `contents: write` draft job, serialized by tag. A rerun verifies matching assets
 and uploads only missing draft assets. Content mismatch fails without deletion
-or replacement. Failed partial drafts remain drafts for investigation/retry;
-   never publish one. If a published release lacks assets, prepare a new approved
+or replacement. Failed partial drafts remain drafts for investigation/retry.
+   Never publish one. If a published release lacks assets, prepare a new approved
 snapshot instead of moving its tag or trying to overwrite immutable attachments.
 
 ## Recovery

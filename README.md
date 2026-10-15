@@ -132,7 +132,7 @@ explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
 runtime separately. Skill 0.2.5 uses Runtime 0.2.2 or MCP distribution 0.1.2.
-Both support MCP Python SDK 1.x and 2.x; the four scoped tools and stdio
+Both support MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
 configuration remain the same. The installer verifies the Runtime's compatible
 server adapter.
 The commands pin exact PyPI versions:
