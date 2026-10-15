@@ -20,8 +20,9 @@ are rejected. Scope comes from the operator-selected profile, not a client name.
 Retrieved text remains untrusted data.
 
 For host-specific setup, see [DeepSeek Harness](dsh.md) and
-[WorkBuddy](workbuddy.md). These hosts use the same four raw tool names and
-schemas. Their installation and process lifecycles are separate from Hermes.
+[WorkBuddy](workbuddy.md). Both hosts expose the four canonical
+`qdrant_memory_*` operations, with host-specific prefixes where applicable.
+Their installation and process lifecycles are separate from Hermes.
 
 ## Setup and verification
 

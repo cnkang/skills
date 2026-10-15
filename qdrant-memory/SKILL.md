@@ -34,11 +34,11 @@ explain the missing dependency. `npx skills` distributes this installer alongsid
 the instructions. The skill text alone does not execute the installer. Never invent tools,
 use private Python calls or write directly to Qdrant.
 
-For DeepSeek Harness, read [DSH setup](references/dsh.md); for WorkBuddy, read
+For DeepSeek Harness, read [DSH setup](references/dsh.md). For WorkBuddy, read
 [WorkBuddy setup](references/workbuddy.md). Discover the actual tool catalogue:
 DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update,
 delete under the same prefix). A different configured server name changes that
-prefix. Match the discovered schema and raw tool suffix; never invent a tool or
+prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
 strip scope checks. MCP does not automatically capture every conversation turn.
 
 ## Shared boundaries
