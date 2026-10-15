@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.2.5"
+  version: "0.2.6"
 ---
 
 # Qdrant memory
@@ -33,6 +33,13 @@ setup or use that requires installation, follow runtime setup. Run the bundled
 explain the missing dependency. `npx skills` distributes this installer alongside
 the instructions. The skill text alone does not execute the installer. Never invent tools,
 use private Python calls or write directly to Qdrant.
+
+For DeepSeek Harness, read [DSH setup](references/dsh.md); for WorkBuddy, read
+[WorkBuddy setup](references/workbuddy.md). Discover the actual tool catalogue:
+DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update,
+delete under the same prefix). A different configured server name changes that
+prefix. Match the discovered schema and raw tool suffix; never invent a tool or
+strip scope checks. MCP does not automatically capture every conversation turn.
 
 ## Shared boundaries
 
