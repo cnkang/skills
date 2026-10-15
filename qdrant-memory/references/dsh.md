@@ -8,12 +8,15 @@ Loading this Skill does not authorize installing software or modifying a profile
 Install this canonical `qdrant-memory` directory under a standard DSH Skill
 root, such as `.agents/skills/qdrant-memory/SKILL.md` in the selected project.
 Keep its `references` and `scripts` together. DSH's filesystem provider also
-supports custom Skill roots; point it at the directory containing
+supports custom Skill roots. Point it at the directory that contains
 `qdrant-memory`, not at `SKILL.md`. Do not maintain an independently edited copy.
 
-Choose a dedicated DSH memory profile. Prepare the backend before enabling the
-MCP overlay; DSH may start and close a temporary probe process before starting
-the persistent connection. Never put downloads or initialization in that probe.
+Choose a DSH memory profile. A dedicated profile is recommended. Authorized
+agents can also share one profile when they connect one at a time, under the
+[shared memory](shared-memory.md) rules. Prepare the backend before you enable
+the MCP overlay. DSH can start and close a temporary probe process before it
+starts the persistent connection. Never put downloads or initialization in that
+probe.
 Apply the additional overlay with `dsh web --patch /absolute/path/to/overlay`.
 Do not overwrite `cordis.patch.yml` or modify the default Profile. Enable only
 one Qdrant Memory overlay per profile.
@@ -29,17 +32,19 @@ With server name `qdrant-memory`, discover:
 
 DSH scrubs credential-shaped variables from inherited stdio environments.
 Explicitly forward required credential variables in the trusted MCP configuration
-using `!!js process.env.VARIABLE`; do not put secret values in YAML, arguments,
+with `!!js process.env.VARIABLE`. Do not put secret values in YAML, arguments,
 Skill text, transcripts or diagnostics. Respect DSH tool approval and cancellation.
 
 A connected transport and four discovered tools do not establish backend
 readiness. If preparation is pending or fails, report that no operation succeeded.
-After interruption, search before repeating an uncertain write. For acceptance,
-save a synthetic fact in one session, retrieve and use it in a fresh session
-without supplying the old transcript, then verify exact-ID update/delete and
-full host restart persistence. Distinguish official client tests from model/GUI
-acceptance; neither implies automatic extraction or prefetch.
+After an interruption, the outcome of a write can stay unknown. Do not repeat
+an uncertain write unless a repeat is safe for that operation. To check the
+result, compare the exact operation and its ID, not search ranking. For
+acceptance, save a synthetic fact in one session. Retrieve and use it in a
+fresh session without the old transcript. Then verify exact-ID update/delete
+and full host restart persistence. Distinguish official client tests from
+model/GUI acceptance. Neither implies automatic extraction or prefetch.
 
 Use [maintenance](maintenance.md) through the standalone CLI when authorized.
 Do not require Hermes CLI or WorkBuddy metadata. Never bypass WriterLease or open
-the same embedded storage from two hosts; see [shared memory](shared-memory.md).
+the same embedded storage from two hosts. See [shared memory](shared-memory.md).
