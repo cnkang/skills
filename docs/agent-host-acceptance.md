@@ -3,7 +3,7 @@
 Skill 0.2.4 prepares pinned PyPI Runtime 0.2.1 / MCP distribution 0.1.1 use.
 Until publication, CI explicitly selects the immutable candidate recorded in
 the workflow and runtime reference. Historical host results below retain their
-original revisions and dates; they do not certify the new release or all agents.
+original revisions and dates. They do not certify the new release or all agents.
 No installer configures an agent, initializes storage or upgrades an existing venv.
 
 Two independent open-source hosts have mandatory acceptance jobs: Hermes and Pi.
@@ -40,9 +40,8 @@ tool allowlist. It never executes package scripts or memory operations.
 | Usage, maintenance and migration | Real read-tool loop reads the entrypoint and selected reference. Full file content appears in subsequent model requests. |
 
 These are 11 host tests plus three fixture transport regression tests. The
-transport tests check that malformed JSON and assertion failures receive only a
-fixed HTTP 500 body, while original errors stay in the test process and cause
-acceptance teardown to fail. Valid text and read-tool streams remain covered.
+transport tests check that malformed JSON and assertion failures receive only a fixed HTTP 500 body. Original
+errors stay in the test process and cause acceptance teardown to fail. Valid text and read-tool streams remain covered.
 They establish host loading and deterministic tool
 transport compatibility. They do not establish autonomous skill selection,
 reasoning quality, execution of all workflows or support for every model/version.

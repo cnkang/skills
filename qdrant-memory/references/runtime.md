@@ -36,7 +36,7 @@ constraints together:
 ```
 
 For SDK 1.x use `mcp>=1.30,<2` instead. This selects the server process's Python
-SDK; a client running in another process can use its own compatible SDK.
+SDK. A client running in another process can use its own compatible SDK.
 `npx skills` distributes instructions and the bundled installer, not Python
 dependencies. Do not install dependencies or change settings merely on skill load.
 

@@ -36,8 +36,9 @@ tests disabled. Dedicated acceptance jobs reject any skip, failure, error or
 insufficient test count and retain JUnit reports for 14 days. `Required checks`
 fails if any package, distribution, contract, Hermes E2E or Pi host job fails or is skipped.
 A separate required three-platform standalone matrix installs the pinned
-backend independently with MCP SDK 1.x and 2.x and exercises real JSON CLI
-subprocesses and an official MCP client without Hermes source or fake host modules. It retains
+backend independently with MCP SDK 1.x and 2.x. It also exercises real JSON
+CLI subprocesses and an official MCP client without Hermes source or fake host
+modules. It retains
 zero-skip JUnit reports. No test contacts personal Qdrant or embeddings.
 
 The Ubuntu standalone job additionally uses real `npx skills@1.7.0`. It installs
@@ -73,7 +74,7 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-installation defaults to exact PyPI Runtime 0.2.2; MCP-focused
+installation defaults to exact PyPI Runtime 0.2.2. MCP-focused
 agents may use metadata-only distribution 0.1.2 instead. Both support MCP Python
 SDK 1.x and 2.x. Development/candidate
 installs require an explicitly chosen full SHA and expected version. Both retain

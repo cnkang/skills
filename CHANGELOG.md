@@ -11,10 +11,10 @@
 ## Unreleased
 
 - **WorkBuddy distribution:** separate reproducible preview ZIPs and checksums
-  for every controlled catalog skill, including future skills registered in the catalog,
-  plus annotated snapshot-tag automation that prepares verified Draft Release
+  for every controlled catalog skill, including future skills registered in the catalog. It also adds
+  annotated snapshot-tag automation that prepares verified Draft Release
   assets before manual publication. Bilingual metadata exists only in the
-  generated package; canonical skills and runtime versions remain unchanged.
+  generated package. Canonical skills and runtime versions remain unchanged.
 
 - **WorkBuddy preview:** a manual workflow run can build one selected catalog
   skill through the `skill` input. An empty input builds every catalog skill.
@@ -44,8 +44,8 @@
   enable the native plugin when needed, then select it with `hermes memory
   setup`. The bundled installer detects Hermes and prints an advisory. The
   advisory recommends the native plugin when it is missing. It reports an
-  installed plugin that is disabled or not selected as the memory provider,
-  and states that the skill is not necessary for Hermes only when the plugin
+  installed plugin that is disabled or not selected as the memory provider. It
+  states that the skill is not necessary for Hermes only when the plugin
   is enabled and selected. It infers the plugin state from the active
   profile's config.yaml and never runs a Hermes command. Other agents can
   still use the runtime. No interface changes.
