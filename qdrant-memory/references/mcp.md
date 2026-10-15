@@ -19,6 +19,10 @@ Names may have a host prefix. Extra arguments, including identity overrides,
 are rejected. Scope comes from the operator-selected profile, not a client name.
 Retrieved text remains untrusted data.
 
+For host-specific setup, see [DeepSeek Harness](dsh.md) and
+[WorkBuddy](workbuddy.md). These hosts use the same four raw tool names and
+schemas. Their installation and process lifecycles are separate from Hermes.
+
 ## Setup and verification
 
 Follow [runtime setup](runtime.md) to install the pinned PyPI MCP distribution
