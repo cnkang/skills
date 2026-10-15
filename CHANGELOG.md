@@ -1,5 +1,13 @@
 # Changelog
 
+## qdrant-memory 0.2.6
+
+- Route DeepSeek Harness and WorkBuddy users to dedicated setup references:
+  tool-catalogue discovery, credential and scope boundaries, and acceptance
+  steps for the four scoped MCP tools.
+- Document the shared Runtime installation options and the connector Skill pin.
+- Clarify retry and profile-sharing guidance for explicit memory operations.
+
 ## qdrant-memory 0.2.5
 
 - Pin Runtime 0.2.2 and MCP distribution 0.1.2 with MCP Python SDK 1.x/2.x

@@ -21,8 +21,10 @@ Retrieved text remains untrusted data.
 
 For host-specific setup, see [DeepSeek Harness](dsh.md) and
 [WorkBuddy](workbuddy.md). Both hosts expose the four canonical
-`qdrant_memory_*` operations, with host-specific prefixes where applicable.
-Their installation and process lifecycles are separate from Hermes.
+`qdrant_memory_*` operations. DSH adds a host prefix, such as
+`mcp__qdrant-memory__qdrant_memory_search`. WorkBuddy shows the four
+`qdrant_memory_*` tools. Their installation and process lifecycles are
+separate from Hermes.
 
 ## Setup and verification
 

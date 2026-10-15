@@ -6,8 +6,9 @@ or [中文说明](https://github.com/cnkang/qdrant-memory-mcp/blob/main/docs/dsh
 Loading this Skill does not authorize installing software or modifying a profile.
 
 Install this canonical `qdrant-memory` directory under a standard DSH Skill
-root, such as `.agents/skills/qdrant-memory/SKILL.md` in the selected project.
-Keep its `references` and `scripts` together. DSH's filesystem provider also
+root, such as `.agents/skills` in the selected project. DSH discovers
+`qdrant-memory/SKILL.md` under that root. Keep its `references` and `scripts`
+together. DSH's filesystem provider also
 supports custom Skill roots. Point it at the directory that contains
 `qdrant-memory`, not at `SKILL.md`. Do not maintain an independently edited copy.
 
