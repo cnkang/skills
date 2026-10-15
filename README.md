@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.5 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.6 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
@@ -131,7 +131,7 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately. Skill 0.2.5 uses Runtime 0.2.2 or MCP distribution 0.1.2.
+runtime separately. Skill 0.2.6 uses Runtime 0.2.2 or MCP distribution 0.1.3.
 Both support MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
 configuration remain the same. The installer verifies the Runtime's compatible
 server adapter.
@@ -148,7 +148,7 @@ python3 -m venv /private/path/qdrant-env
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation. The original v0.1.0
 release does not contain these interfaces. The command pins a PyPI release.
-For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.2
+For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.3
 qdrant-memory-mcp --home /private/path/profile mcp`. Configure
 and initialize the profile first. Both install choices share the Runtime.
 

@@ -85,7 +85,7 @@ The workflow uses only `GITHUB_TOKEN`, read-only build permissions and a separat
 `contents: write` draft job, serialized by tag. A rerun verifies matching assets
 and uploads only missing draft assets. Content mismatch fails without deletion
 or replacement. Failed partial drafts remain drafts for investigation/retry.
-   Never publish one. If a published release lacks assets, prepare a new approved
+Never publish one. If a published release lacks assets, prepare a new approved
 snapshot instead of moving its tag or trying to overwrite immutable attachments.
 
 ## Recovery

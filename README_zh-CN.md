@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.5 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。在 Hermes 上，每个 profile 使用单一记忆接口。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.2.6 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。在 Hermes 上，每个 profile 使用单一记忆接口。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -126,7 +126,7 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装。Skill 0.2.5 使用 Runtime 0.2.2 或 MCP 分发 0.1.2。
+作用域。skill 和运行时分别安装。Skill 0.2.6 使用 Runtime 0.2.2 或 MCP 分发 0.1.3。
 两者均支持 MCP Python SDK 1.x 和 2.x，四个固定作用域工具及 stdio 配置保持一致。
 安装器通过运行时的兼容适配器验证 MCP 服务端。
 以下命令固定安装精确的 PyPI 版本：
@@ -141,7 +141,7 @@ python3 -m venv /private/path/qdrant-env
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
 原 v0.1.0 没有这些入口，以上命令固定安装 PyPI 发行版本。
-主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.1.2
+主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.1.3
 qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
 两种安装方式共用 Runtime，已有用户无需强制切换分发包。
 

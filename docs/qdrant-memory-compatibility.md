@@ -75,7 +75,7 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
 installation defaults to exact PyPI Runtime 0.2.2. MCP-focused
-agents may use metadata-only distribution 0.1.2 instead. Both support MCP Python
+agents may use metadata-only distribution 0.1.3 instead. Both support MCP Python
 SDK 1.x and 2.x. Development/candidate
 installs require an explicitly chosen full SHA and expected version. Both retain
 the durable transcript-author isolation fix. Original release v0.1.0 remains

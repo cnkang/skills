@@ -2,12 +2,12 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-Runtime 0.2.2 and MCP distribution 0.1.2 are the current releases. The commands
+Runtime 0.2.2 and MCP distribution 0.1.3 are the current releases. The commands
 below use those pinned versions. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
 
 ```bash
-uvx --from qdrant-memory-mcp==0.1.2 qdrant-memory-mcp --home /private/path/profile mcp
+uvx --from qdrant-memory-mcp==0.1.3 qdrant-memory-mcp --home /private/path/profile mcp
 ```
 
 Configure and initialize the profile first. Both distribution choices share the
