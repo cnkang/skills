@@ -132,7 +132,7 @@ explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
 runtime separately. Skill 0.2.6 is available in the
-[published distribution](https://github.com/cnkang/skills/releases/tag/skills-20261016.1).
+[published distribution](https://github.com/cnkang/skills/releases/tag/skills-20261016.2).
 It remains compatible with Runtime 0.2.2 and the corresponding MCP 0.1.3.
 Runtime 0.3.0 additionally offers explicitly selected CPU embedding; upgrading
 the Runtime does not require replacing the Skill or changing Hermes defaults.

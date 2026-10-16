@@ -127,7 +127,7 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
 作用域。skill 和运行时分别安装。Skill 0.2.6 已提供
-[正式分发包](https://github.com/cnkang/skills/releases/tag/skills-20261016.1)，
+[正式分发包](https://github.com/cnkang/skills/releases/tag/skills-20261016.2)，
 继续兼容 Runtime 0.2.2 及对应的 MCP 0.1.3。Runtime 0.3.0 还提供可显式选择的
 CPU Embedding；升级 Runtime 无需替换 Skill，也不会改变 Hermes 默认配置。
 两者均支持 MCP Python SDK 1.x 和 2.x，四个固定作用域工具及 stdio 配置保持一致。
