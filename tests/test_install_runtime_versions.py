@@ -1,4 +1,7 @@
-"""Release selection verifies existing installations without silently upgrading."""
+"""Release selection verifies existing installations without silently upgrading.
+
+A newer compatible release satisfies the check; an older one does not.
+"""
 import importlib.util
 import json
 from pathlib import Path
@@ -21,7 +24,7 @@ def installer(monkeypatch):
     return module
 
 
-@pytest.mark.parametrize("installed,expected", [("0.2.2", 0), ("0.2.0", 1), ("0.3.0", 1)])
+@pytest.mark.parametrize("installed,expected", [("0.2.2", 0), ("0.2.5", 0), ("0.3.0", 0), ("0.2.0", 1)])
 def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, capsys, installed, expected):
     target = tmp_path / "existing"
     target.mkdir()
@@ -43,7 +46,7 @@ def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, 
     if expected:
         assert "new --venv" in output.err
     else:
-        assert json.loads(output.out)["installed_version"] == "0.2.2"
+        assert json.loads(output.out)["installed_version"] == installed
 
 
 def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, capsys):
