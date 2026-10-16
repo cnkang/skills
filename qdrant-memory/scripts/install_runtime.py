@@ -25,6 +25,12 @@ VERSION = "0.2.2"
 PLUGIN_ID = "qdrant-memory"
 
 
+def _release_key(version: str) -> tuple[int, int, int]:
+    """Order exact three-part release versions for the compatibility check."""
+    major, minor, patch = version.split(".")
+    return int(major), int(minor), int(patch)
+
+
 def _hermes_home() -> Path | None:
     """Return the active Hermes home: HERMES_HOME when set, else ~/.hermes.
 
@@ -286,7 +292,8 @@ def main() -> int:
 
     Expand ``~`` and resolve the absolute path. If absent, create a venv and
     install a pinned PyPI release with MCP support, or an explicitly selected
-    full Git SHA. Existing environments are verified without upgrading.
+    full Git SHA. Existing environments are verified without upgrading; a
+    newer compatible release is accepted.
     On success, print JSON containing ``ok``, absolute ``python`` and ``command``
     paths, requested and installed versions and the optional revision, then return 0.
 
@@ -338,10 +345,11 @@ def main() -> int:
             venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
             subprocess.run([str(python), "-m", "pip", "install", requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
+        # A newer compatible release satisfies the check; an older one does not.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
         installed = json.loads(probe.stdout)
-        if installed["version"] != args.version:
-            raise ValueError(f"Installed Runtime {installed['version']} differs from requested {args.version}")
+        if _release_key(installed["version"]) < _release_key(args.version):
+            raise ValueError(f"Installed Runtime {installed['version']} is older than requested {args.version}")
         if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:
             raise ValueError("Installed Runtime source does not match the requested immutable revision")
         subprocess.run([str(console), "--help"], env=env, cwd=target, check=True, stdout=sys.stderr)
