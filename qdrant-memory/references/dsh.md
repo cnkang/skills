@@ -20,7 +20,12 @@ starts the persistent connection. Never put downloads or initialization in that
 probe.
 Apply the additional overlay with `dsh web --patch /absolute/path/to/overlay`.
 Do not overwrite `cordis.patch.yml` or modify the default Profile. Enable only
-one Qdrant Memory overlay per profile.
+one Qdrant Memory overlay per profile. DSH can also install the
+configuration-only Bundle through its official Plugin Manager. The Bundle
+declares the same MCP entry for one profile. Follow the
+[installation guide](https://github.com/cnkang/qdrant-memory-mcp/blob/main/docs/dsh-integration.md)
+for the exact Bundle command and the current status. Do not install both
+routes in one profile.
 
 With server name `qdrant-memory`, discover:
 
