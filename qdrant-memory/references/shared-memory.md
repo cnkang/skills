@@ -14,10 +14,11 @@ No legacy record becomes shared through a new connection configuration.
 
 ## Unreleased opt-in single-owner service
 
-The reviewed Runtime checkout adds `shared-serve`, `shared-mcp`, and
+The unreleased preview source adds `shared-serve`, `shared-mcp`, and
 `shared-call`. Published Runtime 0.3.0 does not include them. Confirm the actual
-installed CLI/schema before using this feature. Never assume the installer or
-managed DSH/WorkBuddy packages already contain unreleased changes.
+installed CLI/schema before using this feature. Never assume the installer or the
+managed DeepSeek Harness (DSH) and WorkBuddy packages already contain
+unreleased changes.
 
 One operator starts a dedicated owner profile with `shared-serve` and provisions
 one token and grant per agent (the Runtime operations guide gives the exact
@@ -25,7 +26,7 @@ commands). Only that process opens Qdrant, Ledger, WriterLease and embedding. Ea
 in `QDRANT_MEMORY_SHARED_TOKEN` and launches:
 
 ```text
-/absolute/path/reviewed-env/bin/qdrant-memory shared-mcp --url http://127.0.0.1:8765
+/private/path/qdrant-env/bin/qdrant-memory shared-mcp --url http://127.0.0.1:8765
 ```
 
 This stdio bridge uses a private local HTTP API, not remote HTTP MCP. The token
@@ -34,7 +35,8 @@ operator's private policy. Never send `owner_id`, `agent_id`, `user_id`,
 `space_id`, permissions or vectors in tool arguments. Do not widen grants after
 a denial. Keep Qdrant credentials and database directories away from clients.
 
-Discover the actual catalogue/prefix. Shared mode uses the same four raw tool
+Discover the actual catalogue/prefix. Released private tools keep their
+documented schemas (see [tools](tools.md)). Shared mode uses the same four raw tool
 suffixes but different write arguments:
 
 | Action | Arguments |
@@ -67,7 +69,8 @@ On `SharedRecoveryRequiredError`, report the sanitized error and leave owner
 repair/retry/restart to an authorized operator. Do not remove locks, edit Ledger,
 change fingerprints, or run destructive maintenance around unfinished plans.
 The operator must reconcile pending shared requests and keep a coherent backup
-of the whole stopped-owner profile before reset/delete/import.
+of the whole stopped-owner profile before reset/delete/import. The Runtime
+operations guide gives the reconciliation and backup steps.
 
 ## Hermes compatibility and integrations
 
@@ -77,10 +80,11 @@ planned, not implemented. Do not register the shared MCP bridge as a duplicate
 interface in a Hermes profile already using the qdrant-memory Native Provider.
 An explicitly configured Hermes MCP-fallback profile can save to a shared space.
 A new DSH session can recall the canonical record without copied history.
-Alternatively an authorized operator can save explicitly using `shared-call`.
+Alternatively an authorized operator can save explicitly with `shared-call`
+(the Runtime operations guide gives its syntax).
 
 DSH Bundle and WorkBuddy managed private defaults are unchanged. Shared preview
-configs require explicit manual registration and the reviewed Runtime checkout.
+configs require explicit manual registration and the unreleased preview source.
 Official SDK process tests are protocol evidence, not certification of every
 host UI/native bundle. Use discovered schemas and confirm actual tool results.
 
