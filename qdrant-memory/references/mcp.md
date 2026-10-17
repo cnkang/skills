@@ -52,10 +52,12 @@ extraction/prefetch belongs to the Hermes plugin lifecycle.
 
 ## Sharing and supported clients
 
-[Shared memory](shared-memory.md) uses the same authorized user/profile/pipeline
-and `agent_id: null`. Explicit agent IDs remain private. One active MCP process
-holds the profile writer lease. Close it before another agent opens that profile.
-Do not describe this as a concurrent distributed memory service.
+[Shared memory](shared-memory.md) documents two modes. Released mode uses the
+same authorized user/profile/pipeline and `agent_id: null`. Explicit agent IDs
+remain private. One active MCP process holds the profile writer lease, so close
+it before another agent opens that profile. Concurrent cross-agent sharing
+requires the unreleased opt-in single-owner service. Do not describe released
+mode as a concurrent distributed memory service.
 
 Local integration was verified with Codex CLI 0.160.0 (discovery and add/search),
 OpenCode 2.0.24 (CLI registration plus explicit API connection), and Pi 1.1.0

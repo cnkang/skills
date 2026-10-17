@@ -207,10 +207,11 @@ transport, permissions, sharing and host-specific validation boundaries.
 
 ### Shared memory and workflows
 
-For [cross-agent sharing](qdrant-memory/references/shared-memory.md), configure
-the same user/profile and `agent_id: null`. This is one shared partition.
-Explicit agent IDs remain private. Current embedded/MCP writers access it
-sequentially under the profile lease.
+For [cross-agent sharing](qdrant-memory/references/shared-memory.md), released
+mode configures the same user/profile and `agent_id: null`. This is one shared
+partition, and current embedded/MCP writers access it sequentially under the
+profile lease. Explicit agent IDs remain private. Concurrent cross-agent
+sharing requires the unreleased opt-in single-owner service.
 
 | Workflow | Examples | Interface |
 |---|---|---|
