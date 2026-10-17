@@ -44,7 +44,10 @@ strip scope checks. MCP does not automatically capture every conversation turn.
 ## Shared boundaries
 
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
-Use the same configured scope. Different agent identities remain isolated.
+Released mode permits sequential profile reuse only. The unreleased opt-in owner
+service uses credential-bound explicit grants; check the installed version and
+discovered schemas before using it. Legacy records remain private, and Hermes
+Native Provider automatic shared extraction is not implemented.
 
 Loading this skill grants no save/edit/delete, retry/import, service-stop,
 overwrite, installation or configuration permission. Stay within the user's
