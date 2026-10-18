@@ -16,6 +16,7 @@ import json
 import os
 import re
 import shutil
+import stat
 from pathlib import Path
 import subprocess
 import sys
@@ -305,6 +306,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--venv", required=True, type=Path, help="new private environment, or an already working installation")
     parser.add_argument("--version", default=VERSION, help="exact Runtime release version (default: %(default)s)")
+    parser.add_argument("--requirements-lock", type=Path, help="optional trusted hash-locked requirements for binary-only release installation")
     parser.add_argument("--revision", help="optional full immutable Git SHA for candidate/development installation")
     args = parser.parse_args()
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.version):
@@ -316,7 +318,21 @@ def main() -> int:
         requirement = "hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + args.revision
     if sys.version_info < (3, 11):
         parser.error("Python 3.11+ is required")
-    target = args.venv.expanduser().resolve()
+    selected = args.venv.expanduser()
+    if selected.is_symlink():
+        parser.error("--venv must not be a symlink")
+    target = selected.resolve()
+    existing = target
+    while not existing.exists():
+        existing = existing.parent
+    info = existing.stat()
+    if os.name != "nt" and (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022):
+        parser.error("Choose a venv in a private, user-owned directory")
+    if args.requirements_lock and args.revision:
+        parser.error("--requirements-lock is for release installations, not source revisions")
+    lock = args.requirements_lock.expanduser().resolve() if args.requirements_lock else None
+    if lock and not lock.is_file():
+        parser.error("--requirements-lock must name a trusted requirements file")
     # pip can generate POSIX console scripts with a shell-wrapper shebang.
     # Keep the interpreter path safe even when subprocess itself uses argv.
     if os.name != "nt" and any(
@@ -338,12 +354,16 @@ def main() -> int:
                "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA", "TEMP",
                "TMP", "TMPDIR", "LANG", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR")
     env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
+    env["PIP_CONFIG_FILE"] = os.devnull
     try:
         if not target.exists():
             # Managed POSIX Python builds can resolve libpython relative to the
             # original executable. Match `python -m venv` rather than copying it.
             venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
-            subprocess.run([str(python), "-m", "pip", "install", requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
+            if os.name != "nt":
+                target.chmod(0o700)
+            selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else []
+            subprocess.run([str(python), "-m", "pip", "install", *selection, requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
         # A newer compatible release satisfies the check; an older one does not.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
