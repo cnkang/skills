@@ -10,6 +10,7 @@ import json
 import math
 import os
 import re
+import stat
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -143,15 +144,30 @@ def parse_bool(text: str) -> bool:
 
 
 def _append_event(path: Path, event: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
-    with path.open("a", encoding="utf-8", newline="\n") as stream:
-        stream.write(line)
-    if os.name != "nt":
-        try:
-            path.chmod(0o600)
-        except OSError:
-            pass
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    parent = path.parent.stat()
+    if os.name != "nt" and (parent.st_uid != os.getuid() or parent.st_mode & 0o022):
+        raise ValueError("Log parent must be user-owned and not writable by others")
+    if path.is_symlink():
+        raise ValueError("Log must not be a symlink")
+    flags = os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    descriptor = os.open(path, flags, 0o600)
+    try:
+        info = os.fstat(descriptor)
+        entry = path.lstat()
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or
+                stat.S_ISLNK(entry.st_mode) or getattr(entry, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0) or
+                (info.st_dev, info.st_ino) != (entry.st_dev, entry.st_ino)):
+            raise ValueError("Log must be a regular file without additional links")
+        if os.name != "nt":
+            if info.st_uid != os.getuid():
+                raise ValueError("Log must be owned by the current user")
+            os.fchmod(descriptor, 0o600)
+        line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
+        with os.fdopen(descriptor, "a", encoding="utf-8", newline="\n", closefd=False) as stream:
+            stream.write(line)
+    finally:
+        os.close(descriptor)
 
 
 def _record(args: argparse.Namespace) -> int:

@@ -15,6 +15,44 @@ from unittest.mock import patch
 import telemetry
 
 
+class PrivateLogTests(unittest.TestCase):
+    def test_private_creation_and_append(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            telemetry._append_event(path, {"kind": "first"})
+            telemetry._append_event(path, {"kind": "second"})
+            self.assertEqual(len(path.read_text().splitlines()), 2)
+            if os.name != "nt":
+                self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
+    @unittest.skipIf(os.name == "nt", "POSIX link and mode semantics")
+    def test_links_and_shared_parent_rejected_before_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "keep.txt"
+            target.write_text("preserve")
+            original_mode = target.stat().st_mode
+            link = root / "events.jsonl"
+            link.symlink_to(target)
+            with self.assertRaises(ValueError):
+                telemetry._append_event(link, {})
+            self.assertEqual(target.read_text(), "preserve")
+            self.assertEqual(target.stat().st_mode, original_mode)
+            link.unlink()
+            os.link(target, link)
+            with self.assertRaises(ValueError):
+                telemetry._append_event(link, {})
+            self.assertEqual(target.read_text(), "preserve")
+            link.unlink()
+            root.chmod(0o777)
+            try:
+                with self.assertRaises(ValueError):
+                    telemetry._append_event(link, {})
+                self.assertFalse(link.exists())
+            finally:
+                root.chmod(0o700)
+
+
 class ModePolicyTests(unittest.TestCase):
     def test_default_is_shadow(self):
         self.assertEqual(telemetry.resolve_mode(None), "shadow")
