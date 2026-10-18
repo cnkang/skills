@@ -2,8 +2,10 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-Runtime 0.2.2 and MCP distribution 0.1.3 are the current releases. The commands
-below use those pinned versions. For MCP-focused agents, prefer the metadata-only
+The commands below pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
+baseline for this skill. Newer releases are published (Runtime 0.3.0, MCP
+distribution 0.1.4), and the installer accepts an installed Runtime that is at
+least the requested version. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
 
 ```bash
