@@ -12,13 +12,12 @@ do not create a distributed lock for a remote collection.
 Do not change existing private profiles or identities to share automatically.
 No legacy record becomes shared through a new connection configuration.
 
-## Unreleased opt-in single-owner service
+## Opt-in single-owner service
 
-The unreleased preview source adds `shared-serve`, `shared-mcp`, and
-`shared-call`. Published Runtime 0.3.0 does not include them. Confirm the actual
-installed CLI/schema before using this feature. Never assume the installer or the
-managed DeepSeek Harness (DSH) and WorkBuddy packages already contain
-unreleased changes.
+Runtime 0.4.0 adds `shared-serve`, `shared-mcp`, and `shared-call`. Confirm the
+installed Runtime version before you use this feature. Never assume that the
+installer or the managed DeepSeek Harness (DSH) and WorkBuddy packages already
+contain the new commands.
 
 One operator starts a dedicated owner profile with `shared-serve` and provisions
 one token and grant per agent (the Runtime operations guide gives the exact
@@ -84,7 +83,7 @@ Alternatively an authorized operator can save explicitly with `shared-call`
 (the Runtime operations guide gives its syntax).
 
 DSH Bundle and WorkBuddy managed private defaults are unchanged. Shared preview
-configs require explicit manual registration and the unreleased preview source.
+configs require explicit manual registration and Runtime 0.4.0.
 Official SDK process tests are protocol evidence, not certification of every
 host UI/native bundle. Use discovered schemas and confirm actual tool results.
 

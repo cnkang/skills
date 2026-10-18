@@ -1,5 +1,16 @@
 # Changelog
 
+## qdrant-memory 0.3.0
+
+- Add the cross-agent shared-memory reference: single-owner service, loopback
+  bridge, explicit spaces, grants, revisions and retry rules. The service is
+  opt-in and operator-configured.
+- Separate private and shared workflows. Private records stay isolated. A
+  read-only grant cannot mutate. Native Provider automatic shared extraction
+  remains out of scope.
+- Document the Runtime 0.4.0 install path and the WorkBuddy and DSH client
+  configuration.
+
 ## qdrant-memory 0.2.6
 
 - Route DeepSeek Harness and WorkBuddy users to dedicated setup references:
