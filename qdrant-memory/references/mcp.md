@@ -56,8 +56,9 @@ extraction/prefetch belongs to the Hermes plugin lifecycle.
 same authorized user/profile/pipeline and `agent_id: null`. Explicit agent IDs
 remain private. One active MCP process holds the profile writer lease, so close
 it before another agent opens that profile. Concurrent cross-agent sharing
-requires the unreleased opt-in single-owner service. Do not describe released
-mode as a concurrent distributed memory service.
+requires the opt-in single-owner service released in Runtime 0.4.0 with explicit
+credential-bound grants. The 0.2.2 compatibility baseline provides sequential
+profile reuse only; it is not a concurrent distributed memory service.
 
 Local integration was verified with Codex CLI 0.160.0 (discovery and add/search),
 OpenCode 2.0.24 (CLI registration plus explicit API connection), and Pi 1.1.0

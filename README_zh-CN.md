@@ -197,7 +197,9 @@ JSON CLI 使用这些指引。
 
 [跨 agent 共享](qdrant-memory/references/shared-memory.md)可使用相同用户/profile
 和 `agent_id: null`。这是一个准确的共享分区；显式 agent ID 仍隔离。
-当前 Embedded/MCP 写入会话遵循 profile 锁，按顺序访问。
+当前私有 Embedded/MCP 写入会话遵循 profile 锁，按顺序访问。并发跨 agent
+共享需显式配置 Runtime 0.4.0 发布的单 owner 服务和凭据授权；默认安装器
+及验收仍保留 0.2.2 最低兼容基线，不会自动升级已有环境。
 
 | 流程 | 示例 | 入口 |
 |---|---|---|
