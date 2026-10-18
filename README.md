@@ -211,7 +211,8 @@ For [cross-agent sharing](qdrant-memory/references/shared-memory.md), released
 mode configures the same user/profile and `agent_id: null`. This is one shared
 partition, and current embedded/MCP writers access it sequentially under the
 profile lease. Explicit agent IDs remain private. Concurrent cross-agent
-sharing requires the unreleased opt-in single-owner service.
+sharing requires the opt-in single-owner service released in Runtime 0.4.0.
+The 0.2.2 install baseline below supports sequential private-profile reuse only.
 
 | Workflow | Examples | Interface |
 |---|---|---|
