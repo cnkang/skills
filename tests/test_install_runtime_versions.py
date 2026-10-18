@@ -121,3 +121,44 @@ def test_unpinned_selection_refused(installer, tmp_path, monkeypatch, option, va
         installer.main()
     assert exc.value.code == 2
     assert not target.exists()
+
+
+def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, monkeypatch):
+    import os
+    target = tmp_path / "fresh"
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# trusted operator-supplied lock")
+    calls = []
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir())
+    monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
+    def run(command, **kwargs):
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.2", "source": None}))
+    monkeypatch.setattr(installer.subprocess, "run", run)
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)])
+    assert installer.main() == 0
+    command, options = calls[0]
+    assert "--require-hashes" in command and "--only-binary=:all:" in command
+    assert command[command.index("-r") + 1] == str(lock)
+    assert options["env"]["PIP_CONFIG_FILE"] == os.devnull
+    if os.name != "nt":
+        assert target.stat().st_mode & 0o777 == 0o700
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
+def test_writable_existing_venv_rejected_before_execution(installer, tmp_path, monkeypatch):
+    target = tmp_path / "existing"
+    target.mkdir()
+    target.chmod(0o777)
+    monkeypatch.setattr(installer.subprocess, "run", lambda *a, **k: pytest.fail("must not execute"))
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
+    with pytest.raises(SystemExit):
+        installer.main()
+    assert target.stat().st_mode & 0o777 == 0o777
+
+
+def test_source_revision_cannot_use_release_hash_lock(installer, tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(tmp_path / "new"), "--requirements-lock", str(tmp_path / "lock"), "--revision", "a" * 40])
+    with pytest.raises(SystemExit):
+        installer.main()
+    assert not (tmp_path / "new").exists()

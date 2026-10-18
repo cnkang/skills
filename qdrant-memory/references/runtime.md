@@ -115,3 +115,29 @@ Initialize only an authorized target. `--help` proves interface availability, no
 Existing Hermes users can retain their MemoryProvider and `hermes qdrant-memory` maintenance/migration commands. Follow [Hermes setup](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme) for that integration. Automatic extraction and prefetch remain Hermes lifecycle features. Standalone exposes explicit operations.
 
 MCP and CRUD use one fixed operator-configured profile scope. MCP client names and model arguments cannot select identities. Separate users' profiles and process credentials. Operator maintenance can select broader scopes. Check every selector. Embedded storage requires exclusive access. WriterLease coordinates a profile's writers, not distributed writers across independent profiles.
+
+
+## Hardened installation options
+
+Choose a user-owned private venv and parent directory. The installer rejects a
+symlink venv and, on POSIX, an existing selected directory or nearest existing
+parent writable by group/other users. New venv roots use mode 0700. Existing
+unsafe permissions are rejected rather than changed. Windows requires a private
+inherited ACL. These checks are not an OS sandbox against concurrent changes.
+
+Installation ignores ambient pip configuration (`PIP_CONFIG_FILE` is the null
+device); service credentials are not passed to installation subprocesses. For a
+reviewed release dependency set, pass `--requirements-lock /absolute/path/lock.txt`.
+The trusted lock must cover the requested Runtime with its MCP extra and every
+transitive dependency using exact versions and SHA256 hashes. This enables pip
+`--require-hashes --only-binary=:all:`; missing hashes or unavailable wheels fail
+closed. No fallback to a source build is attempted. This option cannot be combined
+with `--revision`; explicit immutable source installation remains a separate
+operator-authorized development route. Existing environments are verified without
+reinstallation, so this flag does not retroactively certify their bytes.
+
+Runtime 0.2.2 remains the tested minimum selected by this skill's installer and
+CI fixture pins. Runtime 0.4.0 adds the separately configured shared owner; use
+that version or newer for concurrent sharing, and discover its schemas before
+registering a shared bridge. Do not apply private-profile examples as shared
+service setup or silently upgrade an existing installation.
