@@ -2,7 +2,7 @@
 
 Baseline main: `a3524b8ad3a2d66fb478e275531d929d1a345dc2`; initial clean local
 branch HEAD: `4276afd5151fb335d4bbe53ab0be76d77e11635a`. Canonical Skill version
-remains 0.3.0. Existing installer, source pins, lockfiles and published archives
+moves to 0.3.1 for this documentation update. Existing installer, source pins, lockfiles and published archives
 remain unchanged.
 
 The canonical Skill and shared, setup and maintenance references now document
