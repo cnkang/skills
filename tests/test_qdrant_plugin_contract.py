@@ -188,6 +188,7 @@ def test_busy_writer_is_refused_before_services(plugin, offline_home, monkeypatc
 
 @pytest.mark.parametrize("tool", ["qdrant_memory_update", "qdrant_memory_delete"])
 def test_exact_id_is_not_scope_authorization(plugin, tool):
+    """An exact ID never widens the caller scope; each tool gets valid arguments."""
     runtime = SimpleNamespace(lock=nullcontext(), store=SimpleNamespace(get=lambda identifier, scope: None))
     with pytest.raises(ValueError, match="caller scope"):
         arguments = {"id": "foreign"}
