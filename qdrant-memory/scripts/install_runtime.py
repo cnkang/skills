@@ -362,12 +362,14 @@ def main() -> int:
             venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
             if os.name != "nt":
                 target.chmod(0o700)
-            selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else []
-            subprocess.run([str(python), "-m", "pip", "install", *selection, requirement], env=env, cwd=target, check=True, stdout=sys.stderr)
+            selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else [requirement]
+            subprocess.run([str(python), "-m", "pip", "install", *selection], env=env, cwd=target, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
         # A newer compatible release satisfies the check; an older one does not.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
         installed = json.loads(probe.stdout)
+        if lock and installed["version"] != args.version:
+            raise ValueError(f"Installed Runtime {installed['version']} does not match requested {args.version}")
         if _release_key(installed["version"]) < _release_key(args.version):
             raise ValueError(f"Installed Runtime {installed['version']} is older than requested {args.version}")
         if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:

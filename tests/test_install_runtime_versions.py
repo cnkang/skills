@@ -140,9 +140,34 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     command, options = calls[0]
     assert "--require-hashes" in command and "--only-binary=:all:" in command
     assert command[command.index("-r") + 1] == str(lock)
+    assert command[4:] == ["--require-hashes", "--only-binary=:all:", "-r", str(lock)]
     assert options["env"]["PIP_CONFIG_FILE"] == os.devnull
     if os.name != "nt":
         assert target.stat().st_mode & 0o777 == 0o700
+
+
+@pytest.mark.parametrize("installed", ["0.2.0", "0.2.5"])
+@pytest.mark.parametrize("existing", [False, True])
+def test_hash_lock_requires_requested_runtime_version(installer, tmp_path, monkeypatch, capsys, installed, existing):
+    target = tmp_path / "runtime"
+    if existing:
+        target.mkdir()
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# trusted operator-supplied lock")
+    calls = []
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir())
+    monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
+
+    def run(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": installed, "source": None}))
+
+    monkeypatch.setattr(installer.subprocess, "run", run)
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)])
+    assert installer.main() == 1
+    assert "does not match requested 0.2.2" in capsys.readouterr().err
+    assert not any("--help" in call for call in calls)
+    assert any("install" in call for call in calls) is not existing
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
