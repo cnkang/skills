@@ -144,8 +144,18 @@ def parse_bool(text: str) -> bool:
 
 
 def _append_event(path: Path, event: dict[str, Any]) -> None:
+    parent_path = path.absolute().parent
+    # Inspect existing components before mkdir/open; this is not a defense
+    # against concurrent path replacement.
+    for component in (*reversed(parent_path.parents), parent_path):
+        try:
+            info = component.lstat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISLNK(info.st_mode):
+            raise ValueError("Log parent and ancestors must not be symlinks")
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    parent = path.parent.stat()
+    parent = path.parent.lstat()
     if os.name != "nt" and (parent.st_uid != os.getuid() or parent.st_mode & 0o022):
         raise ValueError("Log parent must be user-owned and not writable by others")
     if path.is_symlink():
