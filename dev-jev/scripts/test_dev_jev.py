@@ -18,7 +18,7 @@ import telemetry
 class PrivateLogTests(unittest.TestCase):
     def test_private_creation_and_append(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "events.jsonl"
+            path = Path(tmp).resolve() / "events.jsonl"
             telemetry._append_event(path, {"kind": "first"})
             telemetry._append_event(path, {"kind": "second"})
             self.assertEqual(len(path.read_text().splitlines()), 2)
@@ -28,7 +28,7 @@ class PrivateLogTests(unittest.TestCase):
     @unittest.skipIf(os.name == "nt", "POSIX link and mode semantics")
     def test_links_and_shared_parent_rejected_before_write(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            root = Path(tmp).resolve()
             target = root / "keep.txt"
             target.write_text("preserve")
             original_mode = target.stat().st_mode
@@ -51,6 +51,30 @@ class PrivateLogTests(unittest.TestCase):
                 self.assertFalse(link.exists())
             finally:
                 root.chmod(0o700)
+
+    @unittest.skipIf(os.name == "nt", "POSIX symlink semantics")
+    def test_symlink_parent_and_ancestors_rejected_before_creation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            real = root / "real"
+            real.mkdir()
+            child = real / "child"
+            child.mkdir()
+            link = root / "link"
+            link.symlink_to(real, target_is_directory=True)
+            for suffix in (Path("events.jsonl"), Path("child/events.jsonl"), Path("missing/events.jsonl")):
+                with self.subTest(suffix=suffix):
+                    with patch.object(telemetry.os, "open", side_effect=AssertionError("must reject before open")):
+                        with self.assertRaisesRegex(ValueError, "ancestors must not be symlinks"):
+                            telemetry._append_event(link / suffix, {})
+                    self.assertFalse((real / suffix).exists())
+            self.assertFalse((real / "missing").exists())
+
+    def test_missing_parents_created(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp).resolve() / "new" / "nested" / "events.jsonl"
+            telemetry._append_event(path, {"kind": "first"})
+            self.assertEqual(json.loads(path.read_text()), {"kind": "first"})
 
 
 class ModePolicyTests(unittest.TestCase):
@@ -93,14 +117,14 @@ class TelemetryTests(unittest.TestCase):
 
     def test_default_log_is_profile_local_and_overridable(self):
         with tempfile.TemporaryDirectory() as tmp:
-            home = Path(tmp) / "profile-home"
+            home = Path(tmp).resolve() / "profile-home"
             self.assertEqual(telemetry.default_log_path({"HERMES_HOME": str(home)}), home / "logs" / "dev-jev.jsonl")
-            override = Path(tmp) / "custom-events.jsonl"
+            override = Path(tmp).resolve() / "custom-events.jsonl"
             self.assertEqual(telemetry.default_log_path({"DEV_JEV_LOG": str(override)}), override)
 
     def test_records_whitelisted_fields_without_prompt_or_source(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "events.jsonl"
+            path = Path(tmp).resolve() / "events.jsonl"
             self.record(path,
                 "--workflow", "ci_failure", "--decision-type", "worth_retrying",
                 "--question-id", "retry", "--primitive", "noul", "--result", "uncertain",
@@ -120,7 +144,7 @@ class TelemetryTests(unittest.TestCase):
 
     def test_external_policy_can_force_low_confidence(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "events.jsonl"
+            path = Path(tmp).resolve() / "events.jsonl"
             self.record(path,
                 "--workflow", "task_triage", "--decision-type", "category",
                 "--question-id", "type", "--primitive", "noul", "--result", "yes",
@@ -168,7 +192,7 @@ class TelemetryTests(unittest.TestCase):
 
     def test_benchmark_cli_reads_jsonl(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "events.jsonl"
+            path = Path(tmp).resolve() / "events.jsonl"
             self.record(path,
                 "--workflow", "task_triage", "--decision-type", "category",
                 "--question-id", "type", "--primitive", "choice", "--result", "bugfix",
@@ -200,7 +224,7 @@ class TelemetryTests(unittest.TestCase):
 
     def test_unavailable_jev_is_recorded_as_fallback_without_confidence(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "events.jsonl"
+            path = Path(tmp).resolve() / "events.jsonl"
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 result = telemetry.main(["record", "--workflow", "loop_control", "--decision-type", "next_step",
@@ -219,7 +243,7 @@ class PortableTelemetryTests(unittest.TestCase):
     def test_neutral_arguments_and_legacy_arguments_produce_compatible_records(self):
         with tempfile.TemporaryDirectory() as tmp:
             for action, agreed in (("--final-agent-action", "--agent-agreed"), ("--final-hermes-action", "--hermes-agreed")):
-                path = Path(tmp) / (action + ".jsonl")
+                path = Path(tmp).resolve() / (action + ".jsonl")
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(telemetry.main(["record", "--workflow", "ci", "--decision-type", "retry", "--question-id", "q1", "--primitive", "choice", "--result", "inspect", action, "inspect", agreed, "true", "--log", str(path)]), 0)
                 event = json.loads(path.read_text())
@@ -244,8 +268,8 @@ class PortableTelemetryTests(unittest.TestCase):
 
     def test_cli_log_path_wins_over_environment(self):
         with tempfile.TemporaryDirectory() as tmp:
-            explicit = Path(tmp) / "explicit.jsonl"
-            overridden = Path(tmp) / "environment.jsonl"
+            explicit = Path(tmp).resolve() / "explicit.jsonl"
+            overridden = Path(tmp).resolve() / "environment.jsonl"
             with patch.dict(environ, {"DEV_JEV_LOG": str(overridden)}), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(telemetry.main(["record", "--workflow", "ci", "--decision-type", "retry", "--question-id", "q1", "--primitive", "choice", "--result", "unavailable", "--call-status", "unavailable", "--fallback-used", "true", "--final-agent-action", "continue", "--log", str(explicit)]), 0)
             self.assertTrue(explicit.exists())
