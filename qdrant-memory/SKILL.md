@@ -43,6 +43,11 @@ strip scope checks. MCP does not automatically capture every conversation turn.
 
 ## Shared boundaries
 
+For shared production deployments, read [shared security](references/shared-security.md).
+Do not distribute Qdrant write keys to agents or bypass destination claims. New
+protected policy and shared doctor require an explicitly installed compatible
+Runtime; they are unpublished additions beyond 0.4.0.
+
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
 Released mode permits sequential profile reuse only. The opt-in shared owner
 service uses credential-bound explicit grants. Check the installed version and

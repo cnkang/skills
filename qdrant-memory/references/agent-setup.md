@@ -1,5 +1,7 @@
 # Connect an agent
 
+For shared mode, use [shared-memory setup](shared-memory.md) and [security boundaries](shared-security.md). Give each agent only its fixed-grant Owner token. Never add database write keys or mount Owner state into an agent.
+
 Install/configure the [runtime](runtime.md) and verify `init` and `doctor` for an
 authorized private profile. Use absolute executable/profile paths. Merge only
 the selected MCP entry into existing settings. Skill loading does not authorize

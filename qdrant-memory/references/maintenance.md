@@ -1,5 +1,7 @@
 # Maintenance workflow
 
+Protected shared destinations reject ordinary writer/maintenance admission. Use [shared security and recovery](shared-security.md), coordinate all writers and back up coherent Owner/Qdrant state. Do not remove claims merely to bypass an error.
+
 1. Confirm `qdrant-memory --home PROFILE --help`, or the existing
    `hermes qdrant-memory --help` when using Hermes. Missing CLI means stop and
    explain [runtime setup](runtime.md), not automatically install/reconfigure.
