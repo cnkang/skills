@@ -190,7 +190,10 @@ def test_busy_writer_is_refused_before_services(plugin, offline_home, monkeypatc
 def test_exact_id_is_not_scope_authorization(plugin, tool):
     runtime = SimpleNamespace(lock=nullcontext(), store=SimpleNamespace(get=lambda identifier, scope: None))
     with pytest.raises(ValueError, match="caller scope"):
-        plugin.tools.dispatch(runtime, tool, {"id": "foreign", "text": "replacement"}, object(), "session")
+        arguments = {"id": "foreign"}
+        if tool.endswith("update"):
+            arguments["text"] = "replacement"
+        plugin.tools.dispatch(runtime, tool, arguments, object(), "session")
 
 
 def test_real_writer_lease_excludes_same_home_destination(plugin, tmp_path):
