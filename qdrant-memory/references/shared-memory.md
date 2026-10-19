@@ -1,5 +1,7 @@
 # Share memory across agents
 
+Before production, read [shared deployment security](shared-security.md). New destination protection and shared doctor are unpublished Runtime additions: check installed help. Owner tokens do not authorize direct Qdrant access; only Owner should receive the protected collection write key.
+
 ## Existing released mode: sequential private-profile access
 
 Existing standalone MCP opens one profile's Runtime and WriterLease. Even

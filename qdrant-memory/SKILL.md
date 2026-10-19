@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Qdrant memory
@@ -42,6 +42,11 @@ prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
 strip scope checks. MCP does not automatically capture every conversation turn.
 
 ## Shared boundaries
+
+For shared production deployments, read [shared security](references/shared-security.md).
+Do not distribute Qdrant write keys to agents or bypass destination claims. New
+protected policy and shared doctor require an explicitly installed compatible
+Runtime; they are unpublished additions beyond 0.4.0.
 
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
 Released mode permits sequential profile reuse only. The opt-in shared owner
