@@ -36,6 +36,14 @@ Revoke is repeatable. Rotation accepts one active grant and a new private output
 file; it refuses overwrite. Live policy failure/revocation/expiry denies new
 requests. Already durably accepted work finishes by Ledger reconciliation.
 
+In the source preview, `remote-event --action status|cancel` can inspect/control
+only the authenticated device's own capture receipts. A caller needs a writable,
+currently authorized capture grant. Cancellation is a mutation and needs the
+user's authorization; this Skill does not grant it. Only raw unprepared input
+may become durably `CANCELLED`; prepared, uncertain and committed writes must
+reconcile. Cancellation does not clear a recovery gate or delete saved memories.
+Pi treats `CANCELLED` as a distinct terminal outbox result, never a committed write.
+
 The Native Hermes Owner mode retains one MemoryProvider and one existing host
 Runtime, worker and LLM facade. Explicit project capture additionally requires
 an approved rule in the grant and a separate profile opt-in list. The additive
@@ -57,5 +65,9 @@ alone never provides a lifecycle hook.
 
 Source deployment, migration/rollback and security details:
 [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/codex/universal-owner/docs/shared-memory/remote-owner.md).
+The dedicated service and Cloud Owner test examples also remain previews.
+Missing scoped Cloud credentials skip that credentialed job; successful
+availability checks are not evidence of Cloud execution. Small local LLM
+diagnostics, even when passing, are not production extraction-quality guarantees.
 The branch reference denotes a preview, not an accepted production release.
 Check the reviewed commit and required dependencies before installation.
