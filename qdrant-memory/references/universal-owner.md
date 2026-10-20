@@ -11,8 +11,8 @@ Immutable preview candidates (not accepted releases):
 
 | Component | Source commit | Scope |
 |---|---|---|
-| Runtime | [`5477c9b0baf6c784d5a9661f1858d1eb38e6051e`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/5477c9b0baf6c784d5a9661f1858d1eb38e6051e) | `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner; PR 69 is held pending review. |
-| MCP adapter | [`0c9e6dafe07d9e45171b85f2287271c69a8ed1fa`](https://github.com/cnkang/qdrant-memory-mcp/tree/0c9e6dafe07d9e45171b85f2287271c69a8ed1fa) | Pi lifecycle extension and preview bridge configuration; requires the Runtime candidate above. |
+| Runtime | [`d13b72c1bef47bcc6b261333f38b8916bafaed1e`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/d13b72c1bef47bcc6b261333f38b8916bafaed1e) | `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner; PR 69 is held pending review and CI. |
+| MCP adapter | [`8b206568210219674e8ea45ce606c8c3572afa57`](https://github.com/cnkang/qdrant-memory-mcp/tree/8b206568210219674e8ea45ce606c8c3572afa57) | Pi lifecycle extension and preview bridge configuration, including reviewed UTF-8, single-flight and credential binding fixes; requires the Runtime candidate above. |
 | Hermes acceptance host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Host used by the source-preview acceptance lane; Pi SDK 1.3.0 is fixed in the adapter lockfile. |
 
 Verify the selected commit and its review/check status before installation. These
@@ -76,7 +76,7 @@ their own official automatic adapters are implemented and tested. Skill text
 alone never provides a lifecycle hook.
 
 Source deployment, migration/rollback and security details:
-[Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/5477c9b0baf6c784d5a9661f1858d1eb38e6051e/docs/shared-memory/remote-owner.md).
+[Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/d13b72c1bef47bcc6b261333f38b8916bafaed1e/docs/shared-memory/remote-owner.md).
 The dedicated service and Cloud Owner test examples also remain previews.
 Missing scoped Cloud credentials skip that credentialed job; successful
 availability checks are not evidence of Cloud execution. Small local LLM
