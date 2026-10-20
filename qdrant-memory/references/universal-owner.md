@@ -1,11 +1,23 @@
 # Universal Owner source preview
 
-These features require a reviewed unreleased Runtime checkout. Runtime 0.4.0,
+These features require an explicitly selected unreleased Runtime checkout. Runtime 0.4.0,
 MCP distribution 0.2.2's release pin, and Skill 0.3.1 do not include the new
 remote/lifecycle implementation. Do not treat a source version string as proof.
 Discover `remote-serve`, `remote-mcp`, `remote-event` and `shared-device` before
 using these instructions. Do not upgrade, migrate or expose an existing user
 destination automatically.
+
+Immutable preview candidates (not accepted releases):
+
+| Component | Source commit | Scope |
+|---|---|---|
+| Runtime | [`5477c9b0baf6c784d5a9661f1858d1eb38e6051e`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/5477c9b0baf6c784d5a9661f1858d1eb38e6051e) | `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner; PR 69 is held pending review. |
+| MCP adapter | [`0c9e6dafe07d9e45171b85f2287271c69a8ed1fa`](https://github.com/cnkang/qdrant-memory-mcp/tree/0c9e6dafe07d9e45171b85f2287271c69a8ed1fa) | Pi lifecycle extension and preview bridge configuration; requires the Runtime candidate above. |
+| Hermes acceptance host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Host used by the source-preview acceptance lane; Pi SDK 1.3.0 is fixed in the adapter lockfile. |
+
+Verify the selected commit and its review/check status before installation. These
+identifiers make the preview reproducible; they do not confer production approval
+or authorize installation, credential changes, destination changes or exposure.
 
 One active Memory Owner owns the Runtime, authoritative Ledger, embeddings and
 Qdrant writes. Multiple local Harnesses use independent loopback bridge grants;
@@ -64,10 +76,10 @@ their own official automatic adapters are implemented and tested. Skill text
 alone never provides a lifecycle hook.
 
 Source deployment, migration/rollback and security details:
-[Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/codex/universal-owner/docs/shared-memory/remote-owner.md).
+[Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/5477c9b0baf6c784d5a9661f1858d1eb38e6051e/docs/shared-memory/remote-owner.md).
 The dedicated service and Cloud Owner test examples also remain previews.
 Missing scoped Cloud credentials skip that credentialed job; successful
 availability checks are not evidence of Cloud execution. Small local LLM
 diagnostics, even when passing, are not production extraction-quality guarantees.
-The branch reference denotes a preview, not an accepted production release.
-Check the reviewed commit and required dependencies before installation.
+The immutable references denote a preview, not an accepted production release.
+Recheck review status and required dependencies before installation.
