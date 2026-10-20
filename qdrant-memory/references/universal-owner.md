@@ -21,8 +21,8 @@ Immutable preview candidates (not accepted releases):
 
 | Component | Source commit | Scope |
 |---|---|---|
-| Runtime | [`0d03c56e0cd2bdae569703d726cb0cb292e2c599`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/0d03c56e0cd2bdae569703d726cb0cb292e2c599) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
-| MCP adapter | [`33eecbb90889aef9f933966833b791b8b988de21`](https://github.com/cnkang/qdrant-memory-mcp/tree/33eecbb90889aef9f933966833b791b8b988de21) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
+| Runtime | [`6463b36c9315ecce5b642c5bbd2834636a3093a9`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/6463b36c9315ecce5b642c5bbd2834636a3093a9) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
+| MCP adapter | [`4a76bf9211ce48b5dcf40caa60e4a91107aa687f`](https://github.com/cnkang/qdrant-memory-mcp/tree/4a76bf9211ce48b5dcf40caa60e4a91107aa687f) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
 Before installation, examine the selected commit, its review status, and its test
@@ -127,7 +127,7 @@ Codex, DSH, WorkBuddy, and OpenCode require explicit MCP use or assisted
 operation. Automatic operation requires an official adapter and tests for that
 agent. Skill instructions alone do not provide lifecycle hooks.
 
-Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/0d03c56e0cd2bdae569703d726cb0cb292e2c599/docs/shared-memory/remote-owner.md)
+Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/6463b36c9315ecce5b642c5bbd2834636a3093a9/docs/shared-memory/remote-owner.md)
 for deployment, migration, rollback, and security details.
 
 The dedicated service and Cloud Owner test examples remain previews. The Cloud
