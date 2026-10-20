@@ -51,11 +51,11 @@ Runtime; they are unpublished additions beyond 0.4.0.
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
 Released mode permits sequential profile reuse only. The opt-in shared owner
 service uses credential-bound explicit grants. Check the installed version and
-discovered schemas before using it. Legacy records remain private, and Hermes
-Native Provider automatic shared extraction is not implemented in the released
-Runtime. For the explicitly installed source preview, read
-[universal Owner](references/universal-owner.md); it separates Native Owner,
-HTTPS MCP, device credentials and Pi lifecycle evidence from released features.
+discovered schemas before using it. Legacy records remain private.
+The released Runtime does not support automatic shared extraction with the
+Hermes Native Provider. For the source preview, read
+[Universal Owner](references/universal-owner.md). That reference describes
+Native Owner, HTTPS MCP, device credentials, and Pi lifecycle tests.
 
 Loading this skill grants no save/edit/delete, retry/import, service-stop,
 overwrite, installation or configuration permission. Stay within the user's

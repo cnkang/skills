@@ -1,85 +1,141 @@
 # Universal Owner source preview
 
-These features require an explicitly selected unreleased Runtime checkout. Runtime 0.4.0,
-MCP distribution 0.2.2's release pin, and Skill 0.3.1 do not include the new
-remote/lifecycle implementation. Do not treat a source version string as proof.
-Discover `remote-serve`, `remote-mcp`, `remote-event` and `shared-device` before
-using these instructions. Do not upgrade, migrate or expose an existing user
-destination automatically.
+These features require an unreleased Runtime source checkout that you explicitly
+select. Runtime 0.4.0 does not include these remote access and lifecycle features.
+The release commit for MCP distribution 0.2.2 does not include them.
+Skill 0.3.1 does not include them.
+
+Do not use a source version string as proof of feature support. Before use,
+confirm that the installed Runtime provides these commands:
+
+- `remote-serve`
+- `remote-mcp`
+- `remote-event`
+- `shared-device`
+
+Do not automatically upgrade an existing destination. Do not automatically
+migrate an existing destination. Do not automatically expose an existing
+destination to remote access.
 
 Immutable preview candidates (not accepted releases):
 
 | Component | Source commit | Scope |
 |---|---|---|
-| Runtime | [`802b4c66551106253350d686650e25ffac57e4f9`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/802b4c66551106253350d686650e25ffac57e4f9) | `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner, including foreign unadmitted input cancellation; PR 69 requires final-head review and CI before acceptance. |
-| MCP adapter | [`f899cef7383dd9d898d39100a2d3cbc5ff108639`](https://github.com/cnkang/qdrant-memory-mcp/tree/f899cef7383dd9d898d39100a2d3cbc5ff108639) | Pi lifecycle extension and preview bridge configuration, including reviewed UTF-8, single-flight and credential binding fixes; its actual Hermes-to-Pi CI lane pins the Runtime candidate above. |
-| Hermes acceptance host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Host used by the source-preview acceptance lane; Pi SDK 1.3.0 is fixed in the adapter lockfile. |
+| Runtime | [`0d03c56e0cd2bdae569703d726cb0cb292e2c599`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/0d03c56e0cd2bdae569703d726cb0cb292e2c599) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
+| MCP adapter | [`33eecbb90889aef9f933966833b791b8b988de21`](https://github.com/cnkang/qdrant-memory-mcp/tree/33eecbb90889aef9f933966833b791b8b988de21) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
+| Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
-Verify the selected commit and its review/check status before installation. These
-identifiers make the preview reproducible; they do not confer production approval
-or authorize installation, credential changes, destination changes or exposure.
+Before installation, examine the selected commit, its review status, and its test
+results. The commit identifiers let users select the same source code. They do
+not indicate production approval.
 
-One active Memory Owner owns the Runtime, authoritative Ledger, embeddings and
-Qdrant writes. Multiple local Harnesses use independent loopback bridge grants;
-remote Harnesses use verified `https://<owner>/mcp` Streamable HTTP. A stdio-only
-Host uses the Runtime's `remote-mcp` MCP-to-MCP bridge. The old `/v1/tool` JSON
-endpoint remains loopback-only. SSH, VPN and Qdrant Cloud are not prerequisites.
-Embedded, self-hosted Qdrant and Cloud remain independent storage choices.
+Get user authorization before installation. Get user authorization before
+credential changes. Get user authorization before destination changes. Get user
+authorization before remote exposure.
 
-This preview supports pre-provisioned, high-entropy, independently revocable
-service credentials. It does not implement OAuth/OIDC or browser authorization.
-Never advertise OAuth MCP interoperability. TLS verification is mandatory; a
-private CA may be explicitly trusted. Never give an Agent a database write key,
-Owner Ledger, protected claim or administrator credential.
+One active Memory Owner controls the Runtime, authoritative Ledger, embeddings,
+and Qdrant writes. Each local harness uses a separate grant through a loopback
+bridge. Remote harnesses use Streamable HTTP at `https://<owner>/mcp`. They verify
+the server certificate.
 
-The administrator binds owner, logical agent, device, principal, space,
-visibility and permission. Two devices of one logical agent use different
-credentials/principals/device IDs bound to the same private space and logical
-identity. A different agent uses its own private space, and may share only an
-explicitly authorized project/shared space. Tool payloads cannot set trusted
-identity. A denial does not permit retrying under another scope or fabricating
-a logical identity. Legacy private/null-agent records are never exposed by a
-new grant. New logical private grants occupy their own v2 partition; migration
-is explicit and outside this preview.
+A host that supports only stdio uses the Runtime's `remote-mcp` bridge. This
+bridge connects one MCP interface to another. The `/v1/tool` JSON endpoint
+accepts only loopback connections.
 
-`shared-device validate/revoke/rotate` is an operator interface. Loading this
-Skill grants no permission to invoke mutation commands or disclose token files.
-Revoke is repeatable. Rotation accepts one active grant and a new private output
-file; it refuses overwrite. Live policy failure/revocation/expiry denies new
-requests. Already durably accepted work finishes by Ledger reconciliation.
+SSH and VPN are optional. Users can select embedded Qdrant, self-hosted Qdrant,
+or Qdrant Cloud.
 
-In the source preview, `remote-event --action status|cancel` can inspect/control
-only the authenticated device's own capture receipts. A caller needs a writable,
-currently authorized capture grant. Cancellation is a mutation and needs the
-user's authorization; this Skill does not grant it. Only raw unprepared input
-may become durably `CANCELLED`; prepared, uncertain and committed writes must
-reconcile. Cancellation does not clear a recovery gate or delete saved memories.
-Pi treats `CANCELLED` as a distinct terminal outbox result, never a committed write.
+This preview supports service credentials that an administrator provides in
+advance. Each credential has high entropy and supports separate revocation.
+The preview does not support OAuth, OIDC, or browser authorization.
 
-The Native Hermes Owner mode retains one MemoryProvider and one existing host
-Runtime, worker and LLM facade. Explicit project capture additionally requires
-an approved rule in the grant and a separate profile opt-in list. The additive
-shared reader is read-only. Do not register a second MCP memory interface in
-that Native profile. Remote Hermes installations may use the explicit MCP
-fallback as their one memory interface; Native remote-client automatic mode is
-not implemented.
+Do not advertise OAuth MCP support. Always verify TLS certificates. Explicit
+configuration can permit a private certificate authority.
 
-Pi has an optional actual lifecycle extension in the MCP repository's
-`integrations/pi/owner-memory.mjs`. It defaults off, saves only permitted hook
-content, retains its own pending events in the current authorized session, and
-uses the Owner for extraction/dedupe/embedding/persistence. Its ephemeral context
-hook refreshes authorized recall for each request and does not persist shared
-recall in history. Actual Pi 1.3.0 session and actual Hermes MemoryManager tests
-use deterministic models; they do not prove real model accuracy or user UI
-acceptance. Codex, DSH, WorkBuddy and OpenCode remain explicit MCP/assisted until
-their own official automatic adapters are implemented and tested. Skill text
-alone never provides a lifecycle hook.
+Do not give an agent a database write key. Do not give an agent the Owner Ledger.
+Do not give an agent a protected claim. Do not give an agent administrator
+credentials.
 
-Source deployment, migration/rollback and security details:
-[Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/802b4c66551106253350d686650e25ffac57e4f9/docs/shared-memory/remote-owner.md).
-The dedicated service and Cloud Owner test examples also remain previews.
-Missing scoped Cloud credentials skip that credentialed job; successful
-availability checks are not evidence of Cloud execution. Small local LLM
-diagnostics, even when passing, are not production extraction-quality guarantees.
-The immutable references denote a preview, not an accepted production release.
-Recheck review status and required dependencies before installation.
+The administrator binds the owner, logical agent, device, principal, space,
+visibility, and permission. Each device of one logical agent uses separate
+credentials, a separate principal, and a separate device ID. These devices share
+the same private space and logical identity.
+
+Each different agent uses a separate private space. Agents can share a project
+space or shared space only with explicit authorization. Tool payloads cannot set
+trusted identity.
+
+After a denial, do not retry with another scope. Do not create a false logical
+identity.
+
+A new grant does not expose legacy private records or records without an agent
+identity. New logical private grants use a separate v2 partition. Migration
+requires explicit action and is outside this preview.
+
+Operators use `shared-device validate`, `shared-device revoke`, and
+`shared-device rotate`. This Skill does not authorize changes or token file
+disclosure.
+
+Revocation supports repeated requests. Rotation requires one active grant and
+a new private output file. Rotation does not overwrite an existing file.
+
+The Owner denies new requests if policy validation fails or the grant expires.
+The Owner also denies new requests after revocation. The Ledger reconciles work
+that the Owner already accepted durably.
+
+The `remote-event` command supports the `--action status` and `--action cancel`
+options. Each action applies only to capture receipts from the authenticated
+device. The caller needs a current capture grant with write permission.
+
+Get user authorization before cancellation. This Skill does not provide that
+authorization.
+
+Only raw input that has not entered preparation can enter the durable
+`CANCELLED` state. The Ledger reconciles prepared, uncertain, and committed
+writes. Cancellation does not clear a recovery gate. Cancellation does not
+delete saved memories.
+
+Pi treats `CANCELLED` as a terminal outbox result. This result does not indicate
+a committed write.
+
+Native Hermes Owner mode uses one MemoryProvider and the existing host Runtime,
+worker, and LLM facade. Project capture requires an approved grant rule. It also
+requires a separate profile list that explicitly permits project capture.
+
+The additional shared reader cannot write data. Do not register a second MCP
+memory interface in that Native profile.
+
+A remote Hermes installation can use the explicit MCP fallback as its only
+memory interface. Native mode does not support automatic operation as a remote
+client.
+
+The MCP repository provides the optional Pi lifecycle extension at
+`integrations/pi/owner-memory.mjs`. The extension is off by default. It saves
+only hook content that the grant permits.
+
+The extension retains its pending events in the current authorized session.
+The Owner performs extraction, duplicate detection, embedding, and persistence.
+
+The temporary context hook refreshes authorized recall for each request. It does
+not save shared recall in session history.
+
+Pi 1.3.0 session tests and Hermes MemoryManager tests use deterministic models.
+These tests do not establish accuracy with real models. They do not establish
+user interface acceptance.
+
+Codex, DSH, WorkBuddy, and OpenCode require explicit MCP use or assisted
+operation. Automatic operation requires an official adapter and tests for that
+agent. Skill instructions alone do not provide lifecycle hooks.
+
+Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/0d03c56e0cd2bdae569703d726cb0cb292e2c599/docs/shared-memory/remote-owner.md)
+for deployment, migration, rollback, and security details.
+
+The dedicated service and Cloud Owner test examples remain previews. The Cloud
+test does not run without credentials that grant the required access. Successful
+availability tests do not establish that the Cloud test ran.
+
+Small local LLM tests do not establish production extraction quality. The source
+references identify a preview, not a production release.
+
+Before installation, examine the review status. Confirm the required
+dependencies.
