@@ -22,7 +22,7 @@ Immutable preview candidates (not accepted releases):
 | Component | Source commit | Scope |
 |---|---|---|
 | Runtime | [`0b1b05289eae3731af30e1c38c427aec7c6ac635`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/0b1b05289eae3731af30e1c38c427aec7c6ac635) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
-| MCP adapter | [`ffc22ad5c31102c48c36c8ea3b8fd81933484eb8`](https://github.com/cnkang/qdrant-memory-mcp/tree/ffc22ad5c31102c48c36c8ea3b8fd81933484eb8) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
+| MCP adapter | [`08652038483cae3e1c81e328f19136ed2c330d8f`](https://github.com/cnkang/qdrant-memory-mcp/tree/08652038483cae3e1c81e328f19136ed2c330d8f) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
 Before installation, examine the selected commit, its review status, and its test
@@ -140,7 +140,7 @@ Collection-level credential restrictions remain unverified.
 Cloud tests require credentials that grant the required access.
 Successful availability tests do not establish that the Cloud test ran.
 
-Runtime CI uses Qwen3.5 0.8B for functional smoke tests. A smoke pass does not
+Runtime CI uses fixed models for functional smoke tests. A smoke pass does not
 establish extraction quality. The [Runtime model guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/0b1b05289eae3731af30e1c38c427aec7c6ac635/docs/shared-memory/model-quality.md)
 defines the full model quality tests. The source references identify a preview,
 not a production release.
