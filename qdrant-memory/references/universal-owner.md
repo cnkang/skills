@@ -22,7 +22,7 @@ Immutable preview candidates (not accepted releases):
 | Component | Source commit | Scope |
 |---|---|---|
 | Runtime | [`4d63c2067fea5a82dfdea573c1f215c21767e775`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/4d63c2067fea5a82dfdea573c1f215c21767e775) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
-| MCP adapter | [`dfe34c91fed4824ec40a76d7f38a6ba265e9798d`](https://github.com/cnkang/qdrant-memory-mcp/tree/dfe34c91fed4824ec40a76d7f38a6ba265e9798d) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
+| MCP adapter | [`ffc22ad5c31102c48c36c8ea3b8fd81933484eb8`](https://github.com/cnkang/qdrant-memory-mcp/tree/ffc22ad5c31102c48c36c8ea3b8fd81933484eb8) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
 Before installation, examine the selected commit, its review status, and its test
