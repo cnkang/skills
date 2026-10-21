@@ -8,9 +8,9 @@
 |---|---|---|
 | [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.0 | 将独立变更拆成 Conventional Commits。需要 Git；脚本需 Python 3.10+，也有手工检查降级路径。 |
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
-| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读解释 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
+| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读查看 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.1 | 记忆检索与编辑、维护及 Mem0 迁移流程。支持无 Hermes 的独立运行时和 MCP，保留 Hermes 兼容性；按需加载引用。在 Hermes 上，每个 profile 使用单一记忆接口。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.1 | 面向各类 agent 的记忆工具/CLI、维护及 Mem0 迁移流程。独立运行时和 MCP 无需 Hermes 即可工作，已有 Hermes 集成继续受支持。在 Hermes 上，每个 profile 使用单一记忆接口。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -59,7 +59,7 @@ Use $dev-jev for one bounded judgment if compatible tools are available, then co
 Use $qdrant-memory to recall my review preferences without saving or changing memories.
 ```
 
-每条请求可以独立使用，不要求安装其余 skills。想先看提交计划时明确要求 plan only；需要修复、提交或推送时明确该动作。Jev 的默认 `shadow` 模式不能影响实际行动，缺少提供方也不阻塞任务。
+每条请求可以独立使用，不要求安装其余 skills。想先审查提交计划时，明确要求“plan only”；需要修复、提交或推送时明确说明该动作。Jev 的默认 `shadow` 模式不能影响实际行动，缺少提供方也不阻塞任务。
 
 支持 `skills use` 的 CLI 还可以临时加载一个 skill：
 
@@ -71,7 +71,7 @@ npx skills@latest use cnkang/skills --skill sonarcloud-link-inspector
 npx skills@latest use cnkang/skills --skill conventional-commit-batcher --agent codex
 ```
 
-启动宿主需要该 agent 已安装，并遵循它自己的权限配置。`use` 不自动添加其他 skills。[CLI use 说明](https://github.com/vercel-labs/skills#use-a-skill-without-installing)
+启动宿主需要该 agent 已安装，并遵循它自己的权限配置。`use` 不自动添加其他 skills。参见 [CLI use 说明](https://github.com/vercel-labs/skills#use-a-skill-without-installing)。
 
 ## 只更新选择的 skills
 
@@ -85,16 +85,16 @@ npx skills@latest update repository-quality-gate-fixer sonarcloud-link-inspector
 
 在自动化中可加 `-y`。使用显式名称与 `-p`/`-g`，避免更新无关技能或猜测安装范围。无名称的 `update` 会更新所选范围内的全部 skills。
 
-`skills@latest` 选择最新发布的 CLI；skill 内容则按已记录的来源、路径和 ref 更新。`metadata.version` 是发布说明，不是 CLI 的版本比较依据。脚本或 reference 的变化也能触发更新。固定 tag/ref 的安装仍跟随该 ref，不会自动跳到默认分支。[上游更新实现](https://github.com/vercel-labs/skills/blob/main/src/update.ts)
+`skills@latest` 选择最新发布的 CLI；skill 内容则按已记录的来源、路径和 ref 更新。`metadata.version` 是发布说明，不是 CLI 的版本比较依据。脚本或 reference 的变化也能触发更新。固定 tag/ref 的安装仍跟随该 ref，不会自动跳到默认分支。参见[上游更新实现](https://github.com/vercel-labs/skills/blob/main/src/update.ts)。
 
 更新可能替换整个已安装包；先备份有意修改的内容。CLI 可能重新选择共享链接安装方式，因此使用 `--copy` 的环境应核实更新后的安装形态，必要时以原命令加 `--copy` 重新安装。包内可选适配模板更新不会更新已部署到其他目录的命令或 hook。
 
 ## 迁移与进阶安装
 
-- 从旧 `cnkang/conventional-commit-batcher` 来源迁移：对该 skill 重新执行 `add cnkang/skills --skill conventional-commit-batcher`，保留所需的 agent 和安装范围；普通 `update` 不会改变来源。
+- 从旧 `cnkang/conventional-commit-batcher` 来源迁移：对该 skill 重新执行 `add cnkang/skills --skill conventional-commit-batcher`，并指定所需的 agent 和安装范围；普通 `update` 不会改变来源。
 - 手工复制的包、旧 lock 缺少路径/来源或更新无法识别时：备份自定义内容，用 `add` 重新安装对应 skill 建立来源记录。不要手工改版本字段来模拟更新。
 - 提交拆分 **v4** 移除了隐藏目录中的旧入口及自动识别的包内 AGENTS/CLAUDE 文件。可选命令、专用 agent、steering 和 hook 现为模板，迁移参见 [adapter setup](conventional-commit-batcher/references/adapter-setup.md)。不要自动删除外部自定义配置。
-- Jev 的旧遥测参数和日志仍可读；中立路径与 Hermes 可选配置参见 [dev-jev](dev-jev/SKILL.md)。
+- Jev 仍接受旧遥测参数并读取历史日志；中立路径与 Hermes 可选配置参见 [dev-jev](dev-jev/SKILL.md)。
 
 只有确实需要全部 skills 时使用：
 
@@ -115,11 +115,11 @@ python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
 
-分发测试使用隔离的 HOME、配置和项目目录，保留原四个 skills 的全部 15 种组合，并新增Qdrant 独立、全清单及与每个原 skill 的混装（共 21 组）。覆盖重复安装、9 个宿主的项目/全局与链接/复制路径、Qdrant 包在 Codex/Hermes 的安装、临时使用及 reference/脚本的选择性更新。更新来源由本地 Git fixture 提供，不访问真实私有仓库或 token。脚本失败不等于真实宿主不可用；需区分打包缺陷和上游 CLI 行为变化。
+分发测试使用隔离的 HOME、配置和项目目录，保留原四个 skills 的全部 15 种组合，并新增 Qdrant 单装、全清单及与每个原 skill 的混装（共 21 组）。覆盖重复安装、9 个宿主的项目/全局与链接/复制路径、Qdrant 包在 Codex/Hermes 的安装、临时使用及 reference/脚本的选择性更新。更新来源由本地 Git fixture 提供，不访问真实私有仓库或 token。脚本失败不等于真实宿主不可用；需区分打包缺陷和上游 CLI 行为变化。
 
 CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的验收参见 [behavior scenarios](docs/behavior-scenarios.md)；结构检查不能证明模型行为。[发布与回滚](docs/releasing.md)说明默认分支更新渠道、版本、标签与迁移流程。
 
-三平台强制[agent 平台验收](docs/agent-host-acceptance.md)覆盖 Hermes 和 MIT 开源的 Pi Coding Agent。Pi 使用真实 skill 发现、显式加载与引用文件读取流程，模型端采用本地确定性测试服务，无需付费 API、账户或下载模型。平台加载兼容性、真实模型判断能力和各 skill 的运行依赖分别说明。
+三平台强制[agent 平台验收](docs/agent-host-acceptance.md)覆盖 Hermes 和 MIT 开源的 Pi Coding Agent。Pi 借助本地确定性模型测试服务验证真实的 skill 发现、显式加载与引用文件读取，无需付费 API 或下载模型。平台加载兼容性、真实模型判断能力和各 skill 的运行依赖分别说明。
 
 ## Qdrant 记忆 skill
 
@@ -130,8 +130,8 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [正式分发包](https://github.com/cnkang/skills/releases/tag/skills-20261016.2)，
 继续兼容 Runtime 0.2.2 及对应的 MCP 0.1.3。Runtime 0.3.0 还提供可显式选择的
 CPU Embedding；升级 Runtime 无需替换 Skill，也不会改变 Hermes 默认配置。
-两者均支持 MCP Python SDK 1.x 和 2.x，四个固定作用域工具及 stdio 配置保持一致。
-安装器通过运行时的兼容适配器验证 MCP 服务端。
+两者均支持 MCP Python SDK 1.x 和 2.x，四个 scoped 工具及 stdio 配置保持一致。
+安装器会验证运行时兼容的服务端适配器。
 以下命令固定安装精确的 PyPI 版本：
 
 ```bash
@@ -146,7 +146,7 @@ python3 -m venv /private/path/qdrant-env
 原 v0.1.0 没有这些入口，以上命令固定安装 PyPI 发行版本。
 主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.1.3
 qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
-两种安装方式共用 Runtime，已有用户无需强制切换分发包。
+两种安装方式共用 Runtime。
 
 后端缺失时，获得安装授权的 agent 也可以执行安装后的 skill 自带脚本：
 
@@ -154,11 +154,10 @@ qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 prof
 python3 ~/.agents/skills/qdrant-memory/scripts/install_runtime.py --venv /private/path/qdrant-env
 ```
 
-以 CLI 输出的实际 skill 目录为准。默认只需 Python 3.11+ 与 PyPI，显式完整 SHA
-源码安装才需要 Git/GitHub。脚本验证固定版本、CLI/MCP 导入并返回命令绝对路径；
-保留已有安装及 Hermes 设置，不匹配时建议新建环境，不自动升级。
-`npx skills` 本身不会执行脚本。CI 使用隔离 profile 验证真实 npx 分发、全新
-环境中安装固定源码后端、CLI 读写，以及 MCP 工具发现和调用。
+以 CLI 输出的实际 skill 目录为准。默认安装器只需要 Python 3.11+ 与 PyPI；
+源码安装还需要 Git 和 GitHub 访问。它返回运行时的绝对命令，验证 CLI/MCP 导入，
+并保留已有安装和 Hermes 设置。`npx skills` 本身不会执行该脚本。CI 使用隔离
+profile 验证真实 npx 分发、全新固定来源后端安装、CLI CRUD，以及 MCP 工具发现和调用。
 
 按照[运行时配置](qdrant-memory/references/runtime.md)设置私有 profile 和
 Embedding 服务，然后初始化已授权的 collection：
@@ -169,7 +168,7 @@ qdrant-memory --home /private/path/profile doctor
 qdrant-memory --home /private/path/profile search --query 'review preferences'
 ```
 
-激活虚拟环境或使用其中可执行文件的绝对路径。
+使用虚拟环境中的可执行文件（激活虚拟环境，或使用其绝对路径）。
 按[agent 接入说明](qdrant-memory/references/agent-setup.md)连接 Codex、
 Claude Code、OpenCode、Pi 的 MCP，也可以让支持执行命令的 agent 使用独立
 JSON CLI。先发现四个 scoped 工具再执行操作。身份由操作员固定配置的 profile
@@ -195,11 +194,11 @@ JSON CLI 使用这些指引。
 
 ### 共享记忆与使用流程
 
-[跨 agent 共享](qdrant-memory/references/shared-memory.md)可使用相同用户/profile
-和 `agent_id: null`。这是一个准确的共享分区；显式 agent ID 仍隔离。
-当前私有 Embedded/MCP 写入会话遵循 profile 锁，按顺序访问。并发跨 agent
-共享需显式配置 Runtime 0.4.0 发布的单 owner 服务和凭据授权；默认安装器
-及验收仍保留 0.2.2 最低兼容基线，不会自动升级已有环境。
+[跨 agent 共享](qdrant-memory/references/shared-memory.md)时，已发布模式使用相同的
+用户/profile 和 `agent_id: null`。这是一个共享分区，当前 Embedded/MCP 写入方
+在 profile 租约下按顺序访问它。显式 agent ID 仍保持私有。并发跨 agent 共享
+需要显式选择启用 Runtime 0.4.0 发布的单 owner 服务。下文的 0.2.2 安装基线
+仅支持私有 profile 的顺序复用。
 
 | 流程 | 示例 | 入口 |
 |---|---|---|
@@ -208,10 +207,10 @@ JSON CLI 使用这些指引。
 | [Migration](qdrant-memory/references/migration.md) | Mem0 dry-run/import/resume/verify | 独立或 Hermes 的 `migrate mem0` |
 
 ```text
-使用 qdrant-memory skill 查找我的审查语言偏好，不修改记忆。
-使用 qdrant-memory skill 保存这个偏好：审查总结使用中文。
-使用 qdrant-memory skill 展示过时偏好的准确 ID，暂不编辑。
-使用 qdrant-memory skill 对已授权 JSON 做迁移 dry-run，暂不导入。
+Use $qdrant-memory to find my review language preference; do not change memories.
+Use $qdrant-memory to save this preference: write review summaries in Chinese.
+Use $qdrant-memory to show the exact outdated memory ID before editing it.
+Use $qdrant-memory to dry-run my authorized JSON migration; do not import yet.
 ```
 
 Hermes 用户保留已有 MemoryProvider、原生工具和 `hermes qdrant-memory`
@@ -224,10 +223,10 @@ Hermes 用户保留已有 MemoryProvider、原生工具和 `hermes qdrant-memory
 只更新本 skill：`npx skills@latest update qdrant-memory -p`，全局安装用
 `-g`。保留完整 references 目录。
 
-维护 list/export 未选择用户时可能覆盖整个 collection；核实操作员权限和选择器。
+未提供用户选择器时，维护 list/export 可以选择 collection 的全部用户；请核实操作员授权和选择器。
 恢复保留 ledger 和 ownership。Embedded 需要独占访问；WriterLease 不能作为
 不同独立 profile 之间的分布式锁。迁移重新 Embedding，仍不支持向量复用及 scope
-重映射。[兼容性与验证边界](docs/qdrant-memory-compatibility.md)。
+重映射。参见[兼容性与验证边界](docs/qdrant-memory-compatibility.md)。
 
 ## License
 
