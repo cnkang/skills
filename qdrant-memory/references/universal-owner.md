@@ -21,7 +21,7 @@ Immutable preview candidates (not accepted releases):
 
 | Component | Source commit | Scope |
 |---|---|---|
-| Runtime | [`0b1b05289eae3731af30e1c38c427aec7c6ac635`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/0b1b05289eae3731af30e1c38c427aec7c6ac635) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
+| Runtime | [`24f9b1110ee99237f432afefbc7af7573bfae494`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/24f9b1110ee99237f432afefbc7af7573bfae494) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
 | MCP adapter | [`08652038483cae3e1c81e328f19136ed2c330d8f`](https://github.com/cnkang/qdrant-memory-mcp/tree/08652038483cae3e1c81e328f19136ed2c330d8f) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
@@ -127,11 +127,11 @@ Codex, DSH, WorkBuddy, and OpenCode require explicit MCP use or assisted
 operation. Automatic operation requires an official adapter and tests for that
 agent. Skill instructions alone do not provide lifecycle hooks.
 
-Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/0b1b05289eae3731af30e1c38c427aec7c6ac635/docs/shared-memory/remote-owner.md)
+Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/24f9b1110ee99237f432afefbc7af7573bfae494/docs/shared-memory/remote-owner.md)
 for deployment, migration, rollback, and security details.
 
 The dedicated service and Cloud Owner test examples remain previews.
-The [Runtime Cloud Owner test](https://github.com/cnkang/hermes-plugin-qdrant-memory/actions/runs/39620288178)
+The [Runtime Cloud Owner test](https://github.com/cnkang/hermes-plugin-qdrant-memory/actions/runs/39691871575)
 passed one end-to-end test on main, with no skipped tests.
 The run used the Runtime preview revision in the table above.
 The test removed its records and collection.
@@ -141,7 +141,7 @@ Cloud tests require credentials that grant the required access.
 Successful availability tests do not establish that the Cloud test ran.
 
 Runtime CI uses fixed models for functional smoke tests. A smoke pass does not
-establish extraction quality. The [Runtime model guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/0b1b05289eae3731af30e1c38c427aec7c6ac635/docs/shared-memory/model-quality.md)
+establish extraction quality. The [Runtime model guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/24f9b1110ee99237f432afefbc7af7573bfae494/docs/shared-memory/model-quality.md)
 defines the full model quality tests. The source references identify a preview,
 not a production release.
 
