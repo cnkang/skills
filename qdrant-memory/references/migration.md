@@ -12,7 +12,7 @@
    profiles/hosts and wait for release. Embedded source reads may need its owner
    stopped too. Dry-run reads/plans source without opening target/ledger and does
    not prove target readiness or lease availability.
-4. Execute via plugin Runtime with re-embedding and verification. Keep source,
+4. Execute through plugin Runtime with re-embedding and verification. Keep source,
    target and pipeline stable for resume. Read [failure/resume](migration-recovery.md)
    for incomplete, failed or superseded work.
 5. Require successful payload and manifest verification before completion or

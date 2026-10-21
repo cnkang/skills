@@ -56,7 +56,7 @@ Load the skill with `/skill:qdrant-memory` after installation/discovery.
 ## Other agents and Hermes
 
 Compatible stdio MCP clients can discover four `qdrant_memory_*` tools. Hosts
-may prefix their names. Agents with command execution can use the JSON CLI via
+may prefix their names. Agents with command execution can use the JSON CLI through
 [usage](usage.md). Interface compatibility is not a claim that every host/model
 has been tested.
 
@@ -66,10 +66,9 @@ Avoid concurrent embedded writers against the same storage.
 
 Use one memory interface for each Hermes profile: the native plugin or the
 qdrant-memory MCP server, not both. Before you register this MCP server,
-check `hermes plugins list` for qdrant-memory. If the plugin is installed,
-ask the user to enable it when needed (`hermes plugins enable qdrant-memory`),
-then run `hermes memory setup` and select qdrant-memory as the memory
-provider. After that, do not add this server for Hermes. Inform the user that
+check `hermes plugins list` for qdrant-memory. If the plugin is installed, ask the user to enable it when needed (`hermes plugins
+enable qdrant-memory`). Then run `hermes memory setup` and select qdrant-memory as the
+memory provider. After that, do not add this server for Hermes. Inform the user that
 Hermes needs no further setup. Other agents can still use this server or the
 CLI. If the plugin cannot be used for that profile, register this server for
 that profile instead. If the plugin is not installed, recommend it for Hermes

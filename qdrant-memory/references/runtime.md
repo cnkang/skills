@@ -110,7 +110,7 @@ qdrant-memory --home /private/path/profile doctor
 qdrant-memory --home /private/path/profile search --query 'review preferences'
 ```
 
-Initialize only an authorized target. `--help` proves interface availability, not service readiness. Connect MCP via [agent setup](agent-setup.md), or use the supported standalone CLI. Never substitute private Python calls or direct Qdrant access.
+Initialize only an authorized target. `--help` proves interface availability, not service readiness. Connect MCP through [agent setup](agent-setup.md), or use the supported standalone CLI. Never substitute private Python calls or direct Qdrant access.
 
 Existing Hermes users can retain their MemoryProvider and `hermes qdrant-memory` maintenance/migration commands. Follow [Hermes setup](https://github.com/cnkang/hermes-plugin-qdrant-memory#readme) for that integration. Automatic extraction and prefetch remain Hermes lifecycle features. Standalone exposes explicit operations.
 
@@ -126,18 +126,18 @@ unsafe permissions are rejected rather than changed. Windows requires a private
 inherited ACL. These checks are not an OS sandbox against concurrent changes.
 
 Installation ignores ambient pip configuration (`PIP_CONFIG_FILE` is the null
-device); service credentials are not passed to installation subprocesses. For a
+device). Service credentials are not passed to installation subprocesses. For a
 reviewed release dependency set, pass `--requirements-lock /absolute/path/lock.txt`.
 The trusted lock must cover the requested Runtime with its MCP extra and every
 transitive dependency using exact versions and SHA256 hashes. This enables pip
-`--require-hashes --only-binary=:all:`; missing hashes or unavailable wheels fail
+`--require-hashes --only-binary=:all:`. Missing hashes or unavailable wheels fail
 closed. No fallback to a source build is attempted. This option cannot be combined
-with `--revision`; explicit immutable source installation remains a separate
+with `--revision`. Explicit immutable source installation remains a separate
 operator-authorized development route. Existing environments are verified without
 reinstallation, so this flag does not retroactively certify their bytes.
 
 Runtime 0.2.2 remains the tested minimum selected by this skill's installer and
-CI fixture pins. Runtime 0.4.0 adds the separately configured shared owner; use
+CI fixture pins. Runtime 0.4.0 adds the separately configured shared owner. Use
 that version or newer for concurrent sharing, and discover its schemas before
 registering a shared bridge. Do not apply private-profile examples as shared
 service setup or silently upgrade an existing installation.

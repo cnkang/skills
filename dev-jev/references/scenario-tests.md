@@ -1,6 +1,8 @@
 # dev-jev scenario verification matrix
 
-Use these cases to verify when the skill calls the plugin, when it deliberately does not, and how the current agent workflow behaves in shadow/advisory/off modes. The matrix is a manual acceptance suite. It does not claim the model classified these examples correctly. Run offline helper tests separately with `scripts/test_dev_jev.py`.
+Use these cases to verify three points. First, when the skill calls the plugin. Second,
+when it deliberately does not. Third, how the current agent workflow behaves in shadow,
+advisory and off modes. The matrix is a manual acceptance suite. It does not claim the model classified these examples correctly. Run offline helper tests separately with `scripts/test_dev_jev.py`.
 
 | Case | Jev call? | Bounded judgment | Required behavior |
 |---|---|---|---|

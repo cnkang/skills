@@ -101,4 +101,4 @@ Send only the controller fields: `goal`, `current_hypothesis`, `last_action`, `l
 
 For a short changed-file/hunk summary, batch separate Nouls for behavior change, security relevance, memory safety, concurrency, performance, compatibility, test gap, and docs contract. HIGH/critical prioritizes code reading and call-path review. LOW never skips review.
 
-Near release, ask separate questions. Examples are “Is there evidence of an untested behavior change?” and “Does the current evidence indicate manual testing is still needed?” Do not ask whether to merge, release, or approve. Verify every gate independently.
+Near release, ask separate questions. Example questions: “Is there evidence of an untested behavior change?” Also: “Does the current evidence indicate manual testing is still needed?” Do not ask whether to merge, release, or approve. Verify every gate independently.

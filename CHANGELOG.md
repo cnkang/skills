@@ -7,7 +7,7 @@
   transport. Link setup and maintenance guidance to it.
 - Separate unpublished Runtime hardening work from the released 0.3.0 baseline.
 - Fix the exact-ID authorization contract test so each tool receives valid
-  arguments; the scope denial assertion is unchanged.
+  arguments. The scope denial assertion is unchanged.
 
 ## qdrant-memory 0.3.0
 
