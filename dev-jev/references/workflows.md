@@ -33,7 +33,10 @@ Include only `goal`, `current_hypothesis`, `last_action`, `last_result`, `failur
 
 ### Code-review risk triage
 
-The current agent performs the review. Jev may help prioritize changed files/hunks by separate bounded questions: behavior change, security relevance, memory-safety relevance, concurrency relevance, performance relevance, compatibility relevance, test-gap risk, and documentation-contract risk. Send concise diff summaries or relevant small hunks. Do not ask Jev whether a PR is correct or mergeable.
+The current agent performs the review. Jev may help prioritize changed files and hunks by separate bounded questions. The
+questions cover behavior change, security relevance, memory-safety relevance,
+concurrency relevance and performance relevance. They also cover compatibility
+relevance, test-gap risk and documentation-contract risk. Send concise diff summaries or relevant small hunks. Do not ask Jev whether a PR is correct or mergeable.
 
 HIGH/critical candidate risk means read the code, trace callers, inspect tests, and delegate if useful. MEDIUM gets normal review. LOW only permits a faster first pass. It never justifies skipping review or treating a finding as false.
 

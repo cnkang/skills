@@ -134,7 +134,7 @@ an authorized memory scope or keep private scopes. Install the skill and its
 runtime separately. Skill 0.3.1 is available in the
 [published distribution](https://github.com/cnkang/skills/releases/tag/skills-20261016.2).
 It remains compatible with Runtime 0.2.2 and the corresponding MCP 0.1.3.
-Runtime 0.3.0 additionally offers explicitly selected CPU embedding; upgrading
+Runtime 0.3.0 additionally offers explicitly selected CPU embedding. Upgrading
 the Runtime does not require replacing the Skill or changing Hermes defaults.
 Both support MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
 configuration remain the same. The installer verifies the Runtime's compatible

@@ -1,6 +1,6 @@
 # Usage workflow
 
-1. Discover scoped `qdrant_memory_*` tools via MCP or Hermes. If absent, confirm
+1. Discover scoped `qdrant_memory_*` tools through MCP or Hermes. If absent, confirm
    `qdrant-memory --home PROFILE --help` and the authorized profile. CLI mode
    requires no Hermes. If neither exists, explain [runtime setup](runtime.md)
    and stop. Availability alone does not prove service readiness.

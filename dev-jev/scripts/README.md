@@ -12,7 +12,7 @@ See `../README.md` for path resolution and field semantics. The logger is an opt
 
 Telemetry creates a new JSONL log with private mode 0600 on POSIX before writing.
 It rejects symlinks, reparse points, nonregular files and files with additional
-hard links. Existing POSIX files must be user-owned; their mode is tightened
+hard links. Existing POSIX files must be user-owned. Their mode is tightened
 through the opened descriptor before append. The parent must be user-owned and
 not writable by other users. Keep custom log parents and ancestors trusted.
 Windows relies on a private inherited ACL. No directory ACL is configured by

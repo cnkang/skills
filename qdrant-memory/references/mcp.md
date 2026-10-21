@@ -34,10 +34,9 @@ the absolute executable/profile paths using [agent setup](agent-setup.md).
 Verify a connected server and discovery of all four tools, then perform an
 authorized search. A saved settings entry alone does not verify a connection.
 
-Check `hermes plugins list` before you register this server. If the native
-plugin is installed for Hermes, ask the user to enable it when needed
-(`hermes plugins enable qdrant-memory`), then run `hermes memory setup` and
-select qdrant-memory as the memory provider. After that, do not register this
+Check `hermes plugins list` before you register this server. If the native plugin is installed for Hermes, ask the user to enable it when needed
+(`hermes plugins enable qdrant-memory`). Then run `hermes memory setup` and select
+qdrant-memory as the memory provider. After that, do not register this
 server there. Inform the user that Hermes needs no further setup. Other agents
 can still use this server or the CLI. If the plugin cannot be used for that
 profile, register this server for that profile instead. If the plugin is not
@@ -58,7 +57,7 @@ remain private. One active MCP process holds the profile writer lease, so close
 it before another agent opens that profile. Concurrent cross-agent sharing
 requires the opt-in single-owner service released in Runtime 0.4.0 with explicit
 credential-bound grants. The 0.2.2 compatibility baseline provides sequential
-profile reuse only; it is not a concurrent distributed memory service.
+profile reuse only. It is not a concurrent distributed memory service.
 
 Local integration was verified with Codex CLI 0.160.0 (discovery and add/search),
 OpenCode 2.0.24 (CLI registration plus explicit API connection), and Pi 1.1.0

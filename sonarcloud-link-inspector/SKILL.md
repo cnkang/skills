@@ -41,7 +41,7 @@ For requested remediation, make a scoped fix and validate affected behavior.
 Neither request authorizes posting comments, reviewing hotspots, or transitioning
 issues on SonarCloud.
 
-Use `SONARCLOUD_TOKEN` via the environment when authentication is needed. Never
+Use `SONARCLOUD_TOKEN` through the environment when authentication is needed. Never
 print or copy its value into files or the conversation. Report API failures as
 limitations, not empty findings or passed gates.
 
