@@ -119,7 +119,7 @@ python3 scripts/test_distribution.py --cli-version 1.7.0
 
 CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的验收参见 [behavior scenarios](docs/behavior-scenarios.md)；结构检查不能证明模型行为。[发布与回滚](docs/releasing.md)说明默认分支更新渠道、版本、标签与迁移流程。
 
-三平台强制[agent 平台验收](docs/agent-host-acceptance.md)覆盖 Hermes 和 MIT 开源的 Pi Coding Agent。Pi 借助本地确定性模型测试服务验证真实的 skill 发现、显式加载与引用文件读取，无需付费 API 或下载模型。平台加载兼容性、真实模型判断能力和各 skill 的运行依赖分别说明。
+三个操作系统平台均强制执行 [agent 宿主验收](docs/agent-host-acceptance.md)，覆盖 Hermes 和 MIT 开源的 Pi Coding Agent。Pi 借助本地确定性模型测试服务验证真实的 skill 发现、显式加载与引用文件读取，无需付费 API 或下载模型。平台加载兼容性、真实模型判断能力和各 skill 的运行依赖分别说明。
 
 ## Qdrant 记忆 skill
 
