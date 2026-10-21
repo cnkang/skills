@@ -18,7 +18,7 @@ tests do not certify these live agent behaviors. Record PASS/FAIL/SKIP separatel
 | Failed/superseded migration | Preserve the manifest and the authorized retry. No automatic fresh import restores deleted records. |
 
 See [compatibility](qdrant-memory-compatibility.md) for runnable test layers.
-Mandatory CI exercises real host discovery and provider, plus the discovered CLI
+Mandatory CI exercises real host and provider discovery, plus the discovered CLI
 handlers. It also covers Hub installation, isolated embedded storage, local HTTP
 embeddings, scoped CRUD and writer exclusion. The suite also checks restart persistence,
 migration failure recovery and deletion.
