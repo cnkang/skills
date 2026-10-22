@@ -38,9 +38,9 @@
 
 ## Unreleased
 
-- **Installer isolation:** create the managed venv under `umask 077` and run
-  `pip` with `-I`, closing a writable window and import path that another
-  account could use to plant a module during installation.
+- **Installer isolation:** pre-create the managed venv with mode `0700`, run
+  `pip` with `-I`, and read a supplied hash lock in its own directory, closing a
+  writable window and import path while keeping relative lock entries valid.
 - Document that non-loopback embedding endpoints require HTTPS even when no
   credential is configured.
 

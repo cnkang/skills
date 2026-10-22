@@ -52,7 +52,7 @@ def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, 
 def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, capsys):
     target = tmp_path / "fresh"
     calls = []
-    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir())
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir(exist_ok=True))
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
 
     def run(command, **kwargs):
@@ -132,7 +132,7 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     lock = tmp_path / "requirements.txt"
     lock.write_text("# trusted operator-supplied lock")
     calls = []
-    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir())
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir(exist_ok=True))
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
     def run(command, **kwargs):
         calls.append((command, kwargs))
@@ -142,10 +142,9 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     assert installer.main() == 0
     command, options = calls[0]
     assert "--require-hashes" in command and "--only-binary=:all:" in command
-    requirements = target / "runtime-requirements.txt"
-    assert command[command.index("-r") + 1] == str(requirements)
-    assert command[5:] == ["--require-hashes", "--only-binary=:all:", "-r", str(requirements)]
-    assert requirements.read_bytes() == lock.read_bytes()
+    assert command[command.index("-r") + 1] == str(lock.resolve())
+    assert command[5:] == ["--require-hashes", "--only-binary=:all:", "-r", str(lock.resolve())]
+    assert options["cwd"] == lock.resolve().parent
     assert "-I" in command
     assert options["env"]["PIP_CONFIG_FILE"] == os.devnull
     if os.name != "nt":
@@ -161,7 +160,7 @@ def test_hash_lock_requires_requested_runtime_version(installer, tmp_path, monke
     lock = tmp_path / "requirements.txt"
     lock.write_text("# trusted operator-supplied lock")
     calls = []
-    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir())
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir(exist_ok=True))
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
 
     def run(command, **kwargs):
