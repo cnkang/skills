@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Create the managed venv root private (umask 077) and run pip from its parent,
+  closing a group-writable window in which another account could plant a module
+  that the installer's pip subprocess would import.
+- Document that non-loopback embedding endpoints require HTTPS even when no
+  credential is configured.
+
+
 ## qdrant-memory 0.3.1
 
 - Add a shared-security reference: protected enrollment, Owner-only write

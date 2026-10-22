@@ -87,7 +87,10 @@ initialize storage or write any agent's MCP settings. Configure the authorized
 profile and verify service readiness separately below. Installing dependencies
 does not grant permission to import or save memories.
 
-Choose an operator-authorized private profile. Its `qdrant-memory.json` uses existing backend fields:
+Choose an operator-authorized private profile. Any non-loopback embedding
+`base_url` must use HTTPS even when no `EMBEDDING_API_KEY` is configured: memory
+text crosses that endpoint. Loopback HTTP (`127.0.0.1`, `localhost`, `[::1]`)
+remains supported.. Its `qdrant-memory.json` uses existing backend fields:
 
 ```json
 {
