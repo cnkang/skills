@@ -20,8 +20,35 @@ def installer(monkeypatch):
     spec.loader.exec_module(module)
     # Unit probes mock target processes; exercise supported-interpreter paths
     # even in the skill package's Python 3.10 static validation job.
-    monkeypatch.setattr(module.sys, "version_info", (3, 11))
+    monkeypatch.setattr(module.sys, "version_info", (3, 11, 10))
     return module
+
+
+@pytest.mark.parametrize("version,supported", [
+    ((3, 11, 9), False), ((3, 11, 10), True),
+    ((3, 12, 3), False), ((3, 12, 4), True), ((3, 13, 0), True),
+])
+def test_windows_private_directory_requires_security_backport(installer, monkeypatch, version, supported):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "version_info", version)
+    if supported:
+        installer._require_private_mkdir()
+    else:
+        with pytest.raises(ValueError, match="3.11.10"):
+            installer._require_private_mkdir()
+
+
+@pytest.mark.parametrize("version", [(3, 11, 9), (3, 12, 3)])
+def test_unsupported_windows_build_creates_no_venv(installer, tmp_path, monkeypatch, capsys, version):
+    target = tmp_path / "must-not-exist"
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "version_info", version)
+    monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
+    monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda *_: pytest.fail("venv creation must not run"))
+    monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
+    assert installer.main() == 1
+    assert not target.exists()
+    assert "3.11.10" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize("installed,expected", [("0.2.2", 0), ("0.2.5", 0), ("0.3.0", 0), ("0.2.0", 1)])

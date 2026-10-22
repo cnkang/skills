@@ -26,6 +26,17 @@ VERSION = "0.2.2"
 PLUGIN_ID = "qdrant-memory"
 
 
+def _require_private_mkdir() -> None:
+    """Reject Windows builds that ignore mkdir's private-directory mode."""
+    version = sys.version_info[:3]
+    # CPython backported Windows mkdir(0o700) ACL handling to these releases.
+    # Older builds must not create an inherited, potentially shared venv first.
+    if sys.platform == "win32" and (
+        version < (3, 11, 10) or (3, 12) <= version < (3, 12, 4)
+    ):
+        raise ValueError("Windows setup requires Python 3.11.10+, 3.12.4+, or 3.13+")
+
+
 def _release_key(version: str) -> tuple[int, int, int]:
     """Order exact three-part release versions for the compatibility check."""
     major, minor, patch = version.split(".")
@@ -357,6 +368,7 @@ def main() -> int:
     env["PIP_CONFIG_FILE"] = os.devnull
     try:
         if not target.exists():
+            _require_private_mkdir()
             # Managed POSIX Python builds can resolve libpython relative to the
             # original executable. Match `python -m venv` rather than copying it.
             # Create the root private: a later chmod would leave a window in which
