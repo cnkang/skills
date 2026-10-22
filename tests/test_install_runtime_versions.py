@@ -62,7 +62,10 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
     assert installer.main() == 0
-    assert calls[0][-1] == "hermes-plugin-qdrant-memory[mcp]==0.2.2"
+    assert calls[0][-2] == "-r"
+    requirements = target / "runtime-requirements.txt"
+    assert calls[0][-1] == str(requirements)
+    assert requirements.read_text() == "hermes-plugin-qdrant-memory[mcp]==0.2.2\n"
     assert json.loads(capsys.readouterr().out)["installed_version"] == "0.2.2"
 
 

@@ -369,10 +369,15 @@ def main() -> int:
                     os.umask(previous_umask)
             if os.name != "nt":
                 target.chmod(0o700)
-            selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else [requirement]
-            # The argv list has no shell, and args.version is validated as three
-            # integers before this point; the environment is a credential-free allowlist.
-            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
+            if lock:
+                selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)]
+            else:
+                # Keep the requested version out of the argv: pip reads it from a
+                # file this installer writes inside the private venv root.
+                requirement_file = target / "runtime-requirements.txt"
+                requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
+                selection = ["-r", str(requirement_file)]
+            subprocess.run(
                 [str(python), "-I", "-m", "pip", "install", *selection],
                 env=env,
                 cwd=target.parent,
