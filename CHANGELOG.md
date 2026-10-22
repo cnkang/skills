@@ -1,14 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Create the managed venv root private (umask 077) and run pip from its parent,
-  closing a group-writable window in which another account could plant a module
-  that the installer's pip subprocess would import.
-- Document that non-loopback embedding endpoints require HTTPS even when no
-  credential is configured.
-
-
 ## qdrant-memory 0.3.1
 
 - Add a shared-security reference: protected enrollment, Owner-only write
@@ -46,6 +37,12 @@
 - Synchronize English and Chinese installation guidance and version references.
 
 ## Unreleased
+
+- **Installer isolation:** create the managed venv under `umask 077` and run
+  `pip` with `-I`, closing a writable window and import path that another
+  account could use to plant a module during installation.
+- Document that non-loopback embedding endpoints require HTTPS even when no
+  credential is configured.
 
 - **WorkBuddy distribution:** separate reproducible preview ZIPs and checksums
   for every controlled catalog skill, including future skills registered in the catalog. It also adds
