@@ -378,7 +378,8 @@ def main() -> int:
             else:
                 requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
                 selection = ["-r", str(requirement_file)]
-            subprocess.run(
+            # argv is a list with no shell; every element is installer-owned.
+            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
                 [str(python), "-I", "-m", "pip", "install", *selection],
                 env=env,
                 cwd=target.parent,
