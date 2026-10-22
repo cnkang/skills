@@ -370,7 +370,15 @@ def main() -> int:
             if os.name != "nt":
                 target.chmod(0o700)
             selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else [requirement]
-            subprocess.run([str(python), "-I", "-m", "pip", "install", *selection], env=env, cwd=target.parent, check=True, stdout=sys.stderr)
+            # The argv list has no shell, and args.version is validated as three
+            # integers before this point; the environment is a credential-free allowlist.
+            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
+                [str(python), "-I", "-m", "pip", "install", *selection],
+                env=env,
+                cwd=target.parent,
+                check=True,
+                stdout=sys.stderr,
+            )
         # Existing environments are verified, never overwritten or upgraded.
         # A newer compatible release satisfies the check; an older one does not.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
