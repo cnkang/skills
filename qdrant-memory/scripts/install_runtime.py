@@ -359,11 +359,18 @@ def main() -> int:
         if not target.exists():
             # Managed POSIX Python builds can resolve libpython relative to the
             # original executable. Match `python -m venv` rather than copying it.
-            venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
+            # Create the root private: a later chmod would leave a window in which
+            # another account could write into the directory pip later imports from.
+            previous_umask = os.umask(0o077) if os.name != "nt" else None
+            try:
+                venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
+            finally:
+                if previous_umask is not None:
+                    os.umask(previous_umask)
             if os.name != "nt":
                 target.chmod(0o700)
             selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock)] if lock else [requirement]
-            subprocess.run([str(python), "-m", "pip", "install", *selection], env=env, cwd=target, check=True, stdout=sys.stderr)
+            subprocess.run([str(python), "-m", "pip", "install", *selection], env=env, cwd=target.parent, check=True, stdout=sys.stderr)
         # Existing environments are verified, never overwritten or upgraded.
         # A newer compatible release satisfies the check; an older one does not.
         probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
