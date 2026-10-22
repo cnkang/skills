@@ -21,6 +21,9 @@ def installer(monkeypatch):
     # Unit probes mock target processes; exercise supported-interpreter paths
     # even in the skill package's Python 3.10 static validation job.
     monkeypatch.setattr(module.sys, "version_info", (3, 11, 10))
+    # Native ACL behavior has separate real-platform tests. These unit tests
+    # replace subprocesses to inspect only the installation/probe contract.
+    monkeypatch.setattr(module, "_require_private_parent", lambda _path: None)
     return module
 
 

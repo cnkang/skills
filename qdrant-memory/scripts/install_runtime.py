@@ -37,6 +37,65 @@ def _require_private_mkdir() -> None:
         raise ValueError("Windows setup requires Python 3.11.10+, 3.12.4+, or 3.13+")
 
 
+def _require_private_parent(parent: Path) -> None:
+    """Reject native ACL grants that can undermine the private venv directory."""
+    if sys.platform == "darwin":
+        # Darwin allow ACLs can override mode 0700 and propagate to new children.
+        # Reject them before mkdir; do not change an operator's existing ACL.
+        result = subprocess.run(
+            ["/bin/ls", "-lde", str(parent)], env={"LC_ALL": "C"},
+            check=True, capture_output=True, text=True, timeout=10,
+        )
+        if any(re.match(r"\s*\d+:.*\ballow\b", line) for line in result.stdout.splitlines()):
+            raise ValueError("Choose a private parent without granting macOS ACL entries")
+    elif os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        # Resolve the Windows binary through the OS, not cwd, PATH or SystemRoot
+        # from the caller. The script is constant; the path is environment data.
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetWindowsDirectoryW.argtypes = [wintypes.LPWSTR, wintypes.UINT]
+        kernel.GetWindowsDirectoryW.restype = wintypes.UINT
+        directory = ctypes.create_unicode_buffer(32768)
+        length = kernel.GetWindowsDirectoryW(directory, len(directory))
+        if not length or length >= len(directory):
+            raise ValueError("Cannot verify the Windows parent ACL")
+        root = directory.value
+        powershell = Path(root) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+        script = """
+$ErrorActionPreference = 'Stop'
+$acl = [System.IO.Directory]::GetAccessControl($env:QM_INSTALL_PARENT)
+$user = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$owners = @($user, 'S-1-5-18', 'S-1-5-32-544')
+$owner = $acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value
+if ($owners -notcontains $owner) { exit 3 }
+$allowed = $owners + @('S-1-3-0', 'S-1-3-4')
+$raw = [System.Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(), 0)
+if ($null -eq $raw.DiscretionaryAcl) { exit 3 }
+foreach ($entry in $raw.DiscretionaryAcl) {
+    if ([int]$entry.AceType -notin @(0, 1)) { exit 3 }
+    $sid = $entry.SecurityIdentifier.Value
+    if ([int]$entry.AceType -eq 0 -and
+        (([long]$entry.AccessMask -band 0x500D0156) -ne 0) -and
+        $allowed -notcontains $sid) { exit 3 }
+}
+exit 0
+"""
+        try:
+            result = subprocess.run(
+                [str(powershell), "-NoProfile", "-NonInteractive", "-Command", script],
+                shell=False, env={"SystemRoot": root, "WINDIR": root, "QM_INSTALL_PARENT": str(parent)},
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError("Cannot verify the Windows parent ACL") from exc
+        # Includes child deletion and permission changes, not only file writes.
+        # A readable parent is allowed; the new root has its own private DACL.
+        if result.returncode:
+            raise ValueError("Choose a user-controlled parent without other-account write ACL grants")
+
+
 def _release_key(version: str) -> tuple[int, int, int]:
     """Order exact three-part release versions for the compatibility check."""
     major, minor, patch = version.split(".")
@@ -367,6 +426,7 @@ def main() -> int:
     env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
     env["PIP_CONFIG_FILE"] = os.devnull
     try:
+        _require_private_parent(existing)
         if not target.exists():
             _require_private_mkdir()
             # Managed POSIX Python builds can resolve libpython relative to the
@@ -419,7 +479,7 @@ def main() -> int:
         if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:
             raise ValueError("Installed Runtime source does not match the requested immutable revision")
         subprocess.run([str(console), "--help"], env=env, cwd=target, check=True, stdout=sys.stderr)
-    except (OSError, subprocess.CalledProcessError, ValueError, KeyError) as exc:
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError, KeyError) as exc:
         print(f"Runtime installation/verification failed: {exc}. Existing files were retained; choose a new --venv path to retry a partial installation.", file=sys.stderr)
         return 1
     print(json.dumps({"ok": True, "python": str(python), "command": str(console), "requested_version": args.version, "installed_version": installed["version"], "requested_revision": args.revision}))

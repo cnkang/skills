@@ -58,6 +58,9 @@ Default installation requires PyPI access. Optional source installation also nee
 `py -3.11` or an available newer Python and the returned `Scripts` executable.
 For a new Windows environment, use Python 3.11.10+, 3.12.4+, or 3.13+.
 Earlier builds do not apply the private directory ACL required by the installer.
+Use a parent directory controlled by your account. The installer rejects granting
+macOS ACL entries and Windows write grants to other accounts before it creates
+or runs the environment. It does not change the parent directory's ACL.
 The installer installs an exact PyPI version with its official MCP SDK in a new
 venv, then verifies package version, imports and CLI. A matching existing environment
 is reused without an upgrade. An incomplete or different-version environment fails
