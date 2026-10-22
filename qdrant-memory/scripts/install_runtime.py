@@ -397,8 +397,12 @@ def main() -> int:
                 requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
                 selection = ["-r", str(requirement_file)]
                 pip_cwd = target.parent
-            subprocess.run(
+            # The executable is the selected venv's Python. Options are fixed;
+            # the trusted lock path is one argv element, never shell source.
+            # This audit rule treats any CLI-derived argv as command injection.
+            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
                 [str(python), "-I", "-m", "pip", "install", *selection],
+                shell=False,
                 env=env,
                 cwd=pip_cwd,
                 check=True,
