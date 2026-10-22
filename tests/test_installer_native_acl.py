@@ -1,11 +1,13 @@
 """Exercise native ACL boundaries before an installer can execute venv code."""
 
+import ctypes
 import importlib.util
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +20,28 @@ def native_installer(monkeypatch):
     spec.loader.exec_module(module)
     monkeypatch.setattr(module, "hermes_advisory", lambda: "")
     return module
+
+
+@pytest.mark.parametrize("code,message", [
+    (0, None), (3, "other-account write ACL"),
+    (1, "Cannot verify"), (7, "Cannot verify"),
+])
+def test_windows_acl_process_failure_is_not_a_permission_diagnosis(native_installer, tmp_path, monkeypatch, code, message):
+    def windows_directory(buffer, _size):
+        buffer.value = "C:\\Windows"
+        return len(buffer.value)
+
+    kernel = SimpleNamespace(GetWindowsDirectoryW=windows_directory)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **kw: kernel, raising=False)
+    # Replace only the installer's bindings, never pathlib's global OS module.
+    monkeypatch.setattr(native_installer, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(native_installer.subprocess, "run", lambda argv, **kw: subprocess.CompletedProcess(argv, code))
+    if message:
+        with pytest.raises(ValueError, match=message):
+            native_installer._require_private_parent(tmp_path)
+    else:
+        native_installer._require_private_parent(tmp_path)
 
 
 @pytest.mark.skipif(sys.platform != "darwin" or sys.version_info < (3, 11), reason="Native macOS installer test")
