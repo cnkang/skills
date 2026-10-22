@@ -92,8 +92,10 @@ exit 0
             raise ValueError("Cannot verify the Windows parent ACL") from exc
         # Includes child deletion and permission changes, not only file writes.
         # A readable parent is allowed; the new root has its own private DACL.
-        if result.returncode:
+        if result.returncode == 3:
             raise ValueError("Choose a user-controlled parent without other-account write ACL grants")
+        if result.returncode:
+            raise ValueError("Cannot verify the Windows parent ACL")
 
 
 def _release_key(version: str) -> tuple[int, int, int]:
