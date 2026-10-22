@@ -363,26 +363,32 @@ def main() -> int:
             # another account could write into the directory pip later imports from.
             previous_umask = os.umask(0o077) if os.name != "nt" else None
             try:
+                # Pre-create the root with an explicit private mode so inherited
+                # entries are masked before anything runs inside it.
+                target.mkdir(mode=0o700, parents=True, exist_ok=False)
                 venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
             finally:
                 if previous_umask is not None:
                     os.umask(previous_umask)
             if os.name != "nt":
                 target.chmod(0o700)
-            # pip reads its input from a file this installer writes inside the
-            # private venv root, so no caller-supplied value reaches the argv.
-            requirement_file = target / "runtime-requirements.txt"
             if lock:
-                requirement_file.write_bytes(Path(lock).read_bytes())
-                selection = ["--require-hashes", "--only-binary=:all:", "-r", str(requirement_file)]
+                # Read the operator's lock in place: relative includes and local
+                # artifact paths must resolve against its own directory.
+                lock_path = Path(lock).resolve()
+                selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock_path)]
+                pip_cwd = lock_path.parent
             else:
+                # Keep the requested version out of the argv; pip reads it from a
+                # file this installer writes inside the private venv root.
+                requirement_file = target / "runtime-requirements.txt"
                 requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
                 selection = ["-r", str(requirement_file)]
-            # argv is a list with no shell; every element is installer-owned.
-            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
+                pip_cwd = target.parent
+            subprocess.run(
                 [str(python), "-I", "-m", "pip", "install", *selection],
                 env=env,
-                cwd=target.parent,
+                cwd=pip_cwd,
                 check=True,
                 stdout=sys.stderr,
             )
