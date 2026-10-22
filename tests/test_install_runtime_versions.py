@@ -142,8 +142,10 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     assert installer.main() == 0
     command, options = calls[0]
     assert "--require-hashes" in command and "--only-binary=:all:" in command
-    assert command[command.index("-r") + 1] == str(lock)
-    assert command[5:] == ["--require-hashes", "--only-binary=:all:", "-r", str(lock)]
+    requirements = target / "runtime-requirements.txt"
+    assert command[command.index("-r") + 1] == str(requirements)
+    assert command[5:] == ["--require-hashes", "--only-binary=:all:", "-r", str(requirements)]
+    assert requirements.read_bytes() == lock.read_bytes()
     assert "-I" in command
     assert options["env"]["PIP_CONFIG_FILE"] == os.devnull
     if os.name != "nt":
