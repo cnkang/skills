@@ -133,7 +133,8 @@ for deployment, migration, rollback, and security details.
 The dedicated service and Cloud Owner test examples remain previews.
 The [Runtime Cloud Owner test](https://github.com/cnkang/hermes-plugin-qdrant-memory/actions/runs/39691871575)
 passed one end-to-end test on main, with no skipped tests.
-The run used the Runtime preview revision in the table above.
+The run tested Runtime `24f9b1110ee99237f432afefbc7af7573bfae494`.
+It does not verify the newer source revision in the table above.
 The test removed its records and collection.
 A separate cleanup check confirmed removal. This run used a test API key.
 Collection-level credential restrictions remain unverified.
