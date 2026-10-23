@@ -44,13 +44,14 @@ reopening clients. Offline maintenance/profile relocation requires explicit
 operator coordination and reviewed claim retirement/re-enrollment. It is not an
 agent tool action.
 
-NAS/Docker clients and bridges must share Owner's loopback namespace. Independent
-containers cannot reach another container's loopback. Do not change its bind to
-`0.0.0.0`. Authenticated remote transport is deferred to a v0.5.0 design.
+Loopback clients and bridges must share Owner's network namespace. Independent
+containers cannot reach another container's loopback. Keep loopback endpoints on
+loopback. Runtime 0.5.0 provides authenticated HTTPS Streamable HTTP for remote
+clients; use the configured gateway and verified TLS. See [Owner setup](universal-owner.md).
 
 See Runtime [deployment templates](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/docs/shared-memory/deployment-security.md)
 and [threat model](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/docs/shared-memory/threat-model-v1.md)
-after the corresponding Runtime PR merges, plus official
+for the published Runtime controls, plus official
 [Qdrant security guidance](https://qdrant.tech/documentation/security/).
 The official Qdrant MCP server also supports persistence. This Runtime's focus
 is memory lifecycle, fixed scoped authorization, durable recovery and controlled

@@ -52,8 +52,9 @@ For authorized cross-agent sharing, read [shared memory](references/shared-memor
 Private profile reuse remains sequential. The opt-in shared owner
 service uses credential-bound explicit grants. Check the installed version and
 discovered schemas before using it. Legacy records remain private.
-The released Runtime does not support automatic shared extraction with the
-Hermes Native Provider. For released Owner features and preview adapters, read
+Ordinary Hermes Native Provider capture does not automatically share private
+records. Runtime 0.5.0 Native Owner can capture to a project only through an
+explicitly approved grant rule and profile allowlist. For that path, read
 [Universal Owner](references/universal-owner.md). That reference describes
 Native Owner, HTTPS MCP, device credentials, and Pi lifecycle tests.
 

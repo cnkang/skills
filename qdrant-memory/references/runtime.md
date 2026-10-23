@@ -2,11 +2,34 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-The commands below pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
-baseline for this skill. Newer releases are published (Runtime 0.4.0, MCP
-distribution 0.2.0), and the installer accepts an installed Runtime that is at
+The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
+private compatibility baseline for this skill. These minimum versions do not
+provide the Runtime 0.5.0 Owner controls. Newer releases are published (Runtime
+0.5.0, MCP distribution 0.2.3), and the installer accepts an installed Runtime that is at
 least the requested version. For MCP-focused agents, prefer the metadata-only
-[MCP distribution](https://github.com/cnkang/qdrant-memory-mcp):
+[MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
+
+## Install Runtime 0.5.0 for Owner controls
+
+When Owner setup is explicitly authorized, select a new private environment and
+request the version that provides the controls:
+
+```bash
+python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
+  --venv /private/path/qdrant-owner-env --version 0.5.0
+/private/path/qdrant-owner-env/bin/qdrant-memory --help
+```
+
+This installs the CLI/MCP base. The HTTPS gateway also needs the optional remote
+dependencies and operator-configured TLS and credentials. Follow the pinned
+[Owner guide](universal-owner.md) before exposing it. Installing a Skill or an
+older MCP distribution does not provide these controls automatically.
+
+## Private compatibility baseline
+
+The older commands below retain the tested private-operation baseline. Use the
+Owner installation above when shared policy, doctor or remote lifecycle features
+are required.
 
 ```bash
 uvx --from qdrant-memory-mcp==0.1.3 qdrant-memory-mcp --home /private/path/profile mcp
@@ -146,6 +169,6 @@ reinstallation, so this flag does not retroactively certify their bytes.
 
 Runtime 0.2.2 remains the tested minimum selected by this skill's installer and
 CI fixture pins. Runtime 0.4.0 adds the separately configured shared owner. Use
-that version or newer for concurrent sharing, and discover its schemas before
+Runtime 0.5.0 for protected policy, doctor and remote Owner features, and discover its schemas before
 registering a shared bridge. Do not apply private-profile examples as shared
 service setup or silently upgrade an existing installation.
