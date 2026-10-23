@@ -134,6 +134,10 @@ CPU Embedding；升级 Runtime 无需替换 Skill，也不会改变 Hermes 默�
 安装器会验证运行时兼容的服务端适配器。
 以下命令固定安装精确的 PyPI 版本：
 
+直接使用 `venv` 和 `pip` 不会执行自带安装器的 ACL 检查。
+父目录必须仅允许当前账号修改，包括继承的 ACL。
+如需自动执行权限检查，请使用下方的自带安装器。
+
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # 按需要选择其他支持的 agent ID，或多个 ID。
