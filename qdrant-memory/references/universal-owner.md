@@ -3,7 +3,7 @@
 These features require an unreleased Runtime source checkout that you explicitly
 select. Runtime 0.4.0 does not include these remote access and lifecycle features.
 Released MCP distribution 0.2.1 does not include them.
-Skill 0.3.1 does not include them.
+Skill 0.3.2 provides guidance. It does not install the preview Runtime.
 
 Do not use a source version string as proof of feature support. Before use,
 confirm that the installed Runtime provides these commands:
@@ -21,8 +21,8 @@ Immutable preview candidates (not accepted releases):
 
 | Component | Source commit | Scope |
 |---|---|---|
-| Runtime | [`24f9b1110ee99237f432afefbc7af7573bfae494`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/24f9b1110ee99237f432afefbc7af7573bfae494) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
-| MCP adapter | [`08652038483cae3e1c81e328f19136ed2c330d8f`](https://github.com/cnkang/qdrant-memory-mcp/tree/08652038483cae3e1c81e328f19136ed2c330d8f) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
+| Runtime | [`4e0e4ebc25f133d96696e6cf25abb7f696a8ab15`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/4e0e4ebc25f133d96696e6cf25abb7f696a8ab15) | Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. This commit is a preview. |
+| MCP adapter | [`3d9a6d0379c38c99f3373136ec21a5ca6e6d5f75`](https://github.com/cnkang/qdrant-memory-mcp/tree/3d9a6d0379c38c99f3373136ec21a5ca6e6d5f75) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the Runtime candidate in this table. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
 Before installation, examine the selected commit, its review status, and its test
@@ -127,7 +127,7 @@ Codex, DSH, WorkBuddy, and OpenCode require explicit MCP use or assisted
 operation. Automatic operation requires an official adapter and tests for that
 agent. Skill instructions alone do not provide lifecycle hooks.
 
-Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/24f9b1110ee99237f432afefbc7af7573bfae494/docs/shared-memory/remote-owner.md)
+Read the [Runtime guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/4e0e4ebc25f133d96696e6cf25abb7f696a8ab15/docs/shared-memory/remote-owner.md)
 for deployment, migration, rollback, and security details.
 
 The dedicated service and Cloud Owner test examples remain previews.
@@ -141,7 +141,7 @@ Cloud tests require credentials that grant the required access.
 Successful availability tests do not establish that the Cloud test ran.
 
 Runtime CI uses fixed models for functional smoke tests. A smoke pass does not
-establish extraction quality. The [Runtime model guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/24f9b1110ee99237f432afefbc7af7573bfae494/docs/shared-memory/model-quality.md)
+establish extraction quality. The [Runtime model guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/4e0e4ebc25f133d96696e6cf25abb7f696a8ab15/docs/shared-memory/model-quality.md)
 defines the full model quality tests. The source references identify a preview,
 not a production release.
 
