@@ -1,6 +1,8 @@
 # Changelog
 
-## qdrant-memory 0.3.2
+## skills-20261023.1 — 2026-10-23
+
+### qdrant-memory 0.3.2
 
 - Include installer isolation and native parent ACL checks. Reject unsafe
   environments before setup. Read trusted hash locks in their original
@@ -10,6 +12,15 @@
 - Keep English and Chinese catalog version guidance consistent.
 - Document the HTTPS requirement for non-loopback embedding endpoints,
   including endpoints without credentials.
+
+### Catalog distribution and CI
+
+- Build reproducible WorkBuddy ZIP files and checksums for each controlled
+  catalog skill. Annotated snapshot tags prepare verified Draft Release assets
+  before publication. Generated packages include bilingual metadata.
+- Let a manual preview run select one catalog skill through the `skill` input.
+  An empty input builds every catalog skill.
+- Enable grouped weekly Dependabot updates for GitHub Actions pins.
 
 ## qdrant-memory 0.3.1
 
@@ -46,19 +57,6 @@
 - Verify installation through the Runtime server adapter instead of the
   SDK 1.x-only FastMCP import. Exercise both SDK majors in standalone acceptance.
 - Synchronize English and Chinese installation guidance and version references.
-
-## Unreleased
-
-- **WorkBuddy distribution:** separate reproducible preview ZIPs and checksums
-  for every controlled catalog skill, including future skills registered in the catalog. It also adds
-  annotated snapshot-tag automation that prepares verified Draft Release
-  assets before manual publication. Bilingual metadata exists only in the
-  generated package. Canonical skills and runtime versions remain unchanged.
-
-- **WorkBuddy preview:** a manual workflow run can build one selected catalog
-  skill through the `skill` input. An empty input builds every catalog skill.
-
-- CI: enable grouped weekly Dependabot version updates for the GitHub Actions pins.
 
 ## qdrant-memory 0.2.4 — 2026-10-13
 
