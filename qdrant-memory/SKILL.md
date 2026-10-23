@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.3.2"
+  version: "0.3.3"
 ---
 
 # Qdrant memory
@@ -45,15 +45,15 @@ strip scope checks. MCP does not automatically capture every conversation turn.
 
 For shared production deployments, read [shared security](references/shared-security.md).
 Do not distribute Qdrant write keys to agents or bypass destination claims. New
-protected policy and shared doctor require an explicitly installed compatible
-Runtime. They are unpublished additions beyond 0.4.0.
+protected policy and shared doctor require an explicitly installed Runtime 0.5.0
+or a compatible later release. Skill guidance does not install these controls.
 
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
-Released mode permits sequential profile reuse only. The opt-in shared owner
+Private profile reuse remains sequential. The opt-in shared owner
 service uses credential-bound explicit grants. Check the installed version and
 discovered schemas before using it. Legacy records remain private.
 The released Runtime does not support automatic shared extraction with the
-Hermes Native Provider. For the source preview, read
+Hermes Native Provider. For released Owner features and preview adapters, read
 [Universal Owner](references/universal-owner.md). That reference describes
 Native Owner, HTTPS MCP, device credentials, and Pi lifecycle tests.
 
