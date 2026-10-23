@@ -1,5 +1,14 @@
 # Changelog
 
+## qdrant-memory 0.3.2
+
+- Include installer isolation and native parent ACL checks. Reject unsafe
+  environments before setup. Read trusted hash locks in their original
+  directory and keep isolated, fixed-argument subprocess calls.
+- Align the optional Owner preview guide with reviewed Runtime and MCP main
+  source revisions. Preserve the independent published installation baseline.
+- Keep English and Chinese catalog version guidance consistent.
+
 ## qdrant-memory 0.3.1
 
 - Add a shared-security reference: protected enrollment, Owner-only write
