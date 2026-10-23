@@ -8,6 +8,8 @@
 - Align the optional Owner preview guide with reviewed Runtime and MCP main
   source revisions. Preserve the independent published installation baseline.
 - Keep English and Chinese catalog version guidance consistent.
+- Document the HTTPS requirement for non-loopback embedding endpoints,
+  including endpoints without credentials.
 
 ## qdrant-memory 0.3.1
 
@@ -46,14 +48,6 @@
 - Synchronize English and Chinese installation guidance and version references.
 
 ## Unreleased
-
-- **Installer isolation:** pre-create the managed venv with mode `0700`, run
-  `pip` with `-I`, and read a supplied hash lock in its own directory, closing a
-  writable window and import path while keeping relative lock entries valid.
-  Reject unsafe native parent ACLs before setup. Require the Windows private
-  directory security backport before creating a new environment.
-- Document that non-loopback embedding endpoints require HTTPS even when no
-  credential is configured.
 
 - **WorkBuddy distribution:** separate reproducible preview ZIPs and checksums
   for every controlled catalog skill, including future skills registered in the catalog. It also adds
