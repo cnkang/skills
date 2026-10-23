@@ -1,5 +1,15 @@
 # Changelog
 
+## skills-20261023.2 — 2026-10-23
+
+### qdrant-memory 0.3.3
+
+- Describe Runtime 0.5.0 Owner and protected destination controls as published
+  features. Pin their guide to the reviewed release source and the merged MCP
+  adapter revision. Keep preview adapter, Cloud evidence and model quality limits.
+- Retain the independent minimum installer baseline and all authorization checks.
+- Align the English and Chinese catalog versions. No other Skill version changes.
+
 ## skills-20261023.1 — 2026-10-23
 
 ### qdrant-memory 0.3.2

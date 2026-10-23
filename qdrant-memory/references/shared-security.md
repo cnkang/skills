@@ -1,7 +1,7 @@
 # Shared memory deployment and maintenance security
 
 Check the installed Runtime help first. Protected destination policy and
-`shared-doctor` are unpublished additions beyond Runtime 0.4.0. Skill guidance
+`shared-doctor` are available in Runtime 0.5.0. Skill guidance
 does not install, enroll or authorize a deployment automatically.
 
 Use only explicit operator grants. Give agents separate Owner client tokens. Read-only agents receive `read`. Never provide Qdrant write keys, arbitrary scope
