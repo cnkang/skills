@@ -141,6 +141,10 @@ configuration remain the same. The installer verifies the Runtime's compatible
 server adapter.
 The commands pin exact PyPI versions:
 
+Direct `venv` and `pip` setup does not run the bundled installer's ACL checks.
+Use a parent directory that only your account can change. This also applies to
+inherited ACLs. For automatic permission checks, use the bundled installer below.
+
 ```bash
 npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
