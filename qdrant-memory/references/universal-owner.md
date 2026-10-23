@@ -22,7 +22,7 @@ Immutable reference revisions:
 | Component | Source commit | Scope |
 |---|---|---|
 | Runtime | [`60762c3e39f4cb3419f6e983aeb61833952bf216`](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/60762c3e39f4cb3419f6e983aeb61833952bf216) | Published Runtime 0.5.0. Provides `remote-serve`, `remote-mcp`, `remote-event`, `shared-device`, and Native Owner. |
-| MCP adapter | [`b023b63b7f2f40d208396561b4b663349d6d6754`](https://github.com/cnkang/qdrant-memory-mcp/tree/b023b63b7f2f40d208396561b4b663349d6d6754) | Provides the Pi lifecycle extension and bridge configuration. This adapter requires the compatible Runtime in this table. |
+| Pi/bridge source | [`b023b63b7f2f40d208396561b4b663349d6d6754`](https://github.com/cnkang/qdrant-memory-mcp/tree/b023b63b7f2f40d208396561b4b663349d6d6754) | Provides the preview Pi extension and bridge configuration. This revision's Python distribution pins Runtime 0.4.0. Do not use that default dependency for a Runtime 0.5.0 Owner; configure the extension to call the separately installed Owner. |
 | Hermes test host | [`8f5693af418256b89da17ddda18a9242f113dcf6`](https://github.com/NousResearch/hermes-agent/tree/8f5693af418256b89da17ddda18a9242f113dcf6) | Provides the Hermes test host. The adapter lockfile selects Pi SDK 1.3.0. |
 
 Before installation, examine the selected commit, its review status, and its test
