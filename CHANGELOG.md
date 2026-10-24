@@ -1,5 +1,14 @@
 # Changelog
 
+## skills-20261024.1 — 2026-10-24
+
+### qdrant-memory 0.3.4
+
+- Select Runtime 0.5.1 for Owner controls and record the current MCP
+  distribution version. No install command, permission or installer rule
+  changed.
+- Keep the private compatibility baseline and all authorization checks.
+
 ## skills-20261023.2 — 2026-10-23
 
 ### qdrant-memory 0.3.3

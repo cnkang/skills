@@ -5,18 +5,18 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
 private compatibility baseline for this skill. These minimum versions do not
 provide the Runtime 0.5.0 Owner controls. Newer releases are published (Runtime
-0.5.0, MCP distribution 0.2.3), and the installer accepts an installed Runtime that is at
+0.5.1, MCP distribution 0.2.4), and the installer accepts an installed Runtime that is at
 least the requested version. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
 
-## Install Runtime 0.5.0 for Owner controls
+## Install Runtime 0.5.1 for Owner controls
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.5.0
+  --venv /private/path/qdrant-owner-env --version 0.5.1
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
