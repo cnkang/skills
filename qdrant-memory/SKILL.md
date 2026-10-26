@@ -49,6 +49,8 @@ protected policy and shared doctor require an explicitly installed Runtime 0.5.0
 or a compatible later release. Skill guidance does not install these controls.
 
 For authorized cross-agent sharing, read [shared memory](references/shared-memory.md).
+For sharing vs portability vs backup distinctions, see the Runtime
+[portability guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/docs/portability.md).
 Private profile reuse remains sequential. The opt-in shared owner
 service uses credential-bound explicit grants. Check the installed version and
 discovered schemas before using it. Legacy records remain private.
