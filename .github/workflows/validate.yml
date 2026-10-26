@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: ${{ matrix.python }}
       - run: python --version
@@ -60,7 +60,7 @@ jobs:
           ref: c85d2bce788b117dddd854bb124971f7de8e564c # immutable Runtime 0.2.2 source
           path: .contract-plugin
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
       - run: python -m pip install -r requirements-dev.txt ./.contract-plugin
@@ -102,7 +102,7 @@ jobs:
           ref: c85d2bce788b117dddd854bb124971f7de8e564c # Runtime 0.2.2
           path: .runtime-plugin
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
       - run: python -m pip install -r requirements-runtime-tests.txt ./.runtime-plugin
@@ -139,7 +139,7 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: tests/agent-hosts/pi/package-lock.json
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
       - name: Install the pinned MIT Pi SDK from the integrity-checked lockfile
@@ -170,7 +170,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -204,7 +204,7 @@ jobs:
           ref: c85d2bce788b117dddd854bb124971f7de8e564c # merged Runtime source
           path: .standalone-plugin
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
       - name: Install standalone runtime without Hermes source
