@@ -18,9 +18,11 @@ a Node.js SDK with native Agent Skills discovery and built-in read tools. Its
 and [SDK documentation](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/sdk.md)
 describe the interfaces used by these tests. The published SDK is pinned to
 `@earendil-works/pi-coding-agent@1.1.0`. The npm lockfile pins transitive
-versions and integrity hashes. Node 24 runs the suite without a Python host environment,
-model download, GPU, paid API, account or real credentials. Install scripts are
-disabled with `npm ci --ignore-scripts`.
+versions and integrity hashes. An npm override pins the transitive `undici`
+dependency to `8.12.3`, which contains the fix for GHSA-xjj6-f33q-929c; the Pi
+SDK itself still declares `8.10.2`. Node 24 runs the suite without a Python host
+environment, model download, GPU, paid API, account or real credentials.
+Install scripts are disabled with `npm ci --ignore-scripts`.
 
 The real Pi SDK performs discovery, catalog prompt construction, `/skill:name`
 expansion, agent iteration and its built-in `read` tool. Only the model server

@@ -1,5 +1,13 @@
 # Changelog
 
+## skills-20261027.1 — 2026-10-27
+
+### Catalog distribution and CI
+
+- Override the Pi acceptance host's transitive `undici` dependency to 8.12.3,
+  resolving the high-severity GHSA-xjj6-f33q-929c denial-of-service advisory.
+  The pinned Pi SDK version and acceptance behavior are unchanged.
+
 ## skills-20261024.1 — 2026-10-24
 
 ### qdrant-memory 0.3.4
