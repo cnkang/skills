@@ -4,7 +4,7 @@ description: Diagnose and close repository or PR quality-gate failures when the 
 license: MIT
 compatibility: Python 3.10+ for the optional probe. Git and project toolchains as needed.
 metadata:
-  version: "0.8.0"
+  version: "0.8.1"
 ---
 
 # Repository Quality Gate Fixer

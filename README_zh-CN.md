@@ -6,10 +6,10 @@
 
 | Skill | Version | 用途与依赖 |
 |---|---|---|
-| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.0 | 将独立变更拆成 Conventional Commits。需要 Git；脚本需 Python 3.10+，也有手工检查降级路径。 |
-| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
-| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | 只读查看 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
-| [dev-jev](dev-jev/SKILL.md) | 0.2.0 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
+| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.1 | 将独立变更拆成 Conventional Commits。需要 Git；脚本需 Python 3.10+，也有手工检查降级路径。 |
+| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
+| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | 只读查看 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
+| [dev-jev](dev-jev/SKILL.md) | 0.2.1 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
 | [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.4 | 面向各类 agent 的记忆工具/CLI、维护及 Mem0 迁移流程。独立运行时和 MCP 无需 Hermes 即可工作，已有 Hermes 集成继续受支持。在 Hermes 上，每个 profile 使用单一记忆接口。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
@@ -111,9 +111,13 @@ python3 -m venv .venv
 # 激活项目虚拟环境后：
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate_skills.py
-python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate-fixer/tests sonarcloud-link-inspector/tests dev-jev/scripts/test_dev_jev.py tests
+python3 -m pytest -q tests
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
+
+Skill 包只包含运行文件。所有 skill 的开发测试位于顶层 `tests/` 目录，CLI
+不会安装这些测试，WorkBuddy 打包也会拒绝测试文件。Pi 宿主验收依赖仍是独立的
+npm 开发包，并禁用安装脚本。
 
 分发测试使用隔离的 HOME、配置和项目目录，保留原四个 skills 的全部 15 种组合，并新增 Qdrant 单装、全清单及与每个原 skill 的混装（共 21 组）。覆盖重复安装、9 个宿主的项目/全局与链接/复制路径、Qdrant 包在 Codex/Hermes 的安装、临时使用及 reference/脚本的选择性更新。更新来源由本地 Git fixture 提供，不访问真实私有仓库或 token。脚本失败不等于真实宿主不可用；需区分打包缺陷和上游 CLI 行为变化。
 

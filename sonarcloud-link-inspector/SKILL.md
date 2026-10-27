@@ -4,7 +4,7 @@ description: Inspect SonarCloud issue, hotspot, or project URLs and fetch read-o
 license: MIT
 compatibility: Requires Python 3.10+, requests, network access, and optional SONARCLOUD_TOKEN.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # SonarCloud Link Inspector

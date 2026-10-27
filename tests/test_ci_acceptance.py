@@ -63,8 +63,11 @@ def test_pi_host_is_locked_required_and_rejects_skips():
     lock = json.loads((directory / "package-lock.json").read_text(encoding="utf-8"))
     name = "@earendil-works/pi-coding-agent"
     assert package["devDependencies"][name] == "1.1.0"
+    assert package["overrides"]["undici"] == "8.12.3"
     assert lock["packages"][f"node_modules/{name}"]["version"] == "1.1.0"
     assert lock["packages"][f"node_modules/{name}"]["integrity"].startswith("sha512-")
+    assert lock["packages"]["node_modules/undici"]["version"] == "8.12.3"
+    assert (directory / ".npmrc").read_text(encoding="utf-8").strip() == "ignore-scripts=true"
 
 
 def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():

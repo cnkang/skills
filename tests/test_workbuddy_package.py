@@ -78,6 +78,16 @@ def test_local_junk_never_enters_package(repo, tmp_path):
         assert not any(n.endswith(('.env', '.pem', '.db', 'private-config.json')) for n in z.namelist())
 
 
+@pytest.mark.parametrize('relative', ['scripts/test_probe.py', 'scripts/conftest.py', 'tests/test_probe.py'])
+def test_development_tests_are_rejected(repo, tmp_path, relative):
+    path = repo / 'qdrant-memory' / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('def test_probe():\n    assert True\n', encoding='utf-8')
+    git(repo, 'add', f'qdrant-memory/{relative}')
+    with pytest.raises(ValueError, match='Unapproved'):
+        load('build').build(repo, tmp_path / 'out', skill_name='qdrant-memory')
+
+
 @pytest.mark.parametrize('mutation', ['version', 'link', 'symlink', 'missing', 'tracked-secret'])
 def test_invalid_sources_fail_closed(repo, tmp_path, mutation):
     p = repo / 'qdrant-memory/SKILL.md'

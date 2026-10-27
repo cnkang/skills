@@ -1,5 +1,17 @@
 # Changelog
 
+## skills-20261027.2 — 2026-10-27
+
+### Catalog distribution and CI
+
+- Move development-only Python tests for conventional-commit-batcher, dev-jev,
+  repository-quality-gate-fixer and sonarcloud-link-inspector into the
+  repository-level `tests/` directory. Patch-bump those four skills so installed
+  packages contain runtime resources only.
+- Set `ignore-scripts=true` for the Pi host acceptance npm package so local
+  installs follow the same no-lifecycle-script policy as CI.
+- No skill runtime behavior, interfaces or dependencies changed.
+
 ## skills-20261027.1 — 2026-10-27
 
 ### Catalog distribution and CI

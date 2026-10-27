@@ -22,7 +22,8 @@ versions and integrity hashes. An npm override pins the transitive `undici`
 dependency to `8.12.3`, which contains the fix for GHSA-xjj6-f33q-929c; the Pi
 SDK itself still declares `8.10.2`. Node 24 runs the suite without a Python host
 environment, model download, GPU, paid API, account or real credentials.
-Install scripts are disabled with `npm ci --ignore-scripts`.
+Install scripts are disabled with `npm ci --ignore-scripts`, and the test
+package's `.npmrc` sets `ignore-scripts=true` for local installs.
 
 The real Pi SDK performs discovery, catalog prompt construction, `/skill:name`
 expansion, agent iteration and its built-in `read` tool. Only the model server

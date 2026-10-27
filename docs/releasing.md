@@ -2,7 +2,9 @@
 
 Each skill is an independently installable folder. Keep its name and top-level
 path stable. Runtime scripts/references/licenses belong inside that folder.
-Repository development tooling is not a runtime dependency. Never add mandatory
+Repository development tooling is not a runtime dependency. Keep test suites
+under the repository-level `tests/` directory; installed packages contain runtime
+resources only, and WorkBuddy packaging rejects test files. Never add mandatory
 cross-skill dependencies or automatic installation chains.
 
 ## Release checks

@@ -52,7 +52,6 @@ select a subset for local preview. Each archive has one independent root:
   agents/                   # canonical host UI metadata, when present
   examples/                 # tracked examples, when present
   templates/                # tracked templates, when present
-  tests/                    # bundled tests, when present
   README.md                 # when present
   requirements.txt          # when present
 ```
@@ -60,8 +59,9 @@ select a subset for local preview. Each archive has one independent root:
 There is no `integrations/workbuddy/` directory, other skill, runtime binary,
 database or account configuration in the ZIP. Root `.gitignore` files are omitted.
 Only tracked regular resources in approved directories/extensions are accepted.
-Text is UTF-8 and supported binary assets retain their exact bytes. Unapproved
-tracked resources fail the build. Untracked local files are omitted. Symlinks,
+Development tests stay outside skill directories; test files and `tests/`
+directories are rejected from packages. Text is UTF-8 and supported binary
+assets retain their exact bytes. Unapproved tracked resources fail the build. Untracked local files are omitted. Symlinks,
 unresolved index entries, missing or escaping references and unsafe output paths
 are rejected. Sources are read from Git index blobs, avoiding Windows checkout
 CRLF conversion. Stage intentional resource edits before previewing. Unstaged

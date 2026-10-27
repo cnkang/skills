@@ -1,4 +1,5 @@
 """Package invariants validated against isolated copies, not wording snapshots."""
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -6,7 +7,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from validate_skills import SKILLS, validate_skill, validate_repository
+from validate_skills import SKILLS, files_under, validate_skill, validate_repository
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,7 +46,7 @@ def test_broken_resource_is_rejected(skill):
 
 def test_invalid_frontmatter_is_rejected(skill):
     p = skill / "SKILL.md"
-    p.write_text(p.read_text().replace('  version: "4.0.0"', '  version: 4'))
+    p.write_text(re.sub(r'  version: "[^"]+"', '  version: 4', p.read_text(), count=1))
     assert any("metadata" in error for error in validate_skill(skill))
 
 
@@ -57,6 +58,16 @@ def test_python_syntax_failure_is_rejected(skill):
 def test_repository_contains_controlled_entrypoints():
     assert validate_repository(ROOT) == []
     assert {p.parent.name for p in ROOT.glob("*/SKILL.md")} == set(SKILLS)
+
+
+def test_installed_packages_exclude_development_tests():
+    for name in SKILLS:
+        offenders = [
+            path.relative_to(ROOT / name).as_posix()
+            for path in files_under(ROOT / name)
+            if "tests" in path.relative_to(ROOT / name).parts or path.name.startswith("test_")
+        ]
+        assert offenders == [], f"{name} ships development tests: {offenders}"
 
 
 @pytest.mark.parametrize("name", SKILLS)

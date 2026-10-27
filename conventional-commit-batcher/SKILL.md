@@ -4,7 +4,7 @@ description: Split mixed Git changes into logical Conventional Commits when inde
 license: MIT
 compatibility: Requires Git. Python 3.10+ for bundled checks. Manual fallback is documented.
 metadata:
-  version: "4.0.0"
+  version: "4.0.1"
 ---
 
 # Conventional Commit Batcher

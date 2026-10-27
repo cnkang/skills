@@ -2,7 +2,10 @@
 
 Use these cases to verify three points. First, when the skill calls the plugin. Second,
 when it deliberately does not. Third, how the current agent workflow behaves in shadow,
-advisory and off modes. The matrix is a manual acceptance suite. It does not claim the model classified these examples correctly. Run offline helper tests separately with `scripts/test_dev_jev.py`.
+advisory and off modes. The matrix is a manual acceptance suite. It does not
+claim the model classified these examples correctly. Run offline helper tests
+from the repository development checkout with
+`python3 -m pytest -q tests/test_dev_jev.py`.
 
 | Case | Jev call? | Bounded judgment | Required behavior |
 |---|---|---|---|

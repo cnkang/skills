@@ -14,8 +14,10 @@ Use the actual installed path for Python 3.10+ helpers:
 
 ```bash
 python3 <skill-dir>/scripts/telemetry.py mode
-python3 <skill-dir>/scripts/test_dev_jev.py
 ```
+
+Development-only helper tests live in the repository-level `tests/` directory
+and are not part of the installed skill package.
 
 Telemetry is opt-in and stdlib-only. `--log` overrides `DEV_JEV_LOG`, then explicit
 `HERMES_HOME`, then the platform user directory documented in the entrypoint.

@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sonarcloud-link-inspector" / "scripts"))
 import inspect_sonarcloud_link as inspector
 from sonarcloud_api import SonarCloudClient
 from url_parser import parse_sonarcloud_url

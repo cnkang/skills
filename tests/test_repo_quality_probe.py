@@ -9,7 +9,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-SCRIPT_DIR = Path(__file__).resolve().parent.parent / "scripts"
+ROOT = Path(__file__).resolve().parents[1]
+SKILL_ROOT = ROOT / "repository-quality-gate-fixer"
+SCRIPT_DIR = SKILL_ROOT / "scripts"
 SCRIPT = SCRIPT_DIR / "repo_quality_probe.py"
 
 sys_path_inserted = False
@@ -409,7 +411,7 @@ class TestSkillLimit(unittest.TestCase):
     def test_skill_limit_zero_disables_scan(self):
         result = run_probe(
             ".", "--skill-limit", "0", "--no-skill-scan",
-            cwd=Path(__file__).resolve().parent.parent,
+            cwd=SKILL_ROOT,
         )
         self.assertEqual(result.returncode, 0)
 

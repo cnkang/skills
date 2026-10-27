@@ -6,10 +6,10 @@ Five skills for development and Qdrant memory workflows that you can install ind
 
 | Skill | Version | Purpose and dependencies |
 |---|---|---|
-| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.0 | Split independent changes into Conventional Commits. Requires Git. Helper scripts require Python 3.10+. Manual checks are available as a fallback. |
-| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.0 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
-| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.0 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
-| [dev-jev](dev-jev/SKILL.md) | 0.2.0 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
+| [conventional-commit-batcher](conventional-commit-batcher/SKILL.md) | 4.0.1 | Split independent changes into Conventional Commits. Requires Git. Helper scripts require Python 3.10+. Manual checks are available as a fallback. |
+| [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
+| [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
+| [dev-jev](dev-jev/SKILL.md) | 0.2.1 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
 | [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.4 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
@@ -111,9 +111,14 @@ python3 -m venv .venv
 # After activating the project virtual environment:
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate_skills.py
-python3 -m pytest -q conventional-commit-batcher/scripts repository-quality-gate-fixer/tests sonarcloud-link-inspector/tests dev-jev/scripts/test_dev_jev.py tests
+python3 -m pytest -q tests
 python3 scripts/test_distribution.py --cli-version 1.7.0
 ```
+
+Skill packages contain runtime files only. Development tests for every skill live
+under the top-level `tests/` directory. The CLI does not install them, and
+WorkBuddy packaging rejects test files. Pi host acceptance dependencies remain a
+separate dev-only npm package with lifecycle scripts disabled.
 
 Distribution tests use isolated HOME, configuration, and project directories. They retain all 15 original-skill subsets and add the Qdrant singleton, full catalog and a mix with each original skill (21 total). They verify repeat installation, project/global and symlink/copy paths for nine hosts. They also cover the Qdrant package on Codex/Hermes, temporary use and selective reference/helper updates. Update sources use local Git fixtures without accessing real private repositories or tokens. A script failure does not establish that a real host is unavailable. Distinguish packaging defects from upstream CLI changes.
 

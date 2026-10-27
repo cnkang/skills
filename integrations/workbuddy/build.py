@@ -60,7 +60,9 @@ def safe_resource(name: str) -> bool:
         return False
     if name in {'SKILL.md', 'LICENSE', 'README.md', 'requirements.txt'}:
         return True
-    return (path.parts[0] in {'references', 'scripts', 'assets', 'agents', 'examples', 'templates', 'tests'} and
+    if path.name.startswith('test_') or path.name == 'conftest.py':
+        return False
+    return (path.parts[0] in {'references', 'scripts', 'assets', 'agents', 'examples', 'templates'} and
             path.suffix in {'.md', '.py', '.sh', '.js', '.ts', '.json', '.yaml', '.yml', '.toml', '.txt', '.template', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf', '.csv', '.sql', '.css', '.html'} and
             not any(word in path.stem.lower() for word in ('secret', 'credential', 'private-key')))
 

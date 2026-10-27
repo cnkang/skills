@@ -4,7 +4,7 @@ description: Use an available Jev provider for bounded semantic triage or attent
 license: MIT
 compatibility: Compatible Jev tools and provider credentials are optional. Python 3.10+ for local telemetry. Without a provider, continue the task normally.
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   author: "Kang, Hermes Agent"
   tags: "jev,typesafe,software-development,triage,relevance,risk"
 ---
@@ -108,6 +108,12 @@ Historical files remain readable with an explicit `--log` path.
 
 ## Verification
 
-Run `python3 <skill-dir>/scripts/test_dev_jev.py` for offline helper tests.
+Offline helper tests live in the repository development checkout and are not
+part of the installed skill package. From that checkout, run:
+
+```bash
+python3 -m pytest -q tests/test_dev_jev.py
+```
+
 [Scenario tests](references/scenario-tests.md) cover call/no-call, missing provider,
 and mode behavior. Helper tests do not prove semantic accuracy or host behavior.
