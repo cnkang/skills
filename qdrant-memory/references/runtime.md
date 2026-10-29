@@ -5,18 +5,18 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
 private compatibility baseline for this skill. These minimum versions do not
 provide the Runtime 0.5.0 Owner controls. Newer releases are published (Runtime
-0.5.1, MCP distribution 0.2.4), and the installer accepts an installed Runtime that is at
+0.5.2, MCP distribution 0.2.5), and the installer accepts an installed Runtime that is at
 least the requested version. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
 
-## Install Runtime 0.5.1 for Owner controls
+## Install Runtime 0.5.2 for Owner controls
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.5.1
+  --venv /private/path/qdrant-owner-env --version 0.5.2
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
@@ -24,6 +24,13 @@ This installs the CLI/MCP base. The HTTPS gateway also needs the optional remote
 dependencies and operator-configured TLS and credentials. Follow the pinned
 [Owner guide](universal-owner.md) before exposing it. Installing a Skill or an
 older MCP distribution does not provide these controls automatically.
+
+Runtime 0.5.2 and later classify an interrupted remote write as retryable. The
+error envelope names the identifier to replay and, when the Owner sends one, the
+delay before the next attempt. Replay the same request ID or event ID. Never use
+a new identifier for a retry, because that can add a second record. A
+`recovery_required` reason means the Owner kept the request for operator
+recovery. Do not discard it.
 
 ## Private compatibility baseline
 

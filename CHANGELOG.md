@@ -1,5 +1,13 @@
 # Changelog
 
+## skills-20261029.1 — 2026-10-29
+
+### qdrant-memory 0.3.5
+
+- Select Runtime 0.5.2 for Owner controls and record the current MCP
+  distribution version. Describe the replay contract for an interrupted remote
+  write. No install command, permission or installer rule changed.
+
 ## skills-20261027.2 — 2026-10-27
 
 ### Catalog distribution and CI
