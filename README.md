@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.4 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.5 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. Standalone runtime and MCP work without Hermes. Existing Hermes integration remains supported. On Hermes, use one memory interface per profile. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
