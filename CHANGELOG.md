@@ -5,8 +5,9 @@
 ### qdrant-memory 0.3.5
 
 - Select Runtime 0.5.2 for Owner controls and record the current MCP
-  distribution version. Describe the replay contract for an interrupted remote
-  write. No install command, permission or installer rule changed.
+  distribution version. The Owner install example now names Runtime 0.5.2.
+  Describe the replay contract for an interrupted remote write. No permission or
+  installer rule changed.
 
 ## skills-20261027.2 — 2026-10-27
 
