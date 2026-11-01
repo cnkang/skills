@@ -54,7 +54,10 @@ def test_unsupported_windows_build_creates_no_venv(installer, tmp_path, monkeypa
     assert "3.11.10" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("installed,expected", [("0.2.2", 0), ("0.2.5", 0), ("0.3.0", 0), ("0.2.0", 1)])
+@pytest.mark.parametrize(
+    "installed,expected",
+    [("0.5.3", 0), ("0.5.4", 0), ("0.5.2", 1), ("0.2.2", 1)],
+)
 def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, capsys, installed, expected):
     target = tmp_path / "existing"
     target.mkdir()
@@ -87,7 +90,7 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.2", "source": None}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.5.3", "source": None}))
 
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
@@ -95,8 +98,8 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
     assert calls[0][-2] == "-r"
     requirements = target / "runtime-requirements.txt"
     assert calls[0][-1] == str(requirements)
-    assert requirements.read_text() == "hermes-plugin-qdrant-memory[mcp]==0.2.2\n"
-    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.2.2"
+    assert requirements.read_text() == "hermes-plugin-qdrant-memory[mcp]==0.5.3\n"
+    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.5.3"
 
 
 def test_posix_venv_links_managed_interpreter(installer, tmp_path, monkeypatch):
@@ -166,7 +169,7 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
     def run(command, **kwargs):
         calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.2.2", "source": None}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.5.3", "source": None}))
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)])
     assert installer.main() == 0
@@ -182,7 +185,7 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
         assert target.stat().st_mode & 0o777 == 0o700
 
 
-@pytest.mark.parametrize("installed", ["0.2.0", "0.2.5"])
+@pytest.mark.parametrize("installed", ["0.5.2", "0.5.4"])
 @pytest.mark.parametrize("existing", [False, True])
 def test_hash_lock_requires_requested_runtime_version(installer, tmp_path, monkeypatch, capsys, installed, existing):
     target = tmp_path / "runtime"
@@ -201,7 +204,7 @@ def test_hash_lock_requires_requested_runtime_version(installer, tmp_path, monke
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)])
     assert installer.main() == 1
-    assert "does not match requested 0.2.2" in capsys.readouterr().err
+    assert f"does not match requested {installer.VERSION}" in capsys.readouterr().err
     assert not any("--help" in call for call in calls)
     assert any("install" in call for call in calls) is not existing
 

@@ -46,7 +46,16 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                for step in runtime["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 25" in step["run"]
                for step in jobs["qdrant-contract"]["steps"])
-    assert set(jobs["required-checks"]["needs"]) == {"packages", "distribution", "qdrant-contract", "qdrant-e2e", "pi-host", "qdrant-standalone"}
+    current = jobs["qdrant-current-runtime-e2e"]
+    assert set(current["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
+    current_refs = {step["with"]["repository"]: step["with"]["ref"] for step in current["steps"]
+                    if "repository" in step.get("with", {})}
+    assert current_refs == {"cnkang/hermes-agent": "4787e4d56fc8d9265d4c7d3c0fe5accee86b4078",
+                            "cnkang/hermes-plugin-qdrant-memory": "1b50a22bf80d894a6b90fe11457d5a72bc73dcd3"}
+    assert set(jobs["required-checks"]["needs"]) == {
+        "packages", "distribution", "qdrant-contract", "qdrant-e2e",
+        "qdrant-current-runtime-e2e", "pi-host", "qdrant-standalone",
+    }
     assert jobs["required-checks"]["if"] == "always()"
 
 
