@@ -106,18 +106,61 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install -r requirements-runtime-tests.txt ./.runtime-plugin
-      - name: Run mandatory Hub and cross-process runtime acceptance
+      # Runtime 0.2.2 predates the lifecycle recovery contract. That P0 scenario
+      # runs against the current published Runtime in qdrant-current-runtime-e2e.
+      - name: Run mandatory Hub and cross-process compatibility acceptance
         env:
           HERMES_SKILL_HOST_ROOT: ${{ github.workspace }}/.runtime-host
           QDRANT_MEMORY_PLUGIN_ROOT: ${{ github.workspace }}/.runtime-plugin
           QDRANT_RUNTIME_E2E: '1'
-        run: python -m pytest -q tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py --junitxml=reports/runtime-e2e.xml
+        run: python -m pytest -q tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py -k 'not writer_busy_callbacks_fail_safely_then_same_instance_recovers' --junitxml=reports/runtime-e2e.xml
       - name: Reject skipped or empty runtime acceptance
         run: python scripts/check_test_report.py reports/runtime-e2e.xml --minimum-tests 5
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: runtime-e2e-${{ matrix.os }}
+          path: reports/*.xml
+          if-no-files-found: error
+          retention-days: 14
+
+  qdrant-current-runtime-e2e:
+    name: Hermes Hub and disposable Qdrant E2E (Runtime 0.5.3, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: cnkang/hermes-agent
+          ref: 4787e4d56fc8d9265d4c7d3c0fe5accee86b4078 # tested immutable host baseline
+          path: .runtime-host
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.14'
+      - name: Install published Runtime 0.5.3 from PyPI
+        run: python -m pip install -r requirements-runtime-tests.txt 'hermes-plugin-qdrant-memory==0.5.3'
+      - name: Resolve installed Runtime plugin package
+        run: python -c 'import os; from pathlib import Path; import qdrant_memory; root=Path(qdrant_memory.__file__).resolve().parent; assert (root / "plugin.yaml").is_file(); open(os.environ["GITHUB_ENV"], "a", encoding="utf-8").write("QDRANT_MEMORY_PLUGIN_ROOT=" + str(root) + "\n")'
+      - run: python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
+      - name: Run mandatory Hub and cross-process runtime acceptance
+        env:
+          HERMES_SKILL_HOST_ROOT: ${{ github.workspace }}/.runtime-host
+          QDRANT_RUNTIME_E2E: '1'
+        run: python -m pytest -q tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py --junitxml=reports/current-runtime-e2e.xml
+      - name: Reject skipped or empty current-release acceptance
+        run: python scripts/check_test_report.py reports/current-runtime-e2e.xml --minimum-tests 6
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: current-runtime-e2e-${{ matrix.os }}
           path: reports/*.xml
           if-no-files-found: error
           retention-days: 14
@@ -256,7 +299,7 @@ jobs:
   required-checks:
     name: Required checks
     if: always()
-    needs: [packages, distribution, qdrant-contract, qdrant-e2e, pi-host, qdrant-standalone]
+    needs: [packages, distribution, qdrant-contract, qdrant-e2e, qdrant-current-runtime-e2e, pi-host, qdrant-standalone]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -270,5 +313,5 @@ jobs:
           failed = {job: data['result'] for job, data in results.items() if data['result'] != 'success'}
           if failed:
               raise SystemExit(f'Required jobs did not succeed: {failed}')
-          print('All package, distribution, plugin contract, Hermes E2E, standalone and Pi host jobs passed')
+          print('All package, distribution, historical and current plugin contracts, Hermes E2E, standalone and Pi host jobs passed')
           PY

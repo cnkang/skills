@@ -22,7 +22,7 @@ import subprocess
 import sys
 import venv
 
-VERSION = "0.2.2"
+VERSION = "0.5.3"
 PLUGIN_ID = "qdrant-memory"
 
 

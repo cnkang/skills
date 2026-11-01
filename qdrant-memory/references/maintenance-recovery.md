@@ -7,8 +7,30 @@ profile to bypass writer ownership or unfinished recovery.
 
 For `writer_busy`, locate the active session/gateway and coordinate stopping it.
 Wait for workers and in-flight requests to release ownership. Never remove its
-lock. Stop writers on other machines and profiles too. Embedded storage also
-rejects concurrent read clients while a provider holds its file lock.
+lock file. It can remain after the operating system releases the lock handle, so
+the file's presence alone does not prove that a writer is alive. Check Hermes
+Desktop, Gateway, CLI and other configured writer processes, and confirm shutdown
+completed before retrying. Embedded storage also rejects concurrent read clients
+while a provider holds its file lock.
+
+Runtime 0.5.3 reports a redacted lifecycle code/type when initialization fails.
+`writer_busy` identifies the lease conflict; other initialization failures need
+their reported code and type investigated. Runtime permits a new initialization
+attempt after failed-attempt cleanup completes. When the Hermes host does not retry
+that provider, restart its Desktop or Gateway process after the other writer has
+shut down. Do not mask `sync_turn` or required-checkpoint failures as successful
+writes, and do not treat an empty prefetch as evidence that the provider is ready.
+
+WriterLease coordinates writers for one local profile/destination. It does not
+provide a distributed lock across machines or independent homes. Do not start
+another independent writer until the existing one has stopped. After supported
+recovery, stop the affected Hermes Desktop or Gateway before running `doctor`
+against the same profile and destination. Embedded Qdrant refuses a concurrent
+diagnostic client while the active provider owns its local files. Then perform
+an authorized scoped search for a known record. Restart the host only after
+diagnostics finish. Allow startup recovery to reconcile pending Ledger work;
+retry FAILED work only after its cause is corrected and the retry is explicitly
+authorized.
 
 PENDING operations recover on provider startup. FAILED work requires correcting
 the underlying problem and explicit retry authorization. `hermes qdrant-memory

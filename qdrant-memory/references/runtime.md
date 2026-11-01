@@ -4,19 +4,19 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
 private compatibility baseline for this skill. These minimum versions do not
-provide the Runtime 0.5.0 Owner controls. Newer releases are published (Runtime
-0.5.2, MCP distribution 0.2.5), and the installer accepts an installed Runtime that is at
+provide the Runtime 0.5.0 Owner controls. Current published releases are Runtime
+0.5.3 and MCP distribution 0.2.7, and the installer accepts an installed Runtime that is at
 least the requested version. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
 
-## Install Runtime 0.5.2 for Owner controls
+## Install Runtime 0.5.3 for Owner controls
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.5.2
+  --venv /private/path/qdrant-owner-env --version 0.5.3
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
@@ -31,6 +31,33 @@ delay before the next attempt. Replay the same request ID or event ID. Never use
 a new identifier for a retry, because that can add a second record. A
 `recovery_required` reason means the Owner kept the request for operator
 recovery. Do not discard it.
+
+## Recover from provider initialization failure
+
+Runtime 0.5.3 keeps a provider unavailable after initialization fails and reports
+redacted lifecycle codes instead of acknowledging an unpersisted turn or required
+checkpoint. A `writer_busy` code means another process currently owns the local
+WriterLease. Check the Hermes Desktop, Gateway and CLI processes or other
+configured writers, let the active process shut down cleanly, and wait for its
+in-flight work to finish. The OS releases its lease when the owning process closes
+the lock handle; a lock file may remain. Never delete the file to force ownership.
+
+WriterLease protects a profile and destination on the local host. It is not a
+distributed lock across machines or independent profile paths. Coordinate all
+writers yourself and never run two independent writers against the same
+destination. If initialization failed with another code, inspect the redacted
+error type and fix the named configuration, dependency or service problem without
+publishing credentials or raw service responses.
+
+Runtime allows initialization to be retried after failed-attempt cleanup finishes.
+Hermes hosts that do not retry failed provider initialization need the affected
+Desktop or Gateway process restarted after the competing writer exits. After
+the failed host is stopped, run the configured profile's supported `doctor`
+command and make an authorized scoped search for a known memory before relying
+on new writes. Do not run CLI diagnostics against an embedded destination while
+an active Hermes provider still owns its local Qdrant files. Allow the provider's
+normal startup recovery to process pending ledger work; retry
+FAILED operations only after correcting the cause and authorizing that retry.
 
 ## Private compatibility baseline
 
@@ -79,7 +106,7 @@ available, the agent can run the installed skill's [installer](../scripts/instal
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-env --version 0.2.2
+  --venv /private/path/qdrant-env --version 0.5.3
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
@@ -99,12 +126,13 @@ Choose a new path to retry rather than deleting another installation.
 Use a new private environment for an authorized upgrade. Back up the profile and
 destination and retain the same collection, scope and embedding pipeline.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.2.2 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
+`--version 0.5.3 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The standalone acceptance checks pin revision
-`c85d2bce788b117dddd854bb124971f7de8e564c`. The published release tag is the
-source of truth.
+The Runtime 0.5.3 standalone acceptance uses the immutable release commit
+`1b50a22bf80d894a6b90fe11457d5a72bc73dcd3`. The separate Runtime 0.2.2
+compatibility lane retains commit `c85d2bce788b117dddd854bb124971f7de8e564c`.
+The published release tag is the source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
 until an explicit fresh transcript reset. Attributed per-turn writes continue.
@@ -174,8 +202,9 @@ with `--revision`. Explicit immutable source installation remains a separate
 operator-authorized development route. Existing environments are verified without
 reinstallation, so this flag does not retroactively certify their bytes.
 
-Runtime 0.2.2 remains the tested minimum selected by this skill's installer and
-CI fixture pins. Runtime 0.4.0 adds the separately configured shared owner. Use
-Runtime 0.5.0 for protected policy, doctor and remote Owner features, and discover its schemas before
+New installations default to Runtime 0.5.3. Runtime 0.2.2 remains the tested
+private-compatibility baseline in explicit examples and CI fixture pins. Runtime
+0.4.0 adds the separately configured shared owner. Use Runtime 0.5.0 or later for
+protected policy, doctor and remote Owner features, and discover its schemas before
 registering a shared bridge. Do not apply private-profile examples as shared
 service setup or silently upgrade an existing installation.

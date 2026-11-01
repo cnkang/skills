@@ -1,5 +1,15 @@
 # Changelog
 
+## skills-20261101.1 — 2026-11-01
+
+### qdrant-memory 0.3.6
+
+- Default new Runtime installations to the published 0.5.3 P0 fix. Preserve
+  Runtime 0.2.2 as an explicit private compatibility baseline and keep its
+  immutable CI coverage alongside current-release validation.
+- Document diagnosis and supported recovery for `writer_busy` and other
+  initialization failures, including the local-only scope of WriterLease.
+
 ## skills-20261029.1 — 2026-10-29
 
 ### qdrant-memory 0.3.5

@@ -40,13 +40,36 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     assert refs == {"cnkang/hermes-agent": "4787e4d56fc8d9265d4c7d3c0fe5accee86b4078",
                     "cnkang/hermes-plugin-qdrant-memory": "c85d2bce788b117dddd854bb124971f7de8e564c"}
     execution = next(step for step in runtime["steps"] if "--junitxml" in step.get("run", ""))
+    assert "not writer_busy_callbacks_fail_safely_then_same_instance_recovers" in execution["run"]
     assert execution["env"]["QDRANT_RUNTIME_E2E"] == "1"
     assert execution["env"]["HERMES_SKILL_HOST_ROOT"] and execution["env"]["QDRANT_MEMORY_PLUGIN_ROOT"]
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 5" in step["run"]
                for step in runtime["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 25" in step["run"]
                for step in jobs["qdrant-contract"]["steps"])
-    assert set(jobs["required-checks"]["needs"]) == {"packages", "distribution", "qdrant-contract", "qdrant-e2e", "pi-host", "qdrant-standalone"}
+    current = jobs["qdrant-current-runtime-e2e"]
+    assert set(current["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
+    current_refs = {step["with"]["repository"]: step["with"]["ref"] for step in current["steps"]
+                    if "repository" in step.get("with", {})}
+    assert current_refs == {"cnkang/hermes-agent": "4787e4d56fc8d9265d4c7d3c0fe5accee86b4078"}
+    assert any("hermes-plugin-qdrant-memory==0.5.3" in step.get("run", "")
+               for step in current["steps"])
+    assert any("qdrant_memory.__file__" in step.get("run", "")
+               and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
+    assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])
+    current_execution = next(step for step in current["steps"]
+                             if "tests/test_qdrant_runtime_e2e.py" in step.get("run", ""))
+    assert "-k " not in current_execution["run"]
+    assert "tests/test_hermes_skill_paths.py" in current_execution["run"]
+    assert "--junitxml=reports/current-runtime-e2e.xml" in current_execution["run"]
+    assert current_execution["env"]["QDRANT_RUNTIME_E2E"] == "1"
+    assert current_execution["env"]["HERMES_SKILL_HOST_ROOT"]
+    assert any("current-runtime-e2e.xml --minimum-tests 6" in step.get("run", "")
+               for step in current["steps"])
+    assert set(jobs["required-checks"]["needs"]) == {
+        "packages", "distribution", "qdrant-contract", "qdrant-e2e",
+        "qdrant-current-runtime-e2e", "pi-host", "qdrant-standalone",
+    }
     assert jobs["required-checks"]["if"] == "always()"
 
 
