@@ -35,8 +35,17 @@ def runtime(tmp_path):
                 "XDG_CONFIG_HOME": str(home / ".config"), "XDG_STATE_HOME": str(home / ".state"),
                 "PYTHONPATH": str(host), "PYTHONDONTWRITEBYTECODE": "1",
                 "DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1", "NO_PROXY": "127.0.0.1,localhost"})
-    shutil.copytree(plugin, home / "plugins/qdrant-memory", ignore=shutil.ignore_patterns(
-        ".git", ".venv", ".test-env", ".hermes-test-env", "__pycache__", ".pytest_cache"))
+    plugin_home = home / "plugins/qdrant-memory"
+    if (plugin / "provider.py").is_file():
+        # A PyPI wheel installs the plugin package directly. Reconstruct only
+        # the host's expected plugin root from those installed files.
+        plugin_home.mkdir(parents=True)
+        shutil.copytree(plugin, plugin_home / "qdrant_memory", ignore=shutil.ignore_patterns(
+            "__pycache__", ".pytest_cache"))
+        shutil.copy2(plugin / "plugin.yaml", plugin_home / "plugin.yaml")
+    else:
+        shutil.copytree(plugin, plugin_home, ignore=shutil.ignore_patterns(
+            ".git", ".venv", ".test-env", ".hermes-test-env", "__pycache__", ".pytest_cache"))
     (home / "config.yaml").write_text("memory:\n  provider: qdrant-memory\nplugins:\n  isolation: in_process\n", encoding="utf-8")
     requests = []
     service = {"fail_text": None}
@@ -152,3 +161,15 @@ def test_failed_migration_survives_process_and_recovers(runtime):
     assert recovered["processed"] == 1
     assert invoke("cli", "qdrant-memory", "verify")["ok"]
     assert invoke("cli", "qdrant-memory", "stats")["points_count"] == 1
+
+
+def test_writer_busy_callbacks_fail_safely_then_same_instance_recovers(runtime):
+    home, invoke, requests, service = runtime
+    recovered = invoke("busy-recovery")
+    assert recovered == {
+        "retryable": True,
+        "failed_state": "FAILED",
+        "event_high_watermark": 0,
+        "written_once": True,
+    }
+    assert requests

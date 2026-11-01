@@ -24,10 +24,13 @@ writes, and do not treat an empty prefetch as evidence that the provider is read
 WriterLease coordinates writers for one local profile/destination. It does not
 provide a distributed lock across machines or independent homes. Do not start
 another independent writer until the existing one has stopped. After supported
-recovery, run `doctor` against the same profile and destination, then perform an
-authorized scoped search for a known record. Allow startup recovery to reconcile
-pending Ledger work; retry FAILED work only after its cause is corrected and the
-retry is explicitly authorized.
+recovery, stop the affected Hermes Desktop or Gateway before running `doctor`
+against the same profile and destination. Embedded Qdrant refuses a concurrent
+diagnostic client while the active provider owns its local files. Then perform
+an authorized scoped search for a known record. Restart the host only after
+diagnostics finish. Allow startup recovery to reconcile pending Ledger work;
+retry FAILED work only after its cause is corrected and the retry is explicitly
+authorized.
 
 PENDING operations recover on provider startup. FAILED work requires correcting
 the underlying problem and explicit retry authorization. `hermes qdrant-memory

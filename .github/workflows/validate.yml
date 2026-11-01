@@ -140,24 +140,21 @@ jobs:
           ref: 4787e4d56fc8d9265d4c7d3c0fe5accee86b4078 # tested immutable host baseline
           path: .runtime-host
           persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: cnkang/hermes-plugin-qdrant-memory
-          ref: 1b50a22bf80d894a6b90fe11457d5a72bc73dcd3 # immutable Runtime 0.5.3 release source
-          path: .runtime-plugin
-          persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
-      - run: python -m pip install -r requirements-runtime-tests.txt ./.runtime-plugin
+      - name: Install published Runtime 0.5.3 from PyPI
+        run: python -m pip install -r requirements-runtime-tests.txt 'hermes-plugin-qdrant-memory==0.5.3'
+      - name: Resolve installed Runtime plugin package
+        run: python -c 'import os; from pathlib import Path; import qdrant_memory; root=Path(qdrant_memory.__file__).resolve().parent; assert (root / "plugin.yaml").is_file(); open(os.environ["GITHUB_ENV"], "a", encoding="utf-8").write("QDRANT_MEMORY_PLUGIN_ROOT=" + str(root) + "\n")'
+      - run: python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
       - name: Run mandatory Hub and cross-process runtime acceptance
         env:
           HERMES_SKILL_HOST_ROOT: ${{ github.workspace }}/.runtime-host
-          QDRANT_MEMORY_PLUGIN_ROOT: ${{ github.workspace }}/.runtime-plugin
           QDRANT_RUNTIME_E2E: '1'
         run: python -m pytest -q tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py --junitxml=reports/current-runtime-e2e.xml
       - name: Reject skipped or empty current-release acceptance
-        run: python scripts/check_test_report.py reports/current-runtime-e2e.xml --minimum-tests 5
+        run: python scripts/check_test_report.py reports/current-runtime-e2e.xml --minimum-tests 6
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:

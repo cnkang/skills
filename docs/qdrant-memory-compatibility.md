@@ -26,12 +26,15 @@ shared-scope/private-agent isolation. Installed local Codex/OpenCode/Pi acceptan
 | Real host/model | Scenarios in `behavior-scenarios.md` | Explicit operator acceptance is needed. Static or install tests do not establish it. |
 
 CI retains Ubuntu/macOS/Windows and Python 3.10/3.14 package jobs and pinned/latest
-skills CLI jobs. A separate Ubuntu job checks plugin release commit
-`c85d2bce788b117dddd854bb124971f7de8e564c` (Runtime 0.2.2). Offline contracts skip
-explicitly when no plugin checkout is supplied. A supplied but invalid checkout
-fails. A mandatory Ubuntu/macOS/Windows job runs Hub fixtures and disposable
-runtime E2E with Hermes pinned to `4787e4d56fc8d9265d4c7d3c0fe5accee86b4078`
-and the same plugin release. Ordinary package jobs leave these environment-driven
+skills CLI jobs. The offline contract and legacy Hermes E2E lanes retain plugin
+release commit `c85d2bce788b117dddd854bb124971f7de8e564c` (Runtime 0.2.2) as a
+compatibility baseline. Offline contracts skip explicitly when no plugin checkout
+is supplied. A supplied but invalid checkout fails. A separate mandatory
+Ubuntu/macOS/Windows job runs Hub fixtures and disposable runtime E2E against the
+published PyPI Runtime 0.5.3 package and Hermes pinned to
+`4787e4d56fc8d9265d4c7d3c0fe5accee86b4078`. The test reconstructs the host plugin
+root from installed wheel files, so this lane validates the public artifact rather
+than a Runtime source checkout. Ordinary package jobs leave these environment-driven
 tests disabled. Dedicated acceptance jobs reject any skip, failure, error or
 insufficient test count and retain JUnit reports for 14 days. `Required checks`
 fails if any package, distribution, contract, Hermes E2E or Pi host job fails or is skipped.
@@ -51,21 +54,25 @@ CLI init/doctor/add, official stdio MCP discovery/search/delete and safe reuse.
 The installation report has a required zero-skip gate. Embeddings use localhost
 fixtures, with no Hermes installation or paid model calls.
 
-For local acceptance, install `requirements-runtime-tests.txt` and the pinned
-plugin into an isolated environment, then run:
+For current-release local acceptance, install `requirements-runtime-tests.txt`
+and `hermes-plugin-qdrant-memory==0.5.3` from PyPI into an isolated environment.
+Set `QDRANT_MEMORY_PLUGIN_ROOT` to the installed `qdrant_memory` package
+directory. Then run:
 
 ```bash
 HERMES_SKILL_HOST_ROOT=/path/hermes-agent \
-QDRANT_MEMORY_PLUGIN_ROOT=/path/runtime-at-0.2.2 \
+QDRANT_MEMORY_PLUGIN_ROOT=/path/to/site-packages/qdrant_memory \
 QDRANT_RUNTIME_E2E=1 python -m pytest -q \
   tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py \
   --junitxml=reports/runtime-e2e.xml
-python scripts/check_test_report.py reports/runtime-e2e.xml --minimum-tests 5
+python scripts/check_test_report.py reports/runtime-e2e.xml --minimum-tests 6
 ```
 
 Runtime coverage includes scoped explicit CRUD, duplicate reconciliation,
 foreign-ID denial, competing writer refusal and persistence after process
-restart. It also covers dry-run isolation, migration/resume/verification,
+restart. The current Runtime lane also holds a real cross-process WriterLease,
+checks failed-initialization lifecycle behavior and retries the same provider
+instance after clean lease release. It also covers dry-run isolation, migration/resume/verification,
 failed embedding and recovery, scoped export and overwrite refusal, and
 confirmed scoped deletion. It does not
 exercise an LLM, automatic extraction, remote Qdrant or abrupt process termination.
@@ -74,8 +81,8 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-installation defaults to exact PyPI Runtime 0.2.2. MCP-focused
-agents may use metadata-only distribution 0.1.3 instead. Both support MCP Python
+installation defaults to exact PyPI Runtime 0.5.3. MCP-focused
+agents may use the metadata-only distribution; both packages support MCP Python
 SDK 1.x and 2.x. Development/candidate
 installs require an explicitly chosen full SHA and expected version. Both retain
 the durable transcript-author isolation fix. Original release v0.1.0 remains

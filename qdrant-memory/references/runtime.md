@@ -52,9 +52,11 @@ publishing credentials or raw service responses.
 Runtime allows initialization to be retried after failed-attempt cleanup finishes.
 Hermes hosts that do not retry failed provider initialization need the affected
 Desktop or Gateway process restarted after the competing writer exits. After
-recovery, run the configured profile's supported `doctor` command and make an
-authorized scoped search for a known memory before relying on new writes. Allow
-the provider's normal startup recovery to process pending ledger work; retry
+the failed host is stopped, run the configured profile's supported `doctor`
+command and make an authorized scoped search for a known memory before relying
+on new writes. Do not run CLI diagnostics against an embedded destination while
+an active Hermes provider still owns its local Qdrant files. Allow the provider's
+normal startup recovery to process pending ledger work; retry
 FAILED operations only after correcting the cause and authorizing that retry.
 
 ## Private compatibility baseline
@@ -127,9 +129,10 @@ For an explicitly authorized candidate/development/fallback source, use
 `--version 0.5.3 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The standalone acceptance checks pin revision
-`c85d2bce788b117dddd854bb124971f7de8e564c`. The published release tag is the
-source of truth.
+The Runtime 0.5.3 standalone acceptance uses the immutable release commit
+`1b50a22bf80d894a6b90fe11457d5a72bc73dcd3`. The separate Runtime 0.2.2
+compatibility lane retains commit `c85d2bce788b117dddd854bb124971f7de8e564c`.
+The published release tag is the source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
 until an explicit fresh transcript reset. Attributed per-turn writes continue.
