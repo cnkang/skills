@@ -21,8 +21,9 @@ export function createModelServer(replies) {
           function: { name: 'read', arguments: JSON.stringify({ path: reply.path }) } }] };
       res.writeHead(200, { 'Content-Type': 'text/event-stream' });
       for (const [content, finish_reason] of [[delta, null], [{}, typeof reply === 'string' ? 'stop' : 'tool_calls']]) {
-        res.write(`data: ${JSON.stringify({ id: `ci_${index}`, object: 'chat.completion.chunk',
-          created: 0, model: 'ci-fixture', choices: [{ index: 0, delta: content, finish_reason }] })}\n\n`);
+        const chunk = { id: `ci_${index}`, object: 'chat.completion.chunk',
+          created: 0, model: 'ci-fixture', choices: [{ index: 0, delta: content, finish_reason }] };
+        res.write(`data: ${JSON.stringify(chunk)}\n\n`);
       }
       res.end('data: [DONE]\n\n');
     } catch (error) {
