@@ -1,5 +1,5 @@
 # Source pins for requirements-ci-3.14.txt (Python 3.14). Regenerate the lock with:
-#   uv pip compile --universal --python-version 3.14 --generate-hashes requirements-ci-3.14.in -o requirements-ci-3.14.txt
+#   cd .github && uv pip compile --universal --python-version 3.14 --generate-hashes requirements-ci-3.14.in -o requirements-ci-3.14.txt
 pytest==9.0.3
 PyYAML==6.0.3
 requests==2.34.2
