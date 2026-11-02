@@ -53,8 +53,11 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     current_refs = {step["with"]["repository"]: step["with"]["ref"] for step in current["steps"]
                     if "repository" in step.get("with", {})}
     assert current_refs == {"cnkang/hermes-agent": "4787e4d56fc8d9265d4c7d3c0fe5accee86b4078"}
-    assert any("hermes-plugin-qdrant-memory==0.5.3" in step.get("run", "")
+    assert any("--require-hashes" in step.get("run", "")
+               and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
+    lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
+    assert "hermes-plugin-qdrant-memory==0.5.3" in lock
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])

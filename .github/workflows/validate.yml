@@ -148,7 +148,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Install published Runtime 0.5.3 from PyPI
-        run: python -m pip install -r requirements-runtime-tests.txt 'hermes-plugin-qdrant-memory==0.5.3'
+        run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-current-runtime-ci.txt'
       - name: Resolve installed Runtime plugin package
         run: python -c 'import os; from pathlib import Path; import qdrant_memory; root=Path(qdrant_memory.__file__).resolve().parent; assert (root / "plugin.yaml").is_file(); open(os.environ["GITHUB_ENV"], "a", encoding="utf-8").write("QDRANT_MEMORY_PLUGIN_ROOT=" + str(root) + "\n")'
       - run: python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"

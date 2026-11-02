@@ -32,7 +32,7 @@ def validate_tag(tag: str) -> str:
     return tag
 
 
-VERSION_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)(.*)", re.ASCII)
+VERSION_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)([-+].*)?", re.ASCII)
 IDENTIFIER_RE = re.compile(r"[0-9A-Za-z-]+")
 
 
