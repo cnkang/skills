@@ -304,10 +304,41 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  sonarcloud:
+    name: SonarCloud quality gate
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require SonarCloud credentials
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: test -n "$SONAR_TOKEN" || { echo '::error::Configure the SONAR_TOKEN repository secret.'; exit 1; }
+      - name: Analyze and wait for quality gate
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   required-checks:
     name: Required checks
     if: always()
-    needs: [packages, distribution, qdrant-contract, qdrant-e2e, qdrant-current-runtime-e2e, pi-host, qdrant-standalone]
+    needs:
+      - packages
+      - distribution
+      - qdrant-contract
+      - qdrant-e2e
+      - qdrant-current-runtime-e2e
+      - pi-host
+      - qdrant-standalone
+      - sonarcloud
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
