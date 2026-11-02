@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def load(relative_path: str, module_name: str):
     """Import one script module by path without installing it."""
     spec = importlib.util.spec_from_file_location(module_name, ROOT / relative_path)
-    assert spec is not None and spec.loader is not None
+    assert spec is not None
+    assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
