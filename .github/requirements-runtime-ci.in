@@ -1,0 +1,11 @@
+# Source pins for requirements-runtime-ci.txt (Python 3.14). Regenerate the lock with:
+#   uv pip compile --universal --python-version 3.14 --generate-hashes requirements-runtime-ci.in -o requirements-runtime-ci.txt
+pytest==9.0.3
+PyYAML==6.0.3
+requests==2.34.2
+rich==14.3.3
+ruamel.yaml==0.18.17
+qdrant-client==1.19.1
+httpx==0.28.1
+portalocker==3.2.0
+colorama==0.4.6

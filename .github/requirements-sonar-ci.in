@@ -1,0 +1,6 @@
+# Source pins for requirements-sonar-ci.txt (Python 3.14). Regenerate the lock with:
+#   uv pip compile --universal --python-version 3.14 --generate-hashes requirements-sonar-ci.in -o requirements-sonar-ci.txt
+pytest==9.0.3
+pytest-cov==7.1.0
+PyYAML==6.0.3
+requests==2.34.2

@@ -1,0 +1,9 @@
+# Source pins for requirements-contract-ci.txt (Python 3.14). Regenerate the lock with:
+#   uv pip compile --universal --python-version 3.14 --generate-hashes requirements-contract-ci.in -o requirements-contract-ci.txt
+pytest==9.0.3
+PyYAML==6.0.3
+requests==2.34.2
+qdrant-client==1.19.1
+httpx==0.28.1
+portalocker==3.2.0
+colorama==0.4.6

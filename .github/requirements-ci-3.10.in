@@ -1,0 +1,8 @@
+# Source pins for requirements-ci-3.10.txt (Python 3.10). Regenerate the lock with:
+#   uv pip compile --universal --python-version 3.10 --generate-hashes requirements-ci-3.10.in -o requirements-ci-3.10.txt
+pytest==9.0.3
+PyYAML==6.0.3
+requests==2.34.2
+colorama==0.4.6
+tomli==2.5.0
+exceptiongroup==1.3.1

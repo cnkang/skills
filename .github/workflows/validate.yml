@@ -321,6 +321,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: test -n "$SONAR_TOKEN" || { echo '::error::Configure the SONAR_TOKEN repository secret.'; exit 1; }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          # The hash lock is built for 3.14; the runner default is not.
+          python-version: '3.14'
       - name: Measure coverage for the quality gate
         run: |
           python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-sonar-ci.txt

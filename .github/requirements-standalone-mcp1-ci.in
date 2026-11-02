@@ -1,0 +1,9 @@
+# Source pins for requirements-standalone-mcp1-ci.txt (Python 3.14). Regenerate the lock with:
+#   uv pip compile --universal --python-version 3.14 --generate-hashes requirements-standalone-mcp1-ci.in -o requirements-standalone-mcp1-ci.txt
+pytest==9.0.3
+PyYAML==6.0.3
+requests==2.34.2
+mcp==1.30.0
+qdrant-client==1.19.1
+httpx==0.28.1
+portalocker==3.2.0
