@@ -3,6 +3,6 @@
 # repository virtualenv (pytest 8.4.2, PyYAML 6.0.3, requests 2.34.2) and stay
 # inside the ranges declared there. CI installs this file with
 # --only-binary=:all:, so every entry must publish wheels.
-pytest==8.4.2
+pytest==9.0.3
 PyYAML==6.0.3
 requests==2.34.2
