@@ -7,8 +7,8 @@
 - Default new Runtime installations to the published 0.5.4 maintainability
   release. The installer keeps accepting an installed Runtime that is newer than
   the requested version.
-- Require every CI install to come from a hash-locked file, and keep the
-  SonarCloud scan in the validation workflow.
+- Require every CI install from a package index to come from a hash-locked
+  file, and keep the SonarCloud scan in the validation workflow.
 - Move the Pi host acceptance harness past the `minimatch` advisory and the CI
   locks past the `pytest` tmpdir advisory.
 
