@@ -321,6 +321,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: test -n "$SONAR_TOKEN" || { echo '::error::Configure the SONAR_TOKEN repository secret.'; exit 1; }
+      - name: Measure coverage for the quality gate
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-sonar-ci.txt
+          python -m pytest -q tests --cov --cov-report=xml
       - name: Analyze and wait for quality gate
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9
         env:
