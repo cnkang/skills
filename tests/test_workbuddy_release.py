@@ -76,7 +76,9 @@ def test_create_draft_and_idempotent_retry(tmp_path):
     r = load('release')
     r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
     r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
-    assert api.created == 1 and len(api.uploaded) == 2 and api.release['draft']
+    assert api.created == 1
+    assert len(api.uploaded) == 2
+    assert api.release['draft']
 
 
 @pytest.mark.parametrize('draft', [True, False])
@@ -85,17 +87,20 @@ def test_mismatch_never_modifies_assets(tmp_path, draft):
     p.write_bytes(b'expected')
     api = FakeAPI(draft=draft)
     api.assets[p.name] = b'original'
+    r = load('release')
     with pytest.raises(ValueError, match='differs'):
-        load('release').attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
-    assert api.assets[p.name] == b'original' and not api.uploaded
+        r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
+    assert api.assets[p.name] == b'original'
+    assert not api.uploaded
 
 
 def test_published_missing_assets_read_only(tmp_path):
     p = tmp_path / 'a.zip'
     p.write_bytes(b'data')
     api = FakeAPI(draft=False)
+    r = load('release')
     with pytest.raises(ValueError, match='Published'):
-        load('release').attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
+        r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
     assert not api.uploaded
     api.assets[p.name] = p.read_bytes()
     load('release').attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
@@ -115,7 +120,8 @@ def test_partial_upload_failure_is_recoverable(tmp_path):
     r = load('release')
     with pytest.raises(RuntimeError):
         r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
-    assert api.assets == {'a.zip': b'data'} and api.release['draft']
+    assert api.assets == {'a.zip': b'data'}
+    assert api.release['draft']
     api.upload_asset = normal_upload
     r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
     assert api.uploaded == ['a.zip', 'a.zip.sha256']
@@ -126,8 +132,9 @@ def test_publication_during_preflight_stops_upload(tmp_path):
     p.write_bytes(b'data')
     api = FakeAPI()
     api.get_release = lambda _: {**api.release, 'draft': False}
+    r = load('release')
     with pytest.raises(ValueError, match='Draft'):
-        load('release').attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
+        r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [p])
     assert not api.uploaded
 
 
@@ -137,8 +144,9 @@ def test_preflight_both_assets_before_any_upload(tmp_path):
     second.write_bytes(b'sum')
     api = FakeAPI()
     api.assets[second.name] = b'mismatch'
+    r = load('release')
     with pytest.raises(ValueError, match='differs'):
-        load('release').attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [first, second])
+        r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', [first, second])
     assert not api.uploaded
 
 
@@ -174,7 +182,8 @@ def test_full_catalog_release_assets_and_global_preflight(repo, tmp_path):
     r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
     r.attach_assets(api, 'skills-20261014.1', 'sha', 'notes', paths)
     assert len(api.assets) == len(paths) == len(b.SKILLS) * 2
-    assert api.created == 1 and len(api.uploaded) == len(paths)
+    assert api.created == 1
+    assert len(api.uploaded) == len(paths)
     mismatch = FakeAPI()
     mismatch.assets[paths[-1].name] = b'mismatch in final catalog asset'
     with pytest.raises(ValueError, match='differs'):

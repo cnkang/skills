@@ -179,7 +179,7 @@ class TestExtractWorkflowSteps(unittest.TestCase):
                 "name: CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: >\n          echo hello\n          echo world\n",
             )
             extracted = self._extract(repo)
-            self.assertTrue(len(extracted) > 0)
+            self.assertGreater(len(extracted), 0)
             self.assertIn("echo hello", extracted[0])
             self.assertIn("echo world", extracted[0])
 

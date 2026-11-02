@@ -96,7 +96,8 @@ def runtime(tmp_path):
 def test_explicit_tools_scope_and_restart_persistence(runtime):
     home, invoke, requests, service = runtime
     saved = invoke("write")
-    assert saved["scope_denied"] and saved["deduplicated"]
+    assert saved["scope_denied"]
+    assert saved["deduplicated"]
     result = invoke("read-delete", saved["id"])
     assert result == {"restarted": True, "deleted": True}
     assert (home / "qdrant-memory/state.db").is_file()
@@ -116,14 +117,16 @@ def test_discovered_cli_maintenance_migration_and_scoped_deletion(runtime):
     migrate = ("migrate", "mem0", "--source-json", str(source), "--quiet")
     planned = cli(*migrate, "--dry-run")
     assert planned["source_unique_count"] == 2
-    assert not (home / "qdrant-memory").exists() and not requests
+    assert not (home / "qdrant-memory").exists()
+    assert not requests
     cli(*migrate, "--reuse-vectors", code=1)
     assert not (home / "qdrant-memory").exists()
     imported = cli(*migrate, "--resume", "--verify")
     assert imported["processed"] == 2
     assert cli(*migrate, "--resume", "--verify")["processed"] == 2
     assert cli("stats")["points_count"] == 2
-    assert cli("doctor")["ok"] and cli("verify")["ok"]
+    assert cli("doctor")["ok"]
+    assert cli("verify")["ok"]
     assert cli("list")["count"]["total"] == 2
     assert cli("list", "--user", "alice", "--agent", "fixture")["count"]["total"] == 1
     output = home / "export.json"

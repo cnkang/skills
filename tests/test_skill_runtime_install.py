@@ -46,7 +46,8 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
             for payload in ("$(touch QDRANT_INSTALL_SHELL_MARKER)", "`touch QDRANT_INSTALL_SHELL_MARKER`", "';touch QDRANT_INSTALL_SHELL_MARKER;#"):
                 unsafe = tmp_path / ("unsafe runtime " + payload)
                 refused = subprocess.run([sys.executable, str(installer), "--venv", str(unsafe)], cwd=isolated, env=env, capture_output=True, text=True, timeout=30)
-                assert refused.returncode != 0 and "shell-sensitive" in refused.stderr
+                assert refused.returncode != 0
+                assert "shell-sensitive" in refused.stderr
                 assert not unsafe.exists()
             assert not list(tmp_path.rglob("QDRANT_INSTALL_SHELL_MARKER"))
         venv = tmp_path / "fresh runtime with spaces"

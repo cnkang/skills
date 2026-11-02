@@ -79,7 +79,8 @@ def test_tool_names_and_schemas(plugin):
     for item in schemas:
         properties, required = expected[item["name"]]
         params = item["parameters"]
-        assert params["type"] == "object" and params["additionalProperties"] is False
+        assert params["type"] == "object"
+        assert params["additionalProperties"] is False
         assert set(params["properties"]) == properties
         assert set(params["required"]) == required
         assert all(value == {"type": "string"} for value in params["properties"].values())
@@ -111,8 +112,9 @@ def test_scope_selection_and_required_arguments(plugin):
     assert scope.as_dict() == {"user_id": "u", "agent_id": None}
     scope = plugin.cli.scope_from(parser.parse_args(["list", "--user", "u", "--agent", "*"]))
     assert scope.agent_id == "*"
+    agent_only = parser.parse_args(["list", "--agent", "a"])
     with pytest.raises(plugin.cli.ScopeSelectionError):
-        plugin.cli.scope_from(parser.parse_args(["list", "--agent", "a"]))
+        plugin.cli.scope_from(agent_only)
     for argv in (["export"], ["migrate", "mem0"],
                  ["migrate", "mem0", "--source-json", "a", "--source-qdrant-collection", "b"],
                  ["migrate", "mem0", "--source-json", "a", "--user", "u"]):
@@ -160,7 +162,8 @@ def test_migration_dry_run_and_vector_reuse_refusal(plugin, offline_home, capsys
     args = parser.parse_args(["migrate", "mem0", "--source-json", str(source), "--dry-run", "--quiet"])
     assert plugin.cli.main(args) == 0
     result = json.loads(capsys.readouterr().out)
-    assert result["dry_run"] is True and result["source_unique_count"] == 1
+    assert result["dry_run"] is True
+    assert result["source_unique_count"] == 1
     assert len(result["target_ids"]) == 1
     assert not (offline_home / "qdrant-memory").exists()
     args.reuse_vectors = True
@@ -190,11 +193,12 @@ def test_busy_writer_is_refused_before_services(plugin, offline_home, monkeypatc
 def test_exact_id_is_not_scope_authorization(plugin, tool):
     """An exact ID never widens the caller scope; each tool gets valid arguments."""
     runtime = SimpleNamespace(lock=nullcontext(), store=SimpleNamespace(get=lambda identifier, scope: None))
+    arguments = {"id": "foreign"}
+    if tool.endswith("update"):
+        arguments["text"] = "replacement"
+    caller = object()
     with pytest.raises(ValueError, match="caller scope"):
-        arguments = {"id": "foreign"}
-        if tool.endswith("update"):
-            arguments["text"] = "replacement"
-        plugin.tools.dispatch(runtime, tool, arguments, object(), "session")
+        plugin.tools.dispatch(runtime, tool, arguments, caller, "session")
 
 
 def test_real_writer_lease_excludes_same_home_destination(plugin, tmp_path):

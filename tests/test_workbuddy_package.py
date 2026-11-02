@@ -84,8 +84,9 @@ def test_development_tests_are_rejected(repo, tmp_path, relative):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('def test_probe():\n    assert True\n', encoding='utf-8')
     git(repo, 'add', f'qdrant-memory/{relative}')
+    b = load('build')
     with pytest.raises(ValueError, match='Unapproved'):
-        load('build').build(repo, tmp_path / 'out', skill_name='qdrant-memory')
+        b.build(repo, tmp_path / 'out', skill_name='qdrant-memory')
 
 
 @pytest.mark.parametrize('mutation', ['version', 'link', 'symlink', 'missing', 'tracked-secret'])
@@ -104,14 +105,16 @@ def test_invalid_sources_fail_closed(repo, tmp_path, mutation):
     else:
         (repo / 'qdrant-memory/scripts/key.pem').write_text('private')
         git(repo, 'add', 'qdrant-memory/scripts/key.pem')
+    b = load('build')
     with pytest.raises(ValueError):
-        load('build').build(repo, tmp_path / 'out', skill_name='qdrant-memory')
+        b.build(repo, tmp_path / 'out', skill_name='qdrant-memory')
 
 
 @pytest.mark.parametrize('tag', ['skills-20260230.1', 'skills-20261014.0', 'skills-20261014.01', '../bad', 'v0.2.4'])
 def test_invalid_snapshot_tags(tag):
+    b = load('build')
     with pytest.raises(ValueError):
-        load('build').validate_tag(tag)
+        b.validate_tag(tag)
 
 
 def test_output_collision_and_corrupt_archive(repo, tmp_path):
@@ -154,8 +157,9 @@ def test_encoding_and_packaged_reference_checks(repo, tmp_path, mutation):
         p.write_text(p.read_text() + '\n[escape](%2e%2e/%2e%2e/outside.md)\n')
     else:
         (repo / 'integrations/workbuddy/metadata.json').write_text('{"author": "cnkang", "version": "9.9.9"}')
+    b = load('build')
     with pytest.raises(ValueError):
-        load('build').build(repo, tmp_path / 'out', skill_name='qdrant-memory')
+        b.build(repo, tmp_path / 'out', skill_name='qdrant-memory')
 
 
 def test_archive_tampering_and_output_symlink(repo, tmp_path):
@@ -163,8 +167,9 @@ def test_archive_tampering_and_output_symlink(repo, tmp_path):
     archive, _ = b.build(repo, tmp_path / 'out', skill_name='qdrant-memory')
     with zipfile.ZipFile(archive, 'a') as z:
         z.writestr('../escape', b'bad')
+    files = b.package_files(repo, 'qdrant-memory')
     with pytest.raises(ValueError):
-        b.verify_archive(archive, b.package_files(repo, 'qdrant-memory'))
+        b.verify_archive(archive, files)
     linked = tmp_path / 'linked'
     linked.symlink_to(tmp_path / 'out', target_is_directory=True)
     with pytest.raises(ValueError):
@@ -191,8 +196,9 @@ def test_crlf_checkout_does_not_change_archive(repo, tmp_path):
 def test_unstaged_resource_change_is_not_silently_ignored(repo, tmp_path):
     p = repo / 'qdrant-memory/references/usage.md'
     p.write_bytes(p.read_bytes() + b'\nNew instruction\n')
+    b = load('build')
     with pytest.raises(ValueError, match='Unstaged'):
-        load('build').build(repo, tmp_path / 'out', skill_name='qdrant-memory')
+        b.build(repo, tmp_path / 'out', skill_name='qdrant-memory')
 
 
 def test_entire_catalog_has_independent_complete_packages(repo, tmp_path):

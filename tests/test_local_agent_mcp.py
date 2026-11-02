@@ -108,7 +108,9 @@ def test_installed_opencode_connects_scoped_mcp(backend_profile):
         result = subprocess.run(["opencode", "mcp", "list"], env=env, cwd=home, capture_output=True, text=True, timeout=60)
         assert result.returncode == 0, (result.stdout, result.stderr)
         inventory = subprocess.run(["opencode", "api", "mcp.list"], env=env, cwd=home, capture_output=True, text=True, timeout=30)
-        assert "qdrant-memory" in inventory.stdout and "connected" in inventory.stdout.lower(), (result.stdout, inventory.stdout, inventory.stderr, connected.stdout)
+        detail = (result.stdout, inventory.stdout, inventory.stderr, connected.stdout)
+        assert "qdrant-memory" in inventory.stdout, detail
+        assert "connected" in inventory.stdout.lower(), detail
     finally:
         subprocess.run(["opencode", "service", "stop"], env=env, cwd=home, capture_output=True, timeout=20)
 
