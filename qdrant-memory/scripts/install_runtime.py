@@ -198,26 +198,32 @@ def _disabled_sequence_ids(stripped: str, in_disabled: bool) -> set[str]:
     return {item} if item else set()
 
 
-def _scan_disabled_block(lines: Sequence[str]) -> set[str]:
-    """Scan the block layout of a top-level ``plugins`` mapping."""
-    found: set[str] = set()
-    sub_indent = -1
-    in_disabled = False
+def _block_lines(lines: Sequence[str]):
+    """Yield the stripped line, its indent and the block base indent."""
+    base = -1
     for line in lines:
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
         if not line[:1].isspace():
-            break  # left the plugins mapping
+            return
         indent = len(line) - len(line.lstrip())
-        if sub_indent == -1:
-            sub_indent = indent
-        if indent < sub_indent:
-            break
+        if base == -1:
+            base = indent
+        if indent < base:
+            return
+        yield stripped, indent, base
+
+
+def _scan_disabled_block(lines: Sequence[str]) -> set[str]:
+    """Scan the block layout of a top-level ``plugins`` mapping."""
+    found: set[str] = set()
+    in_disabled = False
+    for stripped, indent, base in _block_lines(lines):
         if stripped.startswith("-"):
             found.update(_disabled_sequence_ids(stripped, in_disabled))
             continue
-        if indent > sub_indent:
+        if indent > base:
             continue
         in_disabled, inline = _disabled_key_value(stripped)
         found.update(inline)
@@ -297,19 +303,8 @@ def _memory_provider_value(line: str) -> tuple[bool, str | None]:
 
 def _scan_memory_block(lines: Sequence[str]) -> str | None:
     """Scan the block layout of a top-level ``memory`` mapping."""
-    sub_indent = -1
-    for line in lines:
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if not line[:1].isspace():
-            break
-        indent = len(line) - len(line.lstrip())
-        if sub_indent == -1:
-            sub_indent = indent
-        if indent < sub_indent:
-            break
-        if indent > sub_indent:
+    for stripped, indent, base in _block_lines(lines):
+        if indent > base:
             continue
         is_provider, provider = _memory_provider_value(stripped)
         if is_provider:

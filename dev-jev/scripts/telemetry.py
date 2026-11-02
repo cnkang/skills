@@ -150,7 +150,8 @@ def parse_bool(text: str) -> bool:
     raise argparse.ArgumentTypeError("expected true or false")
 
 
-def _append_event(path: Path, event: dict[str, Any]) -> None:
+def _require_link_free_parents(path: Path) -> None:
+    """Reject a log parent or ancestor that is a symbolic link."""
     parent_path = path.absolute().parent
     # Inspect existing components before mkdir/open; this is not a defense
     # against concurrent path replacement.
@@ -161,25 +162,39 @@ def _append_event(path: Path, event: dict[str, Any]) -> None:
             continue
         if stat.S_ISLNK(info.st_mode):
             raise ValueError("Log parent and ancestors must not be symlinks")
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+
+def _require_private_parent(path: Path) -> None:
+    """Reject a log parent that another user can write to."""
     parent = path.parent.lstat()
     if os.name != "nt" and (parent.st_uid != os.getuid() or parent.st_mode & 0o022):
         raise ValueError("Log parent must be user-owned and not writable by others")
+
+
+def _require_regular_log(path: Path, descriptor: int) -> None:
+    """Reject a log handle that is not the single regular file opened by path."""
+    info = os.fstat(descriptor)
+    entry = path.lstat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or
+            stat.S_ISLNK(entry.st_mode) or getattr(entry, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0) or
+            (info.st_dev, info.st_ino) != (entry.st_dev, entry.st_ino)):
+        raise ValueError("Log must be a regular file without additional links")
+    if os.name != "nt":
+        if info.st_uid != os.getuid():
+            raise ValueError("Log must be owned by the current user")
+        os.fchmod(descriptor, 0o600)
+
+
+def _append_event(path: Path, event: dict[str, Any]) -> None:
+    _require_link_free_parents(path)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    _require_private_parent(path)
     if path.is_symlink():
         raise ValueError("Log must not be a symlink")
     flags = os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     descriptor = os.open(path, flags, 0o600)
     try:
-        info = os.fstat(descriptor)
-        entry = path.lstat()
-        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or
-                stat.S_ISLNK(entry.st_mode) or getattr(entry, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0) or
-                (info.st_dev, info.st_ino) != (entry.st_dev, entry.st_ino)):
-            raise ValueError("Log must be a regular file without additional links")
-        if os.name != "nt":
-            if info.st_uid != os.getuid():
-                raise ValueError("Log must be owned by the current user")
-            os.fchmod(descriptor, 0o600)
+        _require_regular_log(path, descriptor)
         line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
         with os.fdopen(descriptor, "a", encoding="utf-8", newline="\n", closefd=False) as stream:
             stream.write(line)

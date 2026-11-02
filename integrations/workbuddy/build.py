@@ -99,6 +99,24 @@ def safe_resource(name: str) -> bool:
             not any(word in path.stem.lower() for word in ('secret', 'credential', 'private-key')))
 
 
+def _staged_record(record: bytes, skill_name: str, root: Path) -> tuple[str, str, str] | None:
+    """Validate one staged git entry and return (path, mode, blob), or None."""
+    info, path_bytes = record.split(b'\t', 1)
+    mode, oid, stage = info.decode().split()
+    name = path_bytes.decode('utf-8')
+    relative = PurePosixPath(name).relative_to(skill_name).as_posix()
+    if relative == '.gitignore':
+        return None  # Git development configuration is not a runtime resource.
+    if stage != '0' or mode not in {'100644', '100755'}:
+        raise ValueError(f'Nonregular or unresolved tracked resource: {name}')
+    if not safe_resource(relative):
+        raise ValueError(f'Unapproved tracked resource: {name}')
+    path = root / name
+    if any(p.is_symlink() for p in [path, *path.parents]) or not path.is_file():
+        raise ValueError(f'Missing or symlink resource: {name}')
+    return name, mode, oid
+
+
 def staged_resources(root: Path, skill_name: str) -> list[tuple[str, str, str]]:
     """Return (path, mode, blob) for every approved resource staged for the skill."""
     records = subprocess.check_output(['git', '-C', str(root), 'ls-files', '--stage', '-z', '--', skill_name])
@@ -106,20 +124,9 @@ def staged_resources(root: Path, skill_name: str) -> list[tuple[str, str, str]]:
     for record in records.split(b'\0'):
         if not record:
             continue
-        info, path_bytes = record.split(b'\t', 1)
-        mode, oid, stage = info.decode().split()
-        name = path_bytes.decode('utf-8')
-        relative = PurePosixPath(name).relative_to(skill_name).as_posix()
-        if relative == '.gitignore':
-            continue  # Git development configuration is not a runtime resource.
-        if stage != '0' or mode not in {'100644', '100755'}:
-            raise ValueError(f'Nonregular or unresolved tracked resource: {name}')
-        if not safe_resource(relative):
-            raise ValueError(f'Unapproved tracked resource: {name}')
-        path = root / name
-        if any(p.is_symlink() for p in [path, *path.parents]) or not path.is_file():
-            raise ValueError(f'Missing or symlink resource: {name}')
-        selected.append((name, mode, oid))
+        staged = _staged_record(record, skill_name, root)
+        if staged is not None:
+            selected.append(staged)
     if not selected:
         raise ValueError('No tracked canonical resources')
     return selected

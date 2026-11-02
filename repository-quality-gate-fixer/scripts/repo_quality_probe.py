@@ -726,6 +726,28 @@ def _skill_subdirs(dirs: list[str]) -> list[str]:
     ]
 
 
+def _root_depth(current_path: Path, root: Path) -> int | None:
+    """Return one walked directory's depth below the root, or None when outside it."""
+    try:
+        rel = current_path.relative_to(root)
+    except ValueError:
+        return None
+    return 0 if str(rel) == "." else len(rel.parts)
+
+
+def _unique_skill(current_path: Path, seen: set[Path]) -> dict[str, str] | None:
+    """Return the summary for one not-yet-seen SKILL.md in this directory."""
+    skill_md = current_path / "SKILL.md"
+    try:
+        resolved_skill = skill_md.resolve()
+    except OSError:
+        return None
+    if resolved_skill in seen:
+        return None
+    seen.add(resolved_skill)
+    return read_skill_summary(skill_md)
+
+
 def scan_skill_root(
     root: Path, max_depth: int, limit: int, seen: set[Path]
 ) -> tuple[list[dict[str, str]], bool]:
@@ -733,31 +755,18 @@ def scan_skill_root(
     found: list[dict[str, str]] = []
     for current, dirs, files in os.walk(root, followlinks=False):
         current_path = Path(current)
-        try:
-            rel = current_path.relative_to(root)
-        except ValueError:
+        depth = _root_depth(current_path, root)
+        if depth is None:
             continue
-
-        depth = 0 if str(rel) == "." else len(rel.parts)
         if depth >= max_depth:
             dirs[:] = []
             continue
-
         dirs[:] = _skill_subdirs(dirs)
         if "SKILL.md" not in files:
             continue
-
-        skill_md = current_path / "SKILL.md"
-        try:
-            resolved_skill = skill_md.resolve()
-        except OSError:
-            continue
-
-        if resolved_skill in seen:
-            continue
-        seen.add(resolved_skill)
-
-        found.append(read_skill_summary(skill_md))
+        summary = _unique_skill(current_path, seen)
+        if summary is not None:
+            found.append(summary)
         if len(found) >= limit:
             return found, True
     return found, False
