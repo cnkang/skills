@@ -1,5 +1,0 @@
-# Exact CI lock for one workflow job. Every pin is exact and the install runs
-# with --only-binary=:all:, so no dependency is resolved at install time.
-pytest==9.0.3
-PyYAML==6.0.3
-requests==2.34.2
