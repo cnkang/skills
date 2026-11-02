@@ -1,5 +1,16 @@
 # Changelog
 
+## skills-20261102.2 — 2026-11-02 (UTC)
+
+### qdrant-memory 0.3.8
+
+- Default new Runtime installations to the published Runtime 0.5.5 release and
+  record its immutable source commit. Keep accepting already-installed versions
+  that meet or exceed the requested version.
+- Update the current MCP distribution reference to 0.2.9 and align the
+  three-platform current Runtime acceptance lock with Runtime 0.5.5.
+- Keep the four existing skills at their current versions.
+
 ## skills-20261102.1 — 2026-11-02
 
 ### qdrant-memory 0.3.7

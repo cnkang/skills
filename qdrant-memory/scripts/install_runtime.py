@@ -23,7 +23,7 @@ import sys
 import venv
 from typing import Sequence
 
-VERSION = "0.5.4"
+VERSION = "0.5.5"
 PLUGIN_ID = "qdrant-memory"
 WINDOWS_ACL_UNVERIFIED = "Cannot verify the Windows parent ACL"
 
