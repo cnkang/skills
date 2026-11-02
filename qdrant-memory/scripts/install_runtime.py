@@ -21,9 +21,11 @@ from pathlib import Path
 import subprocess
 import sys
 import venv
+from typing import Sequence
 
 VERSION = "0.5.3"
 PLUGIN_ID = "qdrant-memory"
+WINDOWS_ACL_UNVERIFIED = "Cannot verify the Windows parent ACL"
 
 
 def _require_private_mkdir() -> None:
@@ -60,7 +62,7 @@ def _require_private_parent(parent: Path) -> None:
         directory = ctypes.create_unicode_buffer(32768)
         length = kernel.GetWindowsDirectoryW(directory, len(directory))
         if not length or length >= len(directory):
-            raise ValueError("Cannot verify the Windows parent ACL")
+            raise ValueError(WINDOWS_ACL_UNVERIFIED)
         root = directory.value
         powershell = Path(root) / "System32/WindowsPowerShell/v1.0/powershell.exe"
         script = """
@@ -89,13 +91,13 @@ exit 0
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
             )
         except subprocess.TimeoutExpired as exc:
-            raise ValueError("Cannot verify the Windows parent ACL") from exc
+            raise ValueError(WINDOWS_ACL_UNVERIFIED) from exc
         # Includes child deletion and permission changes, not only file writes.
         # A readable parent is allowed; the new root has its own private DACL.
         if result.returncode == 3:
             raise ValueError("Choose a user-controlled parent without other-account write ACL grants")
         if result.returncode:
-            raise ValueError("Cannot verify the Windows parent ACL")
+            raise ValueError(WINDOWS_ACL_UNVERIFIED)
 
 
 def _release_key(version: str) -> tuple[int, int, int]:
@@ -159,6 +161,69 @@ def _inline_ids(value: str) -> set[str]:
     return {item.strip() for item in items if item.strip()}
 
 
+def _flow_disabled_ids(line: str) -> set[str]:
+    """IDs from a single-line ``plugins: {disabled: [...]}`` flow mapping."""
+    flow = re.fullmatch(r"plugins:[ \t]*\{([^}]*)\}[ \t]*(?:#.*)?", line)
+    if not flow:
+        return set()
+    inner = re.search(
+        r"""(?:^|[,\s])['"]?disabled['"]?[ \t]*:[ \t]*\[(.*?)\]""", flow.group(1)
+    )
+    if not inner:
+        return set()
+    return _inline_ids("[" + inner.group(1) + "]")
+
+
+def _disabled_item(line: str) -> str | None:
+    """Return the plugin ID from a sequence item line, if any."""
+    item = line[1:].split("#", 1)[0].strip().strip("'\"")
+    return item or None
+
+
+def _disabled_key_value(line: str) -> tuple[bool, set[str]]:
+    """Return (in_disabled, inline IDs) for one ``plugins`` sub-key line."""
+    key, _, value = line.partition(":")
+    value = value.split("#", 1)[0].strip()
+    in_disabled = key.strip().strip("'\"") == "disabled"
+    if not in_disabled or not value.startswith("["):
+        return in_disabled, set()
+    return in_disabled, _inline_ids(value)
+
+
+def _disabled_sequence_ids(stripped: str, in_disabled: bool) -> set[str]:
+    """Return the plugin ID from a sequence item when disabled items are active."""
+    if not in_disabled:
+        return set()
+    item = _disabled_item(stripped)
+    return {item} if item else set()
+
+
+def _scan_disabled_block(lines: Sequence[str]) -> set[str]:
+    """Scan the block layout of a top-level ``plugins`` mapping."""
+    found: set[str] = set()
+    sub_indent = -1
+    in_disabled = False
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line[:1].isspace():
+            break  # left the plugins mapping
+        indent = len(line) - len(line.lstrip())
+        if sub_indent == -1:
+            sub_indent = indent
+        if indent < sub_indent:
+            break
+        if stripped.startswith("-"):
+            found.update(_disabled_sequence_ids(stripped, in_disabled))
+            continue
+        if indent > sub_indent:
+            continue
+        in_disabled, inline = _disabled_key_value(stripped)
+        found.update(inline)
+    return found
+
+
 def _scan_disabled_ids(text: str) -> set[str]:
     """Best-effort scan for a top-level ``plugins:`` -> ``disabled:`` items.
 
@@ -172,45 +237,12 @@ def _scan_disabled_ids(text: str) -> set[str]:
     enabled.
     """
     found: set[str] = set()
-    sub_indent = None  # indentation of the plugins sub-keys once seen
-    in_disabled = False
-    for raw in text.splitlines():
-        line = raw.rstrip()
-        if sub_indent is None:
-            if re.fullmatch(r"plugins:[ \t]*(?:#.*)?", line):
-                sub_indent = -1  # marker: awaiting the first indented line
-            else:
-                flow = re.fullmatch(r"plugins:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
-                inner = (
-                    re.search(r"""(?:^|[,\s])['"]?disabled['"]?[ \t]*:[ \t]*\[(.*?)\]""", flow.group(1))
-                    if flow else None
-                )
-                if inner:
-                    found.update(_inline_ids("[" + inner.group(1) + "]"))
-            continue
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if not line[:1].isspace():
-            break  # left the plugins mapping
-        indent = len(line) - len(line.lstrip())
-        if sub_indent == -1:
-            sub_indent = indent
-        if indent < sub_indent:
+    lines = [raw.rstrip() for raw in text.splitlines()]
+    for index, line in enumerate(lines):
+        if re.fullmatch(r"plugins:[ \t]*(?:#.*)?", line):
+            found.update(_scan_disabled_block(lines[index + 1:]))
             break
-        if stripped.startswith("-"):
-            if in_disabled:
-                item = stripped[1:].split("#", 1)[0].strip().strip("'\"")
-                if item:
-                    found.add(item)
-            continue
-        if indent > sub_indent:
-            continue
-        key, _, value = stripped.partition(":")
-        value = value.split("#", 1)[0].strip()
-        in_disabled = key.strip().strip("'\"") == "disabled"
-        if in_disabled and value.startswith("["):
-            found.update(_inline_ids(value))
+        found.update(_flow_disabled_ids(line))
     return found
 
 
@@ -241,28 +273,32 @@ def _plugin_disabled_in_config(home: Path) -> bool:
     return PLUGIN_ID in _scan_disabled_ids(text)
 
 
-def _scan_memory_provider(text: str) -> str | None:
-    """Best-effort scan for a top-level ``memory:`` -> ``provider:`` value.
+def _flow_memory_provider(line: str) -> str | None:
+    """Provider from a single-line ``memory: {provider: ...}`` flow mapping."""
+    flow = re.fullmatch(r"memory:[ \t]*\{([^}]*)\}[ \t]*(?:#.*)?", line)
+    if not flow:
+        return None
+    inner = re.search(
+        r"""(?:^|[,\s])['"]?provider['"]?[ \t]*:[ \t]*([^,}\s]+)""", flow.group(1)
+    )
+    if not inner:
+        return None
+    return inner.group(1).strip("'\"") or None
 
-    Handles the block layout plus single-line flow mappings such as
-    ``memory: {provider: qdrant-memory}``, with the same tolerance as
-    ``_scan_disabled_ids``.
-    """
-    sub_indent = None
-    for raw in text.splitlines():
-        line = raw.rstrip()
-        if sub_indent is None:
-            if re.fullmatch(r"memory:[ \t]*(?:#.*)?", line):
-                sub_indent = -1
-            else:
-                flow = re.fullmatch(r"memory:[ \t]*\{(.*)\}[ \t]*(?:#.*)?", line)
-                inner = (
-                    re.search(r"""(?:^|[,\s])['"]?provider['"]?[ \t]*:[ \t]*([^,}\s]+)""", flow.group(1))
-                    if flow else None
-                )
-                if inner:
-                    return inner.group(1).strip("'\"") or None
-            continue
+
+def _memory_provider_value(line: str) -> tuple[bool, str | None]:
+    """Return (is_provider_key, value) for one ``memory`` sub-key line."""
+    key, _, value = line.partition(":")
+    if key.strip().strip("'\"") != "provider":
+        return False, None
+    value = value.split("#", 1)[0].strip().strip("'\"")
+    return True, value or None
+
+
+def _scan_memory_block(lines: Sequence[str]) -> str | None:
+    """Scan the block layout of a top-level ``memory`` mapping."""
+    sub_indent = -1
+    for line in lines:
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -275,10 +311,26 @@ def _scan_memory_provider(text: str) -> str | None:
             break
         if indent > sub_indent:
             continue
-        key, _, value = stripped.partition(":")
-        if key.strip().strip("'\"") == "provider":
-            value = value.split("#", 1)[0].strip().strip("'\"")
-            return value or None
+        is_provider, provider = _memory_provider_value(stripped)
+        if is_provider:
+            return provider
+    return None
+
+
+def _scan_memory_provider(text: str) -> str | None:
+    """Best-effort scan for a top-level ``memory:`` -> ``provider:`` value.
+
+    Handles the block layout plus single-line flow mappings such as
+    ``memory: {provider: qdrant-memory}``, with the same tolerance as
+    ``_scan_disabled_ids``.
+    """
+    lines = [raw.rstrip() for raw in text.splitlines()]
+    for index, line in enumerate(lines):
+        if re.fullmatch(r"memory:[ \t]*(?:#.*)?", line):
+            return _scan_memory_block(lines[index + 1:])
+        provider = _flow_memory_provider(line)
+        if provider is not None:
+            return provider
     return None
 
 
@@ -360,6 +412,138 @@ def hermes_advisory() -> str:
     )
 
 
+def _validate_options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> str:
+    """Validate version options and return the pip requirement string."""
+    if not re.fullmatch(r"\d+\.\d+\.\d+", args.version, re.ASCII):
+        parser.error("--version must be an exact three-part release version")
+    if args.revision and not re.fullmatch(r"[0-9a-f]{40}", args.revision):
+        parser.error("--revision must be a full lowercase 40-character Git SHA")
+    requirement = f"hermes-plugin-qdrant-memory[mcp]=={args.version}"
+    if args.revision:
+        requirement = "hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + args.revision
+    return requirement
+
+
+def _resolve_target(parser: argparse.ArgumentParser, selected: Path) -> tuple[Path, Path]:
+    """Resolve --venv and require a private, user-owned existing ancestor."""
+    if selected.is_symlink():
+        parser.error("--venv must not be a symlink")
+    target = selected.resolve()
+    existing = target
+    while not existing.exists():
+        existing = existing.parent
+    info = existing.stat()
+    if os.name != "nt" and (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022):
+        parser.error("Choose a venv in a private, user-owned directory")
+    return target, existing
+
+
+def _resolve_lock(parser: argparse.ArgumentParser, args: argparse.Namespace) -> Path | None:
+    """Resolve and validate the optional hash-locked requirements file."""
+    if args.requirements_lock and args.revision:
+        parser.error("--requirements-lock is for release installations, not source revisions")
+    if not args.requirements_lock:
+        return None
+    lock = args.requirements_lock.expanduser().resolve()
+    if not lock.is_file():
+        parser.error("--requirements-lock must name a trusted requirements file")
+    return lock
+
+
+def _check_shell_safe(parser: argparse.ArgumentParser, target: Path) -> None:
+    """Reject venv paths that would make a generated console script unsafe."""
+    # pip can generate POSIX console scripts with a shell-wrapper shebang.
+    # Keep the interpreter path safe even when subprocess itself uses argv.
+    if os.name != "nt" and any(
+        char in "\"'`$\\;&|<>(){}[]*?" or ord(char) < 32 or ord(char) == 127
+        for char in str(target)
+    ):
+        parser.error("shell-sensitive characters in --venv path; choose a private path with ordinary names (spaces are supported)")
+
+
+def _build_env() -> dict[str, str]:
+    """Return the minimal environment needed for a public-source install."""
+    # Public-source installation needs OS essentials, not agent credentials.
+    allowed = ("PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
+               "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA", "TEMP",
+               "TMP", "TMPDIR", "LANG", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR")
+    env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
+    env["PIP_CONFIG_FILE"] = os.devnull
+    return env
+
+
+def _create_venv(target: Path) -> None:
+    """Create the private virtual environment root and its interpreter."""
+    _require_private_mkdir()
+    # Managed POSIX Python builds can resolve libpython relative to the
+    # original executable. Match `python -m venv` rather than copying it.
+    # Create the root private: a later chmod would leave a window in which
+    # another account could write into the directory pip later imports from.
+    previous_umask = os.umask(0o077) if os.name != "nt" else None
+    try:
+        # Pre-create the root with an explicit private mode so inherited
+        # entries are masked before anything runs inside it.
+        target.mkdir(mode=0o700, parents=True, exist_ok=False)
+        venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
+    finally:
+        if previous_umask is not None:
+            os.umask(previous_umask)
+    if os.name != "nt":
+        target.chmod(0o700)
+
+
+def _pip_selection(target: Path, requirement: str, lock: Path | None) -> tuple[list[str], Path]:
+    """Return the pip arguments and working directory for the install."""
+    if lock:
+        # Read the operator's lock in place: relative includes and local
+        # artifact paths must resolve against its own directory.
+        lock_path = Path(lock).resolve()
+        return ["--require-hashes", "--only-binary=:all:", "-r", str(lock_path)], lock_path.parent
+    # Keep the requested version out of the argv; pip reads it from a
+    # file this installer writes inside the private venv root.
+    requirement_file = target / "runtime-requirements.txt"
+    requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
+    return ["-r", str(requirement_file)], target.parent
+
+
+def _install(target: Path, python: Path, requirement: str, lock: Path | None, env: dict[str, str]) -> None:
+    """Create the venv when absent and install the selected requirement."""
+    if target.exists():
+        return
+    _create_venv(target)
+    selection, pip_cwd = _pip_selection(target, requirement, lock)
+    # The executable is the selected venv's Python. Options are fixed;
+    # the trusted lock path is one argv element, never shell source.
+    # This audit rule treats any CLI-derived argv as command injection.
+    subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
+        [str(python), "-I", "-m", "pip", "install", *selection],
+        shell=False,
+        env=env,
+        cwd=pip_cwd,
+        check=True,
+        stdout=sys.stderr,
+    )
+
+
+def _probe_install(target: Path, python: Path, env: dict[str, str]) -> dict:
+    """Import the installed runtime and report its version and source."""
+    probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
+    return json.loads(probe.stdout)
+
+
+def _verify_install(target: Path, python: Path, console: Path, args: argparse.Namespace, lock: Path | None, env: dict[str, str]) -> dict:
+    """Verify the installed version, revision and console entrypoint."""
+    installed = _probe_install(target, python, env)
+    if lock and installed["version"] != args.version:
+        raise ValueError(f"Installed Runtime {installed['version']} does not match requested {args.version}")
+    if _release_key(installed["version"]) < _release_key(args.version):
+        raise ValueError(f"Installed Runtime {installed['version']} is older than requested {args.version}")
+    if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:
+        raise ValueError("Installed Runtime source does not match the requested immutable revision")
+    subprocess.run([str(console), "--help"], env=env, cwd=target, check=True, stdout=sys.stderr)
+    return installed
+
+
 def main() -> int:
     """Install or verify the runtime selected by the required ``--venv`` CLI path.
 
@@ -381,37 +565,12 @@ def main() -> int:
     parser.add_argument("--requirements-lock", type=Path, help="optional trusted hash-locked requirements for binary-only release installation")
     parser.add_argument("--revision", help="optional full immutable Git SHA for candidate/development installation")
     args = parser.parse_args()
-    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.version):
-        parser.error("--version must be an exact three-part release version")
-    if args.revision and not re.fullmatch(r"[0-9a-f]{40}", args.revision):
-        parser.error("--revision must be a full lowercase 40-character Git SHA")
-    requirement = f"hermes-plugin-qdrant-memory[mcp]=={args.version}"
-    if args.revision:
-        requirement = "hermes-plugin-qdrant-memory[mcp] @ git+https://github.com/cnkang/hermes-plugin-qdrant-memory.git@" + args.revision
+    requirement = _validate_options(parser, args)
     if sys.version_info < (3, 11):
         parser.error("Python 3.11+ is required")
-    selected = args.venv.expanduser()
-    if selected.is_symlink():
-        parser.error("--venv must not be a symlink")
-    target = selected.resolve()
-    existing = target
-    while not existing.exists():
-        existing = existing.parent
-    info = existing.stat()
-    if os.name != "nt" and (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022):
-        parser.error("Choose a venv in a private, user-owned directory")
-    if args.requirements_lock and args.revision:
-        parser.error("--requirements-lock is for release installations, not source revisions")
-    lock = args.requirements_lock.expanduser().resolve() if args.requirements_lock else None
-    if lock and not lock.is_file():
-        parser.error("--requirements-lock must name a trusted requirements file")
-    # pip can generate POSIX console scripts with a shell-wrapper shebang.
-    # Keep the interpreter path safe even when subprocess itself uses argv.
-    if os.name != "nt" and any(
-        char in "\"'`$\\;&|<>(){}[]*?" or ord(char) < 32 or ord(char) == 127
-        for char in str(target)
-    ):
-        parser.error("shell-sensitive characters in --venv path; choose a private path with ordinary names (spaces are supported)")
+    target, existing = _resolve_target(parser, args.venv.expanduser())
+    lock = _resolve_lock(parser, args)
+    _check_shell_safe(parser, target)
     try:
         advisory = hermes_advisory()
     except Exception:
@@ -421,66 +580,13 @@ def main() -> int:
     scripts = target / ("Scripts" if os.name == "nt" else "bin")
     python = scripts / ("python.exe" if os.name == "nt" else "python")
     console = scripts / ("qdrant-memory.exe" if os.name == "nt" else "qdrant-memory")
-    # Public-source installation needs OS essentials, not agent credentials.
-    allowed = ("PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR",
-               "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA", "TEMP",
-               "TMP", "TMPDIR", "LANG", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR")
-    env = {key: value for key in allowed if (value := os.getenv(key)) is not None}
-    env["PIP_CONFIG_FILE"] = os.devnull
+    env = _build_env()
     try:
         _require_private_parent(existing)
-        if not target.exists():
-            _require_private_mkdir()
-            # Managed POSIX Python builds can resolve libpython relative to the
-            # original executable. Match `python -m venv` rather than copying it.
-            # Create the root private: a later chmod would leave a window in which
-            # another account could write into the directory pip later imports from.
-            previous_umask = os.umask(0o077) if os.name != "nt" else None
-            try:
-                # Pre-create the root with an explicit private mode so inherited
-                # entries are masked before anything runs inside it.
-                target.mkdir(mode=0o700, parents=True, exist_ok=False)
-                venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
-            finally:
-                if previous_umask is not None:
-                    os.umask(previous_umask)
-            if os.name != "nt":
-                target.chmod(0o700)
-            if lock:
-                # Read the operator's lock in place: relative includes and local
-                # artifact paths must resolve against its own directory.
-                lock_path = Path(lock).resolve()
-                selection = ["--require-hashes", "--only-binary=:all:", "-r", str(lock_path)]
-                pip_cwd = lock_path.parent
-            else:
-                # Keep the requested version out of the argv; pip reads it from a
-                # file this installer writes inside the private venv root.
-                requirement_file = target / "runtime-requirements.txt"
-                requirement_file.write_text(f"{requirement}\n", encoding="utf-8")
-                selection = ["-r", str(requirement_file)]
-                pip_cwd = target.parent
-            # The executable is the selected venv's Python. Options are fixed;
-            # the trusted lock path is one argv element, never shell source.
-            # This audit rule treats any CLI-derived argv as command injection.
-            subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args
-                [str(python), "-I", "-m", "pip", "install", *selection],
-                shell=False,
-                env=env,
-                cwd=pip_cwd,
-                check=True,
-                stdout=sys.stderr,
-            )
         # Existing environments are verified, never overwritten or upgraded.
         # A newer compatible release satisfies the check; an older one does not.
-        probe = subprocess.run([str(python), "-I", "-c", "import importlib.metadata as m, json; import qdrant_memory.standalone; from qdrant_memory.mcp_server import create_server; create_server(None); d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"], env=env, cwd=target, check=True, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
-        installed = json.loads(probe.stdout)
-        if lock and installed["version"] != args.version:
-            raise ValueError(f"Installed Runtime {installed['version']} does not match requested {args.version}")
-        if _release_key(installed["version"]) < _release_key(args.version):
-            raise ValueError(f"Installed Runtime {installed['version']} is older than requested {args.version}")
-        if args.revision and (installed.get("source") or {}).get("vcs_info", {}).get("commit_id") != args.revision:
-            raise ValueError("Installed Runtime source does not match the requested immutable revision")
-        subprocess.run([str(console), "--help"], env=env, cwd=target, check=True, stdout=sys.stderr)
+        _install(target, python, requirement, lock, env)
+        installed = _verify_install(target, python, console, args, lock, env)
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError, KeyError) as exc:
         print(f"Runtime installation/verification failed: {exc}. Existing files were retained; choose a new --venv path to retry a partial installation.", file=sys.stderr)
         return 1
