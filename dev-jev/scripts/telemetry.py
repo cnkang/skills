@@ -55,6 +55,13 @@ def _valid_nonnegative(value: Any) -> bool:
     )
 
 
+def _probability_value(value: Any) -> float | None:
+    """Return a validated probability as a float, or None when it is invalid."""
+    if not _valid_probability(value):
+        return None
+    return float(value)
+
+
 def confidence_band(primitive: str, confidence: Any = None, probability: Any = None) -> str:
     """Apply the skill's conservative, primitive-aware initial routing bands."""
     if primitive in {"choice", "score"}:
@@ -286,6 +293,100 @@ def _ratio(numerator: int, denominator: int) -> float | None:
     return numerator / denominator if denominator else None
 
 
+def _noul_tally(event: dict[str, Any], noul_threshold: float) -> tuple[int, int, int, int] | None:
+    """Score one NOUL event as (correct, false negatives, positives, labelled) counts."""
+    label = _bool_label(event.get("ground_truth"))
+    probability = _probability_value(event.get("probability"))
+    if label is None or probability is None:
+        return None
+    prediction = probability >= noul_threshold
+    return int(prediction == label), int(label and not prediction), int(label), 1
+
+
+def _tally_labelled(labelled: list[dict[str, Any]], noul_threshold: float) -> dict[str, int]:
+    """Count correct decisions and NOUL false negatives among labelled events."""
+    tally = {"correct": 0, "false_negatives": 0, "positive_labels": 0, "noul_labelled": 0}
+    for event in labelled:
+        primitive = event.get("primitive")
+        if primitive == "noul":
+            counts = _noul_tally(event, noul_threshold)
+            if counts is None:
+                continue
+            correct, false_negatives, positive_labels, noul_labelled = counts
+            tally["correct"] += correct
+            tally["false_negatives"] += false_negatives
+            tally["positive_labels"] += positive_labels
+            tally["noul_labelled"] += noul_labelled
+        elif primitive in {"choice", "score"}:
+            if _same_label(event.get("result"), event.get("ground_truth"), str(primitive)):
+                tally["correct"] += 1
+    return tally
+
+
+def _accuracy_denominator(labelled: list[dict[str, Any]]) -> int:
+    """Count labelled answers whose prediction can be scored."""
+    return sum(
+        1 for e in labelled
+        if (e.get("primitive") == "noul" and _bool_label(e.get("ground_truth")) is not None and _valid_probability(e.get("probability")))
+        or e.get("primitive") in {"choice", "score"}
+    )
+
+
+def _disagreement_metrics(successful: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compare the final agent action with the recorded agreement flags."""
+    disagreement = [e for e in successful if isinstance(e.get("agent_agreed", e.get("hermes_agreed")), bool)]
+    disagreed = sum(1 for e in disagreement if e.get("agent_agreed", e.get("hermes_agreed")) is False)
+    return {
+        "agent_disagreements": disagreed,
+        "agent_comparable_answers": len(disagreement),
+        "agent_disagreement_rate": _ratio(disagreed, len(disagreement)),
+        "hermes_disagreements": disagreed,
+        "hermes_comparable_answers": len(disagreement),
+        "hermes_disagreement_rate": _ratio(disagreed, len(disagreement)),
+    }
+
+
+def _request_metrics(request_events: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate per-request latency, cost, token, and fallback measures."""
+    latencies = [float(e["latency_ms"]) for e in request_events if _valid_nonnegative(e.get("latency_ms"))]
+    costs = [float(e["provider_cost_usd"]) for e in request_events if _valid_nonnegative(e.get("provider_cost_usd"))]
+    saved_tokens = [int(e["main_model_tokens_avoided"]) for e in request_events if isinstance(e.get("main_model_tokens_avoided"), int) and not isinstance(e.get("main_model_tokens_avoided"), bool) and e["main_model_tokens_avoided"] >= 0]
+    fallback_requests = [e for e in request_events if isinstance(e.get("fallback_used"), bool)]
+    fallbacks = sum(1 for e in fallback_requests if e.get("fallback_used") is True)
+    return {
+        "latency_ms_p50": _percentile(latencies, 0.50),
+        "latency_ms_p95": _percentile(latencies, 0.95),
+        "provider_cost_usd_known_total": sum(costs) if costs else None,
+        "main_model_tokens_avoided_known_total": sum(saved_tokens) if saved_tokens else None,
+        "fallback_requests": fallbacks,
+        "fallback_rate": _ratio(fallbacks, len(fallback_requests)),
+    }
+
+
+def _group_metrics(events: list[dict[str, Any]], noul_threshold: float) -> dict[str, Any]:
+    """Compute the metric block for one workflow and decision-type group."""
+    successful = [e for e in events if e.get("call_status", "success") == "success"]
+    labelled = [e for e in successful if e.get("ground_truth") is not None]
+    tally = _tally_labelled(labelled, noul_threshold)
+    labeled_answers = _accuracy_denominator(labelled)
+    low_count = sum(1 for e in successful if e.get("confidence_band", "LOW") == "LOW")
+    metrics = {
+        "call_count": len(events),
+        "successful_answers": len(successful),
+        "labeled_answers": labeled_answers,
+        "decision_accuracy": _ratio(tally["correct"], labeled_answers),
+        "noul_labeled_answers": tally["noul_labelled"],
+        "noul_positive_labels": tally["positive_labels"],
+        "false_negative_cases": tally["false_negatives"],
+        "false_negative_rate": _ratio(tally["false_negatives"], tally["positive_labels"]),
+        "low_confidence_answers": low_count,
+        "low_confidence_rate": _ratio(low_count, len(successful)),
+    }
+    metrics.update(_disagreement_metrics(successful))
+    metrics.update(_request_metrics(_unique_request_events(events)))
+    return metrics
+
+
 def summarize(records: Iterable[dict[str, Any]], noul_threshold: float = 0.75) -> dict[str, Any]:
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for event in records:
@@ -295,70 +396,7 @@ def summarize(records: Iterable[dict[str, Any]], noul_threshold: float = 0.75) -
 
     by_workflow: dict[str, dict[str, Any]] = {}
     for (workflow, decision_type), events in sorted(grouped.items()):
-        successful = [e for e in events if e.get("call_status", "success") == "success"]
-        labelled = [e for e in successful if e.get("ground_truth") is not None]
-        correct = 0
-        false_negatives = 0
-        positive_labels = 0
-        noul_labelled = 0
-        for event in labelled:
-            primitive = event.get("primitive")
-            truth = event.get("ground_truth")
-            if primitive == "noul":
-                label = _bool_label(truth)
-                probability = event.get("probability")
-                if label is None or not _valid_probability(probability):
-                    continue
-                noul_labelled += 1
-                if label:
-                    positive_labels += 1
-                    if float(probability) < noul_threshold:
-                        false_negatives += 1
-                prediction = float(probability) >= noul_threshold
-                if prediction == label:
-                    correct += 1
-            elif primitive in {"choice", "score"}:
-                if _same_label(event.get("result"), truth, str(primitive)):
-                    correct += 1
-
-        accuracy_denominator = sum(
-            1 for e in labelled
-            if (e.get("primitive") == "noul" and _bool_label(e.get("ground_truth")) is not None and _valid_probability(e.get("probability")))
-            or e.get("primitive") in {"choice", "score"}
-        )
-        low_count = sum(1 for e in successful if e.get("confidence_band", "LOW") == "LOW")
-        disagreement = [e for e in successful if isinstance(e.get("agent_agreed", e.get("hermes_agreed")), bool)]
-        disagreed = sum(1 for e in disagreement if e.get("agent_agreed", e.get("hermes_agreed")) is False)
-        request_events = _unique_request_events(events)
-        latencies = [float(e["latency_ms"]) for e in request_events if _valid_nonnegative(e.get("latency_ms"))]
-        costs = [float(e["provider_cost_usd"]) for e in request_events if _valid_nonnegative(e.get("provider_cost_usd"))]
-        saved_tokens = [int(e["main_model_tokens_avoided"]) for e in request_events if isinstance(e.get("main_model_tokens_avoided"), int) and not isinstance(e.get("main_model_tokens_avoided"), bool) and e["main_model_tokens_avoided"] >= 0]
-        fallback_requests = [e for e in request_events if isinstance(e.get("fallback_used"), bool)]
-        metrics = {
-            "call_count": len(events),
-            "successful_answers": len(successful),
-            "labeled_answers": accuracy_denominator,
-            "decision_accuracy": _ratio(correct, accuracy_denominator),
-            "noul_labeled_answers": noul_labelled,
-            "noul_positive_labels": positive_labels,
-            "false_negative_cases": false_negatives,
-            "false_negative_rate": _ratio(false_negatives, positive_labels),
-            "low_confidence_answers": low_count,
-            "low_confidence_rate": _ratio(low_count, len(successful)),
-            "agent_disagreements": disagreed,
-            "agent_comparable_answers": len(disagreement),
-            "agent_disagreement_rate": _ratio(disagreed, len(disagreement)),
-            "hermes_disagreements": disagreed,
-            "hermes_comparable_answers": len(disagreement),
-            "hermes_disagreement_rate": _ratio(disagreed, len(disagreement)),
-            "latency_ms_p50": _percentile(latencies, 0.50),
-            "latency_ms_p95": _percentile(latencies, 0.95),
-            "provider_cost_usd_known_total": sum(costs) if costs else None,
-            "main_model_tokens_avoided_known_total": sum(saved_tokens) if saved_tokens else None,
-            "fallback_requests": sum(1 for e in fallback_requests if e.get("fallback_used") is True),
-            "fallback_rate": _ratio(sum(1 for e in fallback_requests if e.get("fallback_used") is True), len(fallback_requests)),
-        }
-        by_workflow.setdefault(workflow, {})[decision_type] = metrics
+        by_workflow.setdefault(workflow, {})[decision_type] = _group_metrics(events, noul_threshold)
 
     return {
         "measurement": {
