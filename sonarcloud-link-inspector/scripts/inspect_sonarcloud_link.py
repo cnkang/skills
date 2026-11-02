@@ -313,6 +313,29 @@ def _inspect_project_hotspot_list(client: SonarCloudClient, parsed: Dict[str, An
     return normalize_project_summary(parsed["source_url"], parsed, summary)
 
 
+def _result_fetch_status(result: Dict[str, Any]) -> str:
+    """Derive the fetch status of a handler result from its error and warnings."""
+    if result.get("error"):
+        return "failed"
+    if result.get("warnings"):
+        return "partial"
+    return "complete"
+
+
+def _resolve_client(client: SonarCloudClient | None, parsed: Dict[str, Any]) -> SonarCloudClient:
+    """Return a region-matched client, rejecting endpoint overrides for another region."""
+    origin = "https://" + parsed["host"]
+    explicit_base = os.environ.get("SONARCLOUD_BASE_URL")
+    explicit_api = os.environ.get("SONARCLOUD_API_BASE_URL")
+    for override in (explicit_base, explicit_api):
+        if override and urlparse(override).hostname != parsed["host"]:
+            raise ValueError("Configured endpoint contradicts source URL region")
+    current_client = client or SonarCloudClient(base_url=explicit_base or origin, api_base_url=explicit_api or explicit_base or origin)
+    if isinstance(current_client, SonarCloudClient) and urlparse(current_client.api_base_url).hostname != parsed["host"]:
+        raise ValueError("Client region contradicts source URL region")
+    return current_client
+
+
 def inspect_link(url: str, *, client: SonarCloudClient | None = None) -> Dict[str, Any]:
     parsed: Dict[str, Any] = {}
     phase = "input"
@@ -321,20 +344,12 @@ def inspect_link(url: str, *, client: SonarCloudClient | None = None) -> Dict[st
         handlers = {"issue": _inspect_issue, "security_hotspot": _inspect_hotspot, "project_hotspot_list": _inspect_project_hotspot_list, "project": _inspect_project}
         if parsed["resource_type"] not in handlers:
             raise ValueError("Could not determine resource type")
-        origin = "https://" + parsed["host"]
-        explicit_base = os.environ.get("SONARCLOUD_BASE_URL")
-        explicit_api = os.environ.get("SONARCLOUD_API_BASE_URL")
-        for override in (explicit_base, explicit_api):
-            if override and urlparse(override).hostname != parsed["host"]:
-                raise ValueError("Configured endpoint contradicts source URL region")
-        current_client = client or SonarCloudClient(base_url=explicit_base or origin, api_base_url=explicit_api or explicit_base or origin)
-        if isinstance(current_client, SonarCloudClient) and urlparse(current_client.api_base_url).hostname != parsed["host"]:
-            raise ValueError("Client region contradicts source URL region")
+        current_client = _resolve_client(client, parsed)
         phase = "fetch"
         result = handlers[parsed["resource_type"]](current_client, parsed)
         result["request_context"] = {"branch": parsed.get("branch"), "pull_request": parsed.get("pull_request"), "host": parsed["host"]}
         if "fetch_status" not in result:
-            result["fetch_status"] = "failed" if result.get("error") else "partial" if result.get("warnings") else "complete"
+            result["fetch_status"] = _result_fetch_status(result)
         return result
     except (ValueError, TypeError, KeyError, requests.RequestException) as exc:
         return {"resource_type": parsed.get("resource_type", "unknown"), "platform": "sonarcloud", "source_url": safe_source_url(url), "error": safe_error(exc), "error_kind": phase, "fetch_status": "failed"}
@@ -348,7 +363,12 @@ def inspect_links(urls: Iterable[str]) -> Dict[str, Any]:
         kind = result.get("resource_type") or "unknown"
         counts[kind] = counts.get(kind, 0) + 1
     statuses = {item["fetch_status"] for item in results}
-    status = "complete" if statuses == {"complete"} else "failed" if statuses == {"failed"} or not results else "partial"
+    if statuses == {"complete"}:
+        status = "complete"
+    elif statuses == {"failed"} or not results:
+        status = "failed"
+    else:
+        status = "partial"
     return {"resource_type": "batch", "platform": "sonarcloud", "count": len(results), "counts_by_type": counts, "results": results, "fetch_status": status}
 
 

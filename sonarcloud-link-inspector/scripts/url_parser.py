@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import ParseResult, parse_qs, urlparse
 
 
 @dataclass
@@ -42,12 +42,44 @@ def _parse_int(value: Optional[str]) -> Optional[int]:
         return None
 
 
-def parse_sonarcloud_url(url: str) -> ParsedSonarLink:
-    parsed = urlparse(url)
+def _validate_source_url(parsed: ParseResult) -> None:
+    """Reject non-HTTPS, foreign-host, or credential-bearing source URLs."""
     if parsed.scheme != "https" or parsed.hostname not in {"sonarcloud.io", "sonarqube.us"}:
         raise ValueError("Expected an HTTPS SonarQube Cloud EU or US URL")
     if parsed.username or parsed.password or parsed.port not in (None, 443):
         raise ValueError("Credentials and non-HTTPS ports are not allowed in source URLs")
+
+
+def _is_project_path(path_lower: str) -> bool:
+    """Return True when the path points at a project-level page."""
+    return (
+        "/project/" in path_lower
+        or "/dashboard" in path_lower
+        or "/summary/" in path_lower
+        or "/overview" in path_lower
+        or "/code" in path_lower
+        or "/activity" in path_lower
+    )
+
+
+def _detect_resource_type(path_lower: str, issue_key: Optional[str], hotspot_key: Optional[str], project_key: Optional[str]) -> str:
+    """Classify the link from its path shape and the keys carried in the query."""
+    if issue_key:
+        return "issue"
+    if hotspot_key:
+        return "security_hotspot"
+    # A hotspot list page (security_hotspots path without a specific hotspot key)
+    # should be treated as a project-level hotspot listing, not a single hotspot lookup.
+    if "security_hotspots" in path_lower or "security-hotspots" in path_lower:
+        return "project_hotspot_list"
+    if _is_project_path(path_lower) or project_key:
+        return "project"
+    return "unknown"
+
+
+def parse_sonarcloud_url(url: str) -> ParsedSonarLink:
+    parsed = urlparse(url)
+    _validate_source_url(parsed)
     query = parse_qs(parsed.query)
     if any(k.lower() in {"token", "sonarcloud_token", "password", "api_key", "authorization", "secret"} for k in query):
         raise ValueError("Credentials must be supplied through the environment, not URLs")
@@ -63,32 +95,7 @@ def parse_sonarcloud_url(url: str) -> ParsedSonarLink:
     file_path = _first(query, "path", "file")
     line = _parse_int(_first(query, "line"))
 
-    path_lower = parsed.path.lower()
-
-    # A hotspot list page (security_hotspots path without a specific hotspot key)
-    # should be treated as a project-level hotspot listing, not a single hotspot lookup.
-    is_hotspot_path = "security_hotspots" in path_lower or "security-hotspots" in path_lower
-    is_issue_path = "issue" in path_lower
-
-    if issue_key and (is_issue_path or _first(query, "issues", "issueKey", "issue", "open")):
-        resource_type = "issue"
-    elif hotspot_key:
-        resource_type = "security_hotspot"
-    elif is_hotspot_path and not hotspot_key:
-        # Hotspot list page for a project — treat as project-scoped hotspot listing
-        resource_type = "project_hotspot_list"
-    elif (
-        "/project/" in path_lower
-        or "/dashboard" in path_lower
-        or "/summary/" in path_lower
-        or "/overview" in path_lower
-        or "/code" in path_lower
-        or "/activity" in path_lower
-        or (project_key and not issue_key and not hotspot_key)
-    ):
-        resource_type = "project"
-    else:
-        resource_type = "unknown"
+    resource_type = _detect_resource_type(parsed.path.lower(), issue_key, hotspot_key, project_key)
 
     return ParsedSonarLink(
         source_url=url,
