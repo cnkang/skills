@@ -1,7 +1,7 @@
 # Exact CI lock for the standalone CLI/MCP acceptance job with MCP SDK 1.x.
 # mcp==1.30.0 is the tested lower bound of the mcp>=1.30,<2 matrix requirement
 # and the version installed in the Runtime test virtualenv.
-pytest==8.4.2
+pytest==9.0.3
 PyYAML==6.0.3
 requests==2.34.2
 mcp==1.30.0
