@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python --version
-      - run: 'python -m pip install --only-binary=:all: -r .github/requirements-ci.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-${{ matrix.python }}.txt'
       - run: python scripts/validate_skills.py
       - run: python -m pytest -q tests
       - name: Check committed diff whitespace
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
-      - run: 'python -m pip install --only-binary=:all: -r .github/requirements-contract-ci.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-contract-ci.txt'
       - run: 'python -m pip install --only-binary=:all: --no-deps ./.contract-plugin'
       - name: Test real plugin parsers and offline boundaries
         env:
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
-      - run: 'python -m pip install --only-binary=:all: -r .github/requirements-runtime-ci.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-runtime-ci.txt'
       - run: 'python -m pip install --only-binary=:all: --no-deps ./.runtime-plugin'
       # Runtime 0.2.2 predates the lifecycle recovery contract. That P0 scenario
       # runs against the current published Runtime in qdrant-current-runtime-e2e.
@@ -223,7 +223,7 @@ jobs:
           node-version: '24'
       - run: node --version
       - run: npm --version
-      - run: 'python -m pip install --only-binary=:all: -r .github/requirements-ci.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-3.14.txt'
       - run: python scripts/test_distribution.py --cli-version ${{ matrix.cli }}
 
   qdrant-standalone:
@@ -254,10 +254,10 @@ jobs:
           python-version: '3.14'
       - name: Install pinned standalone runtime dependencies (MCP SDK 1.x)
         if: matrix.mcp.name == '1.x'
-        run: 'python -m pip install --only-binary=:all: -r .github/requirements-standalone-mcp1-ci.txt'
+        run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-standalone-mcp1-ci.txt'
       - name: Install pinned standalone runtime dependencies (MCP SDK 2.x)
         if: matrix.mcp.name == '2.x'
-        run: 'python -m pip install --only-binary=:all: -r .github/requirements-standalone-mcp2-ci.txt'
+        run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-standalone-mcp2-ci.txt'
       - name: Install standalone runtime without Hermes source
         run: 'python -m pip install --only-binary=:all: --no-deps "./.standalone-plugin[mcp]"'
       - name: Run installed CLI and official stdio MCP contracts
@@ -304,21 +304,63 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  sonarcloud:
+    name: SonarCloud quality gate
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require SonarCloud credentials
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: test -n "$SONAR_TOKEN" || { echo '::error::Configure the SONAR_TOKEN repository secret.'; exit 1; }
+      - name: Analyze and wait for quality gate
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The scanner host lives in the workflow, not in a data file, so a
+          # pull request cannot redirect the token by editing a properties file.
+          SONAR_HOST_URL: https://sonarcloud.io
+
   required-checks:
     name: Required checks
     if: always()
-    needs: [packages, distribution, qdrant-contract, qdrant-e2e, qdrant-current-runtime-e2e, pi-host, qdrant-standalone]
+    needs:
+      - packages
+      - distribution
+      - qdrant-contract
+      - qdrant-e2e
+      - qdrant-current-runtime-e2e
+      - pi-host
+      - qdrant-standalone
+      - sonarcloud
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Require every test job to succeed
         env:
           RESULTS: ${{ toJSON(needs) }}
+          # A fork pull request has no access to the SonarCloud token, so the scan
+          # is skipped there. Every other skip still fails the gate.
+          SONAR_MAY_SKIP: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           python3 - <<'PY'
           import json, os
           results = json.loads(os.environ['RESULTS'])
-          failed = {job: data['result'] for job, data in results.items() if data['result'] != 'success'}
+          optional = {'sonarcloud'} if os.environ.get('SONAR_MAY_SKIP') == 'true' else set()
+          failed = {
+              job: data['result']
+              for job, data in results.items()
+              if data['result'] != 'success' and not (job in optional and data['result'] == 'skipped')
+          }
           if failed:
               raise SystemExit(f'Required jobs did not succeed: {failed}')
           print('All package, distribution, historical and current plugin contracts, Hermes E2E, standalone and Pi host jobs passed')
