@@ -1,5 +1,17 @@
 # Changelog
 
+## skills-20261102.1 — 2026-11-02
+
+### qdrant-memory 0.3.7
+
+- Default new Runtime installations to the published 0.5.4 maintainability
+  release. The installer keeps accepting an installed Runtime that is newer than
+  the requested version.
+- Require every CI install to come from a hash-locked file, and keep the
+  SonarCloud scan in the validation workflow.
+- Move the Pi host acceptance harness past the `minimatch` advisory and the CI
+  locks past the `pytest` tmpdir advisory.
+
 ## skills-20261101.1 — 2026-11-01
 
 ### qdrant-memory 0.3.6

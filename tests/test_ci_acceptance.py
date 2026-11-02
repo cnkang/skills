@@ -57,7 +57,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.5.3" in lock
+    assert "hermes-plugin-qdrant-memory==0.5.4" in lock
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])
