@@ -31,7 +31,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
-      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-py314.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-3.14.txt'
       - run: python scripts/validate_skills.py
       - run: python -m pytest -q tests/test_workbuddy_package.py tests/test_workbuddy_release.py
       - name: Validate exact release source and build
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.14'
-      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-py314.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-3.14.txt'
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: workbuddy-${{ github.ref_name }}

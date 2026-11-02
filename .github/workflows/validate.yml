@@ -223,7 +223,7 @@ jobs:
           node-version: '24'
       - run: node --version
       - run: npm --version
-      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-py314.txt'
+      - run: 'python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-ci-3.14.txt'
       - run: python scripts/test_distribution.py --cli-version ${{ matrix.cli }}
 
   qdrant-standalone:
