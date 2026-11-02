@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "qdrant-memory/scripts/install_runtime.py"
 
 
-@pytest.fixture()
+@pytest.fixture
 def installer():
     spec = importlib.util.spec_from_file_location("install_runtime_under_test", INSTALLER)
     module = importlib.util.module_from_spec(spec)

@@ -167,12 +167,21 @@ def normalize_hotspot(source_url: str, parsed: Dict[str, Any], hotspot: Dict[str
     }
 
 
+def _project_fetch_status(summary: Dict[str, Any]) -> str:
+    """Derive the project summary fetch status from the fetch count and warnings."""
+    if not summary.get("_successful_fetches"):
+        return "failed"
+    if summary.get("warnings"):
+        return "partial"
+    return "complete"
+
+
 def normalize_project_summary(source_url: str, parsed: Dict[str, Any], summary: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     summary = summary or {}
     top_issues = _top_n_sorted(summary.get("top_issues", []), n=5)
     top_hotspots = _top_n_sorted(summary.get("top_hotspots", []), n=5)
     return {
-        "fetch_status": "failed" if not summary.get("_successful_fetches") else "partial" if summary.get("warnings") else "complete",
+        "fetch_status": _project_fetch_status(summary),
         "resource_type": "project",
         "platform": "sonarcloud",
         "source_url": source_url,

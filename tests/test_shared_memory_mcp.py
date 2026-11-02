@@ -33,15 +33,19 @@ def test_two_client_names_share_only_the_fixed_operator_scope(backend_profile):
         error, saved = await call("agent-a", "qdrant_memory_add", {"text": "Shared review summaries use Chinese"})
         assert not error
         error, recalled = await call("agent-b", "qdrant_memory_search", {"query": "Shared review summaries use Chinese"})
-        assert not error and recalled["memories"][0]["id"] == saved["id"]
+        assert not error
+        assert recalled["memories"][0]["id"] == saved["id"]
         error, updated = await call("agent-b", "qdrant_memory_update", {"id": saved["id"], "text": "Shared review summaries use English"})
-        assert not error and updated["action"] == "UPDATE"
+        assert not error
+        assert updated["action"] == "UPDATE"
         error, recalled = await call("agent-a", "qdrant_memory_search", {"query": "Shared review summaries use English"})
-        assert not error and recalled["memories"][0]["id"] == saved["id"]
+        assert not error
+        assert recalled["memories"][0]["id"] == saved["id"]
         cfg["scope"]["agent_id"] = "private-agent"
         path.write_text(json.dumps(cfg), encoding="utf-8")
         error, recalled = await call("agent-a", "qdrant_memory_search", {"query": "Shared review summaries"})
-        assert not error and not recalled["memories"]
+        assert not error
+        assert not recalled["memories"]
         error, _ = await call("agent-a", "qdrant_memory_delete", {"id": saved["id"]})
         assert error
 

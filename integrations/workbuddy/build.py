@@ -22,7 +22,7 @@ from validate_skills import SKILLS, validate_skill, check_target, LINK, RESOURCE
 
 
 def validate_tag(tag: str) -> str:
-    match = re.fullmatch(r'skills-([0-9]{8})\.([1-9][0-9]*)', tag)
+    match = re.fullmatch(r'skills-(\d{8})\.([1-9]\d*)', tag, re.ASCII)
     if not match:
         raise ValueError('Snapshot tag must be skills-YYYYMMDD.N, N >= 1')
     try:
@@ -32,24 +32,56 @@ def validate_tag(tag: str) -> str:
     return tag
 
 
+VERSION_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)(.*)", re.ASCII)
+IDENTIFIER_RE = re.compile(r"[0-9A-Za-z-]+")
+
+
+def valid_identifiers(value: str) -> bool:
+    """Check a non-empty dot-separated SemVer identifier list."""
+    return all(IDENTIFIER_RE.fullmatch(part) for part in value.split("."))
+
+
+def is_semver(version: object) -> bool:
+    """Check a SemVer 2.0.0 string, including the no-leading-zero rule."""
+    if not isinstance(version, str):
+        return False
+    match = VERSION_RE.fullmatch(version)
+    if not match:
+        return False
+    if any(len(part) > 1 and part.startswith("0") for part in match.group(1, 2, 3)):
+        return False
+    rest = match.group(4)
+    if not rest:
+        return True
+    if rest.startswith("-"):
+        prerelease, has_build, build = rest[1:].partition("+")
+        if not valid_identifiers(prerelease):
+            return False
+    elif rest.startswith("+"):
+        has_build, build = "+", rest[1:]
+    else:
+        return False
+    if not has_build:
+        return True
+    return bool(build) and valid_identifiers(build)
+
+
 def parse_skill(raw: bytes) -> tuple[dict, bytes]:
-    raw.decode('utf-8', errors='strict')
-    if not raw.startswith(b'---\n') or b'\n---\n' not in raw[4:]:
+    text = raw.decode('utf-8', errors='strict')
+    if not text.startswith('---\n') or '\n---\n' not in text[4:]:
         raise ValueError('Missing YAML frontmatter')
-    header, body = raw[4:].split(b'\n---\n', 1)
-    data = yaml.safe_load(header.decode('utf-8'))
+    header, body = text[4:].split('\n---\n', 1)
+    data = yaml.safe_load(header)
     if not isinstance(data, dict):
         raise ValueError('Frontmatter must be a mapping')
     version = data.get('metadata', {}).get('version')
-    if not isinstance(version, str) or not re.fullmatch(
-        r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?', version
-    ):
+    if not is_semver(version):
         raise ValueError('Invalid canonical metadata.version')
     # SemVer numeric prerelease identifiers may not have leading zeroes.
     for part in version.split('+', 1)[0].partition('-')[2].split('.'):
         if part.isdigit() and len(part) > 1 and part.startswith('0'):
             raise ValueError('Invalid canonical metadata.version prerelease')
-    return data, body
+    return data, body.encode('utf-8')
 
 
 def safe_resource(name: str) -> bool:
@@ -67,45 +99,73 @@ def safe_resource(name: str) -> bool:
             not any(word in path.stem.lower() for word in ('secret', 'credential', 'private-key')))
 
 
-def indexed_resources(root: Path, skill_name: str) -> dict[str, tuple[bytes, int]]:
+def _staged_record(record: bytes, skill_name: str, root: Path) -> tuple[str, str, str] | None:
+    """Validate one staged git entry and return (path, mode, blob), or None."""
+    info, path_bytes = record.split(b'\t', 1)
+    mode, oid, stage = info.decode().split()
+    name = path_bytes.decode('utf-8')
+    relative = PurePosixPath(name).relative_to(skill_name).as_posix()
+    if relative == '.gitignore':
+        return None  # Git development configuration is not a runtime resource.
+    if stage != '0' or mode not in {'100644', '100755'}:
+        raise ValueError(f'Nonregular or unresolved tracked resource: {name}')
+    if not safe_resource(relative):
+        raise ValueError(f'Unapproved tracked resource: {name}')
+    path = root / name
+    if any(p.is_symlink() for p in [path, *path.parents]) or not path.is_file():
+        raise ValueError(f'Missing or symlink resource: {name}')
+    return name, mode, oid
+
+
+def staged_resources(root: Path, skill_name: str) -> list[tuple[str, str, str]]:
+    """Return (path, mode, blob) for every approved resource staged for the skill."""
     records = subprocess.check_output(['git', '-C', str(root), 'ls-files', '--stage', '-z', '--', skill_name])
     selected = []
     for record in records.split(b'\0'):
         if not record:
             continue
-        info, path_bytes = record.split(b'\t', 1)
-        mode, oid, stage = info.decode().split()
-        name = path_bytes.decode('utf-8')
-        relative = PurePosixPath(name).relative_to(skill_name).as_posix()
-        if relative == '.gitignore':
-            continue  # Git development configuration is not a runtime resource.
-        if stage != '0' or mode not in {'100644', '100755'}:
-            raise ValueError(f'Nonregular or unresolved tracked resource: {name}')
-        if not safe_resource(relative):
-            raise ValueError(f'Unapproved tracked resource: {name}')
-        path = root / name
-        if any(p.is_symlink() for p in [path, *path.parents]) or not path.is_file():
-            raise ValueError(f'Missing or symlink resource: {name}')
-        selected.append((name, mode, oid))
+        staged = _staged_record(record, skill_name, root)
+        if staged is not None:
+            selected.append(staged)
     if not selected:
         raise ValueError('No tracked canonical resources')
+    return selected
+
+
+def index_blobs(root: Path, selected: list[tuple[str, str, str]]) -> dict[str, bytes]:
+    """Read the exact staged blob contents for the selected resources."""
     batch = subprocess.check_output(['git', '-C', str(root), 'cat-file', '--batch'],
                                     input=''.join(oid + '\n' for _, _, oid in selected).encode('ascii'))
     stream = io.BytesIO(batch)
-    files = {}
-    for name, mode, oid in selected:
+    blobs: dict[str, bytes] = {}
+    for name, _, oid in selected:
         header = stream.readline().decode('ascii').split()
         if len(header) != 3 or header[:2] != [oid, 'blob']:
             raise ValueError(f'Invalid Git source blob: {name}')
-        content = stream.read(int(header[2]))
+        blobs[name] = stream.read(int(header[2]))
         if stream.read(1) != b'\n':
             raise ValueError('Invalid Git batch response')
+    return blobs
+
+
+def same_content(expected: bytes, working: bytes, binary: bool) -> bool:
+    """Compare staged and working content, ignoring only LF/CRLF translation."""
+    if binary:
+        return working == expected
+    return (working.decode('utf-8', errors='surrogateescape').replace('\r\n', '\n')
+            == expected.decode('utf-8', errors='strict').replace('\r\n', '\n'))
+
+
+def indexed_resources(root: Path, skill_name: str) -> dict[str, tuple[bytes, int]]:
+    selected = staged_resources(root, skill_name)
+    blobs = index_blobs(root, selected)
+    files = {}
+    for name, mode, _ in selected:
+        content = blobs[name]
         binary = Path(name).suffix in {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf'}
-        if not binary:
-            content.decode('utf-8', errors='strict')
         # Ignore only the checkout's LF/CRLF translation, never actual edits.
         working = (root / name).read_bytes()
-        if (working if binary else working.replace(b'\r\n', b'\n')) != (content if binary else content.replace(b'\r\n', b'\n')):
+        if not same_content(content, working, binary):
             raise ValueError(f'Unstaged canonical resource change: {name}; stage reviewed edits before previewing')
         files[name] = (content, 0o755 if mode == '100755' else 0o644)
     return files
@@ -126,6 +186,25 @@ def adapter_metadata(root: Path) -> dict:
         if not re.search('[\u3400-\u9fff]', adapter['description_zh']):
             raise ValueError(f'{name}: description_zh must contain Chinese text')
     return metadata
+
+
+def check_package_links(files: dict, skill_name: str) -> list[str]:
+    """Validate links against only the selected package, not excluded local files."""
+    with tempfile.TemporaryDirectory() as temp:
+        extracted = Path(temp) / skill_name
+        for name, (content, _) in files.items():
+            p = Path(temp) / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(content)
+        errors: list[str] = []
+        for p in extracted.rglob('*.md'):
+            text = p.read_text(encoding='utf-8')
+            for target in LINK.findall(text):
+                check_target(extracted, p, target, errors)
+            if p.name == 'SKILL.md':
+                for target in RESOURCE.findall(text):
+                    check_target(extracted, p, target.rstrip('.'), errors)
+    return errors
 
 
 def package_files(root: Path, skill_name: str) -> dict[str, tuple[bytes, int]]:
@@ -150,23 +229,9 @@ def package_files(root: Path, skill_name: str) -> dict[str, tuple[bytes, int]]:
     data['version'] = data['metadata']['version']
     generated = b'---\n' + yaml.safe_dump(data, allow_unicode=True, sort_keys=False).encode('utf-8') + b'---\n' + body
     files[f'{skill_name}/SKILL.md'] = (generated, files[f'{skill_name}/SKILL.md'][1])
-    # Validate links against only the selected package, not excluded local files.
-    with tempfile.TemporaryDirectory() as temp:
-        extracted = Path(temp) / skill_name
-        for name, (content, _) in files.items():
-            p = Path(temp) / name
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_bytes(content)
-        errors = []
-        for p in extracted.rglob('*.md'):
-            text = p.read_text(encoding='utf-8')
-            for target in LINK.findall(text):
-                check_target(extracted, p, target, errors)
-            if p.name == 'SKILL.md':
-                for target in RESOURCE.findall(text):
-                    check_target(extracted, p, target.rstrip('.'), errors)
-        if errors:
-            raise ValueError('\n'.join(errors))
+    errors = check_package_links(files, skill_name)
+    if errors:
+        raise ValueError('\n'.join(errors))
     if parse_skill(files[f'{skill_name}/SKILL.md'][0])[1] != body:
         raise ValueError('Canonical Markdown body changed')
     return files

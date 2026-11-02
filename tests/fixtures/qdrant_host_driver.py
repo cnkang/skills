@@ -153,7 +153,8 @@ def main():
                 provider.shutdown()
 
     provider = load_memory_provider("qdrant-memory")
-    assert provider is not None and provider.is_available()
+    assert provider is not None
+    assert provider.is_available()
     provider.initialize("fixture", user_id="alice")
     try:
         assert provider.wait_idle(10)

@@ -16,11 +16,17 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 PROBE_VERSION = "0.6"
 SCHEMA_VERSION = "1.0"
+
+AGENTS_MD = "AGENTS.md"
+NOT_A_GIT_REPOSITORY = "not a git repository"
+NONE_PLACEHOLDER = "<none>"
+TEXT_FENCE = "```text"
 
 
 # ---------------------------------------------------------------------------
@@ -39,12 +45,12 @@ SECRET_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     ),
     # Bearer tokens (before colon-form to avoid partial match)
     (
-        re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]{16,}"),
+        re.compile(r"(?i)\bBearer\s+[A-Z0-9._~+/=-]{16,}"),
         "Bearer <redacted>",
     ),
     # Basic auth headers
     (
-        re.compile(r"(?i)\bBasic\s+[A-Za-z0-9._~+/=-]{16,}"),
+        re.compile(r"(?i)\bBasic\s+[A-Z0-9._~+/=-]{16,}"),
         "Basic <redacted>",
     ),
     # Common token assignments with = sign
@@ -71,9 +77,9 @@ SECRET_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         '"<redacted-key>": "<redacted>"',
     ),
     # GitHub fine-grained personal access tokens
-    (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"), "<redacted-github-pat>"),
+    (re.compile(r"\bgithub_pat_\w{20,}\b", re.ASCII), "<redacted-github-pat>"),
     # GitHub classic tokens
-    (re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"), "<redacted-github-token>"),
+    (re.compile(r"\bgh[pousr]_\w{20,}\b", re.ASCII), "<redacted-github-token>"),
     # npm tokens
     (re.compile(r"\bnpm_[A-Za-z0-9]{20,}\b"), "<redacted-npm-token>"),
     # Private key blocks
@@ -204,7 +210,7 @@ COMMON_TOOLS = [
 ]
 
 DOC_PATTERNS = [
-    "AGENTS.md",
+    AGENTS_MD,
     "README.md",
     "README",
     "CONTRIBUTING.md",
@@ -229,10 +235,33 @@ SKILL_ROOTS = [
 
 DEFAULT_GIT_TIMEOUT = 15
 
+# Options this probe passes deliberately. Any other option-like argument is
+# rejected so a CLI-supplied ref can never be reinterpreted as a git flag.
+GIT_OPTIONS = frozenset({
+    "-v", "-n", "--git-dir", "--show-current", "--short", "--oneline",
+    "--cached", "--name-status", "--others", "--exclude-standard",
+    "--abbrev-ref", "--symbolic-full-name", "--verify", "--quiet",
+})
+GIT_ARG_RE = re.compile(r"[A-Za-z0-9_./@{}^~:+-]+")
+
+
+def is_safe_git_arg(arg: str) -> bool:
+    """Return True for one git argv element this probe may pass through."""
+    return bool(GIT_ARG_RE.fullmatch(arg)) and (
+        not arg.startswith("-") or arg in GIT_OPTIONS
+    )
+
 
 def run_git(
     repo: Path, args: list[str], timeout_seconds: int = DEFAULT_GIT_TIMEOUT
 ) -> dict[str, Any]:
+    if not all(is_safe_git_arg(arg) for arg in args):
+        return {
+            "ok": False,
+            "returncode": None,
+            "stdout": "",
+            "stderr": "unsafe git argument rejected",
+        }
     try:
         completed = subprocess.run(
             ["git", *args],
@@ -327,7 +356,7 @@ def workflow_files(repo: Path) -> list[str]:
     return sorted(str(path.relative_to(repo)) for path in root.glob("*.y*ml"))
 
 
-RUN_STEP_RE = re.compile(r"^(?P<indent>\s*)(?:-\s*)?run:\s*(?P<value>.*)$")
+RUN_STEP_RE = re.compile(r"^(?P<indent>[ \t]*)(?:-[ \t]*)?run:(?P<value>.*)$")
 
 _BLOCK_SCALAR_RE = re.compile(r"^[|>](?:[+-]?\d*|\d*[+-]?)$")
 
@@ -376,108 +405,126 @@ def _append_block(commands: list[str], block: list[str], folded: bool) -> None:
         commands.append("\n".join(block))
 
 
+@dataclass
+class _StepScanner:
+    """Accumulate run steps from one workflow file, mirroring its YAML layout."""
+
+    commands: list[str] = field(default_factory=list)
+    in_steps: bool = False
+    steps_indent: int = -1
+    step_item_indent: int = -1
+    nested_depth: int = 0
+    capture_block: bool = False
+    block_parent_indent: int = 0
+    folded: bool = False
+    block: list[str] = field(default_factory=list)
+
+    def capture_block_line(self, line: str, stripped: str, indent: int) -> bool:
+        """Consume a line that belongs to a multi-line ``run:`` block scalar."""
+        if not self.capture_block:
+            return False
+        if stripped and indent > self.block_parent_indent:
+            start = self.block_parent_indent + 2
+            self.block.append(line[start:].rstrip() if len(line) > start else stripped)
+            return True
+        _append_block(self.commands, self.block, self.folded)
+        self.capture_block = False
+        self.folded = False
+        self.block = []
+        return False
+
+    def enter_steps(self, stripped: str, indent: int) -> None:
+        if not stripped.startswith(("steps:", "steps: ")):
+            return
+        self.in_steps = True
+        self.steps_indent = indent
+        self.step_item_indent = -1
+        self.nested_depth = 0
+
+    def leave_steps(self, indent: int) -> None:
+        if not (self.in_steps and indent <= self.steps_indent):
+            return
+        self.in_steps = False
+        self.steps_indent = -1
+        self.step_item_indent = -1
+        self.nested_depth = 0
+
+    def track_step_item(self, stripped: str, indent: int) -> None:
+        if self.step_item_indent >= 0 and indent <= self.step_item_indent:
+            self.step_item_indent = indent if stripped.startswith("- ") else -1
+            self.nested_depth = 0
+        if self.step_item_indent < 0 and stripped.startswith("- "):
+            self.step_item_indent = indent
+            self.nested_depth = 0
+
+    def track_nested(self, stripped: str, indent: int) -> bool:
+        """Return True while the current line sits inside a nested key block."""
+        if self.nested_depth > 0 and indent <= self.step_item_indent + 2:
+            self.nested_depth = 0
+        if self.nested_depth == 0 and self.step_item_indent >= 0:
+            key_candidate = stripped.split(":")[0].strip()
+            if key_candidate.startswith("- "):
+                key_candidate = key_candidate[2:].strip()
+            if key_candidate in _NESTED_KEYS:
+                self.nested_depth = 1
+                return True
+        return self.nested_depth > 0
+
+    def consume_run(self, line: str) -> None:
+        match = RUN_STEP_RE.match(line)
+        if not match:
+            return
+        value = match.group("value").strip()
+        if not value or value.startswith("#"):
+            return
+        value = _strip_yaml_comment(value)
+        value = value.strip("\"'")
+        if _is_block_scalar(value):
+            self.capture_block = True
+            self.block_parent_indent = len(match.group("indent"))
+            self.folded = _is_folded_block_scalar(value)
+            self.block = []
+            return
+        if value:
+            self.commands.append(value)
+
+    def consume(self, line: str) -> None:
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip(" "))
+        if self.capture_block_line(line, stripped, indent):
+            return
+        if not stripped or stripped.startswith("#"):
+            return
+        self.leave_steps(indent)
+        if not self.in_steps:
+            self.enter_steps(stripped, indent)
+            return
+        self.track_step_item(stripped, indent)
+        if self.track_nested(stripped, indent):
+            return
+        self.consume_run(line)
+
+    def finish(self) -> list[str]:
+        if self.capture_block and self.block:
+            _append_block(self.commands, self.block, self.folded)
+        return self.commands
+
+
 def extract_workflow_steps(repo: Path, files: list[str]) -> dict[str, list[str]]:
     steps: dict[str, list[str]] = {}
     for rel in files:
-        path = repo / rel
-        commands: list[str] = []
         try:
-            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+            lines = (repo / rel).read_text(
+                encoding="utf-8", errors="replace"
+            ).splitlines()
         except OSError as exc:
             steps[rel] = [f"<unable to read: {exc}>"]
             continue
 
-        capture_block = False
-        block_parent_indent = 0
-        folded = False
-        block: list[str] = []
-
-        in_steps = False
-        steps_indent = -1
-        step_item_indent = -1
-        nested_depth = 0
-
+        scanner = _StepScanner()
         for line in lines:
-            stripped = line.strip()
-            indent = len(line) - len(line.lstrip(" "))
-
-            if capture_block:
-                if stripped and indent > block_parent_indent:
-                    block.append(line[block_parent_indent + 2 :].rstrip() if len(line) > block_parent_indent + 2 else stripped)
-                    continue
-
-                _append_block(commands, block, folded)
-                capture_block = False
-                folded = False
-                block = []
-
-            if not stripped or stripped.startswith("#"):
-                continue
-
-            if in_steps and indent <= steps_indent:
-                in_steps = False
-                steps_indent = -1
-                step_item_indent = -1
-                nested_depth = 0
-
-            if not in_steps:
-                if stripped.startswith("steps:") or stripped.startswith("steps: "):
-                    in_steps = True
-                    steps_indent = indent
-                    step_item_indent = -1
-                    nested_depth = 0
-                    continue
-
-            if not in_steps:
-                continue
-
-            if step_item_indent >= 0 and indent <= step_item_indent:
-                if stripped.startswith("- "):
-                    step_item_indent = indent
-                    nested_depth = 0
-                else:
-                    step_item_indent = -1
-                    nested_depth = 0
-
-            if step_item_indent < 0:
-                if stripped.startswith("- "):
-                    step_item_indent = indent
-                    nested_depth = 0
-
-            if nested_depth > 0 and indent <= step_item_indent + 2:
-                nested_depth = 0
-
-            if nested_depth == 0 and step_item_indent >= 0:
-                key_candidate = stripped.split(":")[0].strip()
-                if key_candidate.startswith("- "):
-                    key_candidate = key_candidate[2:].strip()
-                if key_candidate in _NESTED_KEYS:
-                    nested_depth = 1
-                    continue
-
-            if nested_depth > 0:
-                continue
-
-            match = RUN_STEP_RE.match(line)
-            if match:
-                value = match.group("value").strip()
-                if not value or value.startswith("#"):
-                    continue
-                value = _strip_yaml_comment(value)
-                value = value.strip("\"'")
-                if _is_block_scalar(value):
-                    capture_block = True
-                    block_parent_indent = len(match.group("indent"))
-                    folded = _is_folded_block_scalar(value)
-                    block = []
-                    continue
-                if value:
-                    commands.append(value)
-
-        if capture_block and block:
-            _append_block(commands, block, folded)
-
-        steps[rel] = commands
+            scanner.consume(line)
+        steps[rel] = scanner.finish()
     return steps
 
 
@@ -521,9 +568,34 @@ def discover_agent_files(repo: Path, max_depth: int = 5) -> list[str]:
             continue
         depth = 0 if str(rel_root) == "." else len(rel_root.parts)
         dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS and depth < max_depth]
-        if "AGENTS.md" in files:
-            found.append(str((root_path / "AGENTS.md").relative_to(repo)))
+        if AGENTS_MD in files:
+            found.append(str((root_path / AGENTS_MD).relative_to(repo)))
     return sorted(found)
+
+
+def split_output(value: str) -> list[str]:
+    """Split git stdout into lines, mapping empty output to an empty list."""
+    return value.splitlines() if value else []
+
+
+def resolve_base_ref(
+    repo: Path, base_ref: str | None, upstream: str
+) -> tuple[str, str, str]:
+    """Return the effective base ref, its source and the resolved commit."""
+    if base_ref:
+        verify = run_git(
+            repo, ["rev-parse", "--verify", "--quiet", f"{base_ref}^{{commit}}"]
+        )
+        if verify.get("ok") and verify.get("stdout"):
+            return base_ref, "explicit", verify["stdout"]
+        return "", "explicit_unresolved", ""
+    if upstream:
+        return upstream, "upstream", ""
+    for candidate in ("origin/main", "origin/master", "main", "master"):
+        resolved = git_stdout(repo, ["rev-parse", "--abbrev-ref", candidate])
+        if resolved:
+            return resolved, "fallback", ""
+    return "", "", ""
 
 
 def collect_diff_scope(
@@ -535,31 +607,9 @@ def collect_diff_scope(
         ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
     )
     head = git_stdout(repo, ["rev-parse", "HEAD"])
-
-    effective_base = ""
-    base_ref_source = ""
-    base_ref_resolved = ""
-
-    if base_ref:
-        verify = run_git(
-            repo, ["rev-parse", "--verify", "--quiet", f"{base_ref}^{{commit}}"]
-        )
-        if verify.get("ok") and verify.get("stdout"):
-            effective_base = base_ref
-            base_ref_source = "explicit"
-            base_ref_resolved = verify["stdout"]
-        else:
-            base_ref_source = "explicit_unresolved"
-    if not effective_base and not base_ref and upstream:
-        effective_base = upstream
-        base_ref_source = "upstream"
-    if not effective_base and not base_ref:
-        for candidate in ("origin/main", "origin/master", "main", "master"):
-            resolved = git_stdout(repo, ["rev-parse", "--abbrev-ref", candidate])
-            if resolved:
-                effective_base = resolved
-                base_ref_source = "fallback"
-                break
+    effective_base, base_ref_source, base_ref_resolved = resolve_base_ref(
+        repo, base_ref, upstream
+    )
 
     data: dict[str, Any] = {
         "upstream": upstream,
@@ -574,25 +624,19 @@ def collect_diff_scope(
         "untracked": [],
     }
 
-    staged = git_stdout(repo, ["diff", "--cached", "--name-status"])
-    data["staged"] = staged.splitlines() if staged else []
-
-    unstaged = git_stdout(repo, ["diff", "--name-status"])
-    data["unstaged"] = unstaged.splitlines() if unstaged else []
-
-    untracked = git_stdout(
-        repo, ["ls-files", "--others", "--exclude-standard"]
+    data["staged"] = split_output(git_stdout(repo, ["diff", "--cached", "--name-status"]))
+    data["unstaged"] = split_output(git_stdout(repo, ["diff", "--name-status"]))
+    data["untracked"] = split_output(
+        git_stdout(repo, ["ls-files", "--others", "--exclude-standard"])
     )
-    data["untracked"] = untracked.splitlines() if untracked else []
 
     if effective_base:
         merge_base = git_stdout(repo, ["merge-base", "HEAD", effective_base])
         data["merge_base"] = merge_base
         if merge_base:
-            changed = git_stdout(
-                repo, ["diff", "--name-status", f"{merge_base}...HEAD"]
+            data["changed_vs_base"] = split_output(
+                git_stdout(repo, ["diff", "--name-status", f"{merge_base}...HEAD"])
             )
-            data["changed_vs_base"] = changed.splitlines() if changed else []
 
     return data
 
@@ -657,6 +701,77 @@ def read_skill_summary(skill_md: Path) -> dict[str, str]:
     return {"name": name, "path": str(skill_md), "description": description}
 
 
+def _usable_skill_root(root: Path, warnings: list[str]) -> Path | None:
+    """Return the resolved root, or None with a warning when it is unusable."""
+    if not root.exists():
+        return None
+    if not root.is_dir():
+        warnings.append(f"Skill root is not a directory: {root}")
+        return None
+    try:
+        return root.resolve()
+    except OSError as exc:
+        warnings.append(f"Unable to resolve skill root {root}: {exc}")
+        return None
+
+
+def _skill_subdirs(dirs: list[str]) -> list[str]:
+    """Filter traversal into hidden, excluded and cache directories."""
+    return [
+        d
+        for d in dirs
+        if d not in EXCLUDED_DIRS
+        and d not in {"__pycache__", "__MACOSX"}
+        and not d.startswith(".")
+    ]
+
+
+def _root_depth(current_path: Path, root: Path) -> int | None:
+    """Return one walked directory's depth below the root, or None when outside it."""
+    try:
+        rel = current_path.relative_to(root)
+    except ValueError:
+        return None
+    return 0 if str(rel) == "." else len(rel.parts)
+
+
+def _unique_skill(current_path: Path, seen: set[Path]) -> dict[str, str] | None:
+    """Return the summary for one not-yet-seen SKILL.md in this directory."""
+    skill_md = current_path / "SKILL.md"
+    try:
+        resolved_skill = skill_md.resolve()
+    except OSError:
+        return None
+    if resolved_skill in seen:
+        return None
+    seen.add(resolved_skill)
+    return read_skill_summary(skill_md)
+
+
+def scan_skill_root(
+    root: Path, max_depth: int, limit: int, seen: set[Path]
+) -> tuple[list[dict[str, str]], bool]:
+    """Collect unique SKILL.md summaries from one root, stopping at the limit."""
+    found: list[dict[str, str]] = []
+    for current, dirs, files in os.walk(root, followlinks=False):
+        current_path = Path(current)
+        depth = _root_depth(current_path, root)
+        if depth is None:
+            continue
+        if depth >= max_depth:
+            dirs[:] = []
+            continue
+        dirs[:] = _skill_subdirs(dirs)
+        if "SKILL.md" not in files:
+            continue
+        summary = _unique_skill(current_path, seen)
+        if summary is not None:
+            found.append(summary)
+        if len(found) >= limit:
+            return found, True
+    return found, False
+
+
 def collect_local_skills(
     repo: Path,
     limit: int,
@@ -667,70 +782,31 @@ def collect_local_skills(
 
     Returns a tuple of (skills_found, warnings).
     """
-    warnings: list[str] = []
-
     if limit <= 0:
         return [], ["Local Skill scan disabled by skill limit <= 0."]
 
-    search_roots = roots or [
-        Path(os.path.expanduser(root)) for root in SKILL_ROOTS
-    ]
+    search_roots = list(
+        roots or [Path(os.path.expanduser(root)) for root in SKILL_ROOTS]
+    )
     search_roots.extend([repo / ".skills", repo / "skills"])
 
     skills: list[dict[str, str]] = []
+    warnings: list[str] = []
     seen: set[Path] = set()
 
     for root in search_roots:
-        if not root.exists():
+        resolved_root = _usable_skill_root(root, warnings)
+        if resolved_root is None:
             continue
-        if not root.is_dir():
-            warnings.append(f"Skill root is not a directory: {root}")
-            continue
-        try:
-            resolved_root = root.resolve()
-        except OSError as exc:
-            warnings.append(f"Unable to resolve skill root {root}: {exc}")
-            continue
-
-        for current, dirs, files in os.walk(resolved_root, followlinks=False):
-            current_path = Path(current)
-            try:
-                rel = current_path.relative_to(resolved_root)
-            except ValueError:
-                continue
-
-            depth = 0 if str(rel) == "." else len(rel.parts)
-            if depth >= max_depth:
-                dirs[:] = []
-                continue
-
-            dirs[:] = [
-                d
-                for d in dirs
-                if d not in EXCLUDED_DIRS
-                and d not in {"__pycache__", "__MACOSX"}
-                and not d.startswith(".")
-            ]
-
-            if "SKILL.md" not in files:
-                continue
-
-            skill_md = current_path / "SKILL.md"
-            try:
-                resolved_skill = skill_md.resolve()
-            except OSError:
-                continue
-
-            if resolved_skill in seen:
-                continue
-            seen.add(resolved_skill)
-
-            skills.append(read_skill_summary(skill_md))
-            if len(skills) >= limit:
-                warnings.append(
-                    f"Local Skill scan stopped after reaching limit={limit}."
-                )
-                return skills, warnings
+        found, hit_limit = scan_skill_root(
+            resolved_root, max_depth, limit - len(skills), seen
+        )
+        skills.extend(found)
+        if hit_limit:
+            warnings.append(
+                f"Local Skill scan stopped after reaching limit={limit}."
+            )
+            return skills, warnings
 
     return skills, warnings
 
@@ -814,11 +890,11 @@ def collect(
     else:
         git_data = {
             "state": git_state,
-            "branch": {"ok": False, "stdout": "", "stderr": "not a git repository"},
-            "status_short": {"ok": False, "stdout": "", "stderr": "not a git repository"},
-            "remote_v": {"ok": False, "stdout": "", "stderr": "not a git repository"},
-            "recent_commits": {"ok": False, "stdout": "", "stderr": "not a git repository"},
-            "head": {"ok": False, "stdout": "", "stderr": "not a git repository"},
+            "branch": {"ok": False, "stdout": "", "stderr": NOT_A_GIT_REPOSITORY},
+            "status_short": {"ok": False, "stdout": "", "stderr": NOT_A_GIT_REPOSITORY},
+            "remote_v": {"ok": False, "stdout": "", "stderr": NOT_A_GIT_REPOSITORY},
+            "recent_commits": {"ok": False, "stdout": "", "stderr": NOT_A_GIT_REPOSITORY},
+            "head": {"ok": False, "stdout": "", "stderr": NOT_A_GIT_REPOSITORY},
         }
         diff_scope = {}
         warnings.append(
@@ -865,18 +941,17 @@ def display_path(path: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def print_markdown(data: dict[str, Any]) -> None:
-    git = data["git"]
-    state = git["state"]
-    is_git = state.get("is_git_repo", False)
-
+def print_header(
+    data: dict[str, Any], git_data: dict[str, Any], state: dict[str, Any], is_git: bool
+) -> None:
+    """Print the report title, repository location and git identity."""
     print("# Repository Quality Probe")
     print()
     print(f"- Repository: `{display_path(data['repo'])}`")
 
     if is_git:
-        print(f"- Branch: `{git['branch'].get('stdout') or '<unknown>'}`")
-        print(f"- HEAD: `{git['head'].get('stdout') or '<unknown>'}`")
+        print(f"- Branch: `{git_data['branch'].get('stdout') or '<unknown>'}`")
+        print(f"- HEAD: `{git_data['head'].get('stdout') or '<unknown>'}`")
     else:
         print("- Branch: `<not a git repository>`")
         print("- HEAD: `<not a git repository>`")
@@ -887,76 +962,74 @@ def print_markdown(data: dict[str, Any]) -> None:
     )
     print()
 
+
+def print_warnings(data: dict[str, Any]) -> None:
     print("## Warnings")
-    for warning in data.get("warnings", []) or ["<none>"]:
+    for warning in data.get("warnings", []) or [NONE_PLACEHOLDER]:
         print(f"- {warning}")
     print()
 
+
+def print_worktree(git_data: dict[str, Any], is_git: bool) -> None:
     print("## Worktree")
     if not is_git:
         status = "<not a git repository>"
     else:
-        status = git["status_short"].get("stdout") or "<clean>"
-    print("```text")
+        status = git_data["status_short"].get("stdout") or "<clean>"
+    print(TEXT_FENCE)
     print(status)
     print("```")
     print()
 
+
+def print_recent_commits(git_data: dict[str, Any], is_git: bool) -> None:
     print("## Recent Commits")
     if not is_git:
-        print("```text")
+        print(TEXT_FENCE)
         print("<not a git repository>")
         print("```")
     else:
-        print("```text")
-        print(git["recent_commits"].get("stdout") or "<unavailable>")
+        print(TEXT_FENCE)
+        print(git_data["recent_commits"].get("stdout") or "<unavailable>")
         print("```")
     print()
 
-    # Diff scope
-    diff_scope = data.get("diff_scope", {})
-    if diff_scope:
-        print("## Diff Scope")
+
+def print_diff_scope(diff_scope: dict[str, Any]) -> None:
+    """Print the diff-scope section when base information is available."""
+    if not diff_scope:
+        return
+    print("## Diff Scope")
+    print(
+        f"- Upstream: `{diff_scope.get('upstream') or '<unavailable>'}`"
+    )
+    base_ref_val = diff_scope.get("base_ref", "")
+    if base_ref_val:
         print(
-            f"- Upstream: `{diff_scope.get('upstream') or '<unavailable>'}`"
+            f"- Base ref: `{base_ref_val}` "
+            f"(source: {diff_scope.get('base_ref_source', '')})"
         )
-        base_ref_val = diff_scope.get("base_ref", "")
-        base_ref_src = diff_scope.get("base_ref_source", "")
-        if base_ref_val:
-            print(f"- Base ref: `{base_ref_val}` (source: {base_ref_src})")
-        print(
-            f"- Merge base: `{diff_scope.get('merge_base') or '<unavailable>'}`"
-        )
-        print()
+    print(
+        f"- Merge base: `{diff_scope.get('merge_base') or '<unavailable>'}`"
+    )
+    print()
 
-        changed = diff_scope.get("changed_vs_base", [])
-        print("### Changed vs base")
-        print("```text")
-        print("\n".join(changed) if changed else "<none or base unavailable>")
+    sections = (
+        ("### Changed vs base", "changed_vs_base", "<none or base unavailable>"),
+        ("### Staged changes", "staged", NONE_PLACEHOLDER),
+        ("### Unstaged changes", "unstaged", NONE_PLACEHOLDER),
+        ("### Untracked files", "untracked", NONE_PLACEHOLDER),
+    )
+    for title, key, empty in sections:
+        entries = diff_scope.get(key, [])
+        print(title)
+        print(TEXT_FENCE)
+        print("\n".join(entries) if entries else empty)
         print("```")
         print()
 
-        staged = diff_scope.get("staged", [])
-        print("### Staged changes")
-        print("```text")
-        print("\n".join(staged) if staged else "<none>")
-        print("```")
-        print()
 
-        unstaged = diff_scope.get("unstaged", [])
-        print("### Unstaged changes")
-        print("```text")
-        print("\n".join(unstaged) if unstaged else "<none>")
-        print("```")
-        print()
-
-        untracked = diff_scope.get("untracked", [])
-        print("### Untracked files")
-        print("```text")
-        print("\n".join(untracked) if untracked else "<none>")
-        print("```")
-        print()
-
+def print_stack_and_inputs(data: dict[str, Any]) -> None:
     print("## Detected Stack")
     for item in data["stack"] or ["<none detected from common configs>"]:
         print(f"- {item}")
@@ -969,19 +1042,26 @@ def print_markdown(data: dict[str, Any]) -> None:
         print("- <none detected>")
     print()
 
-    agent_files = data.get("agent_instruction_files", [])
-    if agent_files:
-        print("## Agent Instruction Files")
-        for af in agent_files:
-            print(f"- `{af}`")
-        print()
 
+def print_agent_instruction_files(data: dict[str, Any]) -> None:
+    agent_files = data.get("agent_instruction_files", [])
+    if not agent_files:
+        return
+    print("## Agent Instruction Files")
+    for af in agent_files:
+        print(f"- `{af}`")
+    print()
+
+
+def print_tool_availability(data: dict[str, Any]) -> None:
     print("## Common Tool Availability")
     for tool, path in data["tool_availability"].items():
         value = f"`{display_path(path)}`" if path else "<not found>"
         print(f"- `{tool}`: {value}")
     print()
 
+
+def print_workflow_steps(data: dict[str, Any]) -> None:
     print("## GitHub Workflow Run Steps")
     print(
         "These extracted run steps are best-effort and must be verified "
@@ -996,12 +1076,31 @@ def print_markdown(data: dict[str, Any]) -> None:
             print(f"  - `{step}`")
     print()
 
+
+def print_local_skills(data: dict[str, Any]) -> None:
     print("## Local Skills")
     if not data["local_skills"]:
         print("- <none detected>")
     for skill in data["local_skills"]:
         desc = f" - {skill['description']}" if skill["description"] else ""
         print(f"- `{skill['name']}`: `{skill['path']}`{desc}")
+
+
+def print_markdown(data: dict[str, Any]) -> None:
+    git_data = data["git"]
+    state = git_data["state"]
+    is_git = state.get("is_git_repo", False)
+
+    print_header(data, git_data, state, is_git)
+    print_warnings(data)
+    print_worktree(git_data, is_git)
+    print_recent_commits(git_data, is_git)
+    print_diff_scope(data.get("diff_scope", {}))
+    print_stack_and_inputs(data)
+    print_agent_instruction_files(data)
+    print_tool_availability(data)
+    print_workflow_steps(data)
+    print_local_skills(data)
 
 
 # ---------------------------------------------------------------------------

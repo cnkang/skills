@@ -42,7 +42,8 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     execution = next(step for step in runtime["steps"] if "--junitxml" in step.get("run", ""))
     assert "not writer_busy_callbacks_fail_safely_then_same_instance_recovers" in execution["run"]
     assert execution["env"]["QDRANT_RUNTIME_E2E"] == "1"
-    assert execution["env"]["HERMES_SKILL_HOST_ROOT"] and execution["env"]["QDRANT_MEMORY_PLUGIN_ROOT"]
+    assert execution["env"]["HERMES_SKILL_HOST_ROOT"]
+    assert execution["env"]["QDRANT_MEMORY_PLUGIN_ROOT"]
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 5" in step["run"]
                for step in runtime["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 25" in step["run"]

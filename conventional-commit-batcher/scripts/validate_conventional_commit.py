@@ -56,7 +56,9 @@ def parse_args() -> argparse.Namespace:
         nargs="?",
         help="Commit message text. If omitted, use --file or --stdin.",
     )
-    parser.add_argument("--file", help="Read commit message from file.")
+    parser.add_argument(
+        "--file", help="Read commit message from a file inside the working directory."
+    )
     parser.add_argument(
         "--stdin",
         action="store_true",
@@ -94,12 +96,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def read_message_file(value: str) -> str:
+    """Read a commit message file confined to the current working directory."""
+    path = Path(value).resolve()
+    if not path.is_relative_to(Path.cwd().resolve()):
+        raise ValueError("Refusing to read a commit message outside the current directory.")
+    return path.read_text(encoding="utf-8").strip("\n")
+
+
 def read_message(args: argparse.Namespace) -> str:
     if args.message:
         return args.message.strip("\n")
 
     if args.file:
-        return Path(args.file).read_text(encoding="utf-8").strip("\n")
+        return read_message_file(args.file)
 
     if args.stdin:
         return sys.stdin.read().strip("\n")
@@ -139,48 +149,28 @@ def add_style_message(
         warnings.append(message)
 
 
-def validate(
-    message: str,
+def check_header_spacing(header: str) -> list[str]:
+    """Reject leading or trailing whitespace around the header line."""
+    if header != header.strip():
+        return ["Header must not contain leading/trailing spaces."]
+    return []
+
+
+def check_header_length(header: str, max_header_length: int) -> list[str]:
+    if len(header) > max_header_length:
+        return [f"Header length {len(header)} exceeds max {max_header_length}."]
+    return []
+
+
+def check_subject(
+    subject: str,
     max_subject_length: int,
-    max_header_length: int,
-    allow_underscore_scope: bool,
     subject_lowercase_mode: str,
     imperative_mode: str,
-) -> tuple[list[str], list[str]]:
-    errors: list[str] = []
-    warnings: list[str] = []
-
-    lines = message.splitlines()
-    if not lines:
-        return (["Message is empty."], warnings)
-
-    header = lines[0]
-    header_for_match = header.strip()
-    if header != header_for_match:
-        errors.append("Header must not contain leading/trailing spaces.")
-
-    header_re = build_header_re(allow_underscore_scope)
-    match = header_re.match(header_for_match)
-    if not match:
-        return (
-            [
-                "Header must match '<type>(<scope>)!: <subject>' using allowed Conventional Commit types."
-            ],
-            warnings,
-        )
-
-    commit_type = match.group("type")
-    subject = match.group("subject")
-    has_breaking_bang = bool(match.group("breaking"))
-
-    if commit_type not in ALLOWED_TYPES:
-        errors.append(f"Type '{commit_type}' is not allowed.")
-
-    if len(header_for_match) > max_header_length:
-        errors.append(
-            f"Header length {len(header_for_match)} exceeds max {max_header_length}."
-        )
-
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    """Check subject formatting and style rules in their documented order."""
     if subject.endswith("."):
         errors.append("Subject must not end with a period.")
 
@@ -212,65 +202,127 @@ def validate(
             warnings,
         )
 
-    has_extra_content = len(lines) > 1
-    if has_extra_content:
-        if lines[1].strip():
-            errors.append(
-                "If body or footer exists, insert exactly one blank line after header."
-            )
-        elif len(lines) > 2 and not lines[2].strip():
-            errors.append(
-                "If body or footer exists, insert exactly one blank line after header."
-            )
 
-    content_lines = lines[2:] if len(lines) > 2 else []
-    first_footer_index: int | None = None
-    if content_lines:
-        first_non_empty_index: int | None = None
-        for index, line in enumerate(content_lines):
-            if line.strip():
-                first_non_empty_index = index
-                break
+def check_body_separator(lines: Sequence[str]) -> list[str]:
+    """Require exactly one blank line between the header and any body or footer."""
+    if len(lines) > 1 and (lines[1].strip() or (len(lines) > 2 and not lines[2].strip())):
+        return ["If body or footer exists, insert exactly one blank line after header."]
+    return []
 
-        if (
-            first_non_empty_index is not None
-            and is_footer_line(content_lines[first_non_empty_index])
-            and is_valid_footer_section(content_lines[first_non_empty_index:])
-        ):
-            first_footer_index = first_non_empty_index
-        else:
-            for index, line in enumerate(content_lines):
-                if line.strip():
-                    continue
-                next_index = index + 1
-                while (
-                    next_index < len(content_lines)
-                    and not content_lines[next_index].strip()
-                ):
-                    next_index += 1
-                if next_index >= len(content_lines):
-                    break
-                if is_footer_line(content_lines[next_index]):
-                    first_footer_index = next_index
-                    break
 
-    if first_footer_index is not None:
-        body_lines = content_lines[:first_footer_index]
-        footer_lines = content_lines[first_footer_index:]
+def leading_footer_index(content_lines: Sequence[str]) -> int | None:
+    """Return the footer start when the body opens directly with a footer."""
+    first_non_empty = next(
+        (index for index, line in enumerate(content_lines) if line.strip()), None
+    )
+    if first_non_empty is None:
+        return None
+    if is_footer_line(content_lines[first_non_empty]) and is_valid_footer_section(
+        content_lines[first_non_empty:]
+    ):
+        return first_non_empty
+    return None
 
-        if body_lines and body_lines[-1].strip():
-            errors.append("Insert one blank line between body and footer.")
 
-        if not is_valid_footer_section(footer_lines):
-            errors.append("Footer section contains invalid non-footer lines.")
+def paragraph_footer_index(content_lines: Sequence[str]) -> int | None:
+    """Return the footer start that follows a blank line in the body."""
+    for index, line in enumerate(content_lines):
+        if line.strip():
+            continue
+        next_index = index + 1
+        while next_index < len(content_lines) and not content_lines[next_index].strip():
+            next_index += 1
+        if next_index >= len(content_lines):
+            break
+        if is_footer_line(content_lines[next_index]):
+            return next_index
+    return None
 
+
+def check_footer_section(
+    content_lines: Sequence[str], first_footer_index: int
+) -> list[str]:
+    errors: list[str] = []
+    body_lines = content_lines[:first_footer_index]
+    footer_lines = content_lines[first_footer_index:]
+
+    if body_lines and body_lines[-1].strip():
+        errors.append("Insert one blank line between body and footer.")
+
+    if not is_valid_footer_section(footer_lines):
+        errors.append("Footer section contains invalid non-footer lines.")
+    return errors
+
+
+def check_breaking_mentions(
+    message: str, lines: Sequence[str], has_breaking_bang: bool
+) -> list[str]:
+    """Require a breaking marker whenever the message text claims a breaking change."""
     has_breaking_footer = any(BREAKING_FOOTER_RE.match(line) for line in lines[1:])
     mentions_breaking_change = bool(BREAKING_CHANGE_RE.search(message))
     if mentions_breaking_change and not (has_breaking_bang or has_breaking_footer):
-        errors.append(
+        return [
             "Message mentions breaking changes; add '!' in header or 'BREAKING CHANGE:' footer."
+        ]
+    return []
+
+
+def validate(
+    message: str,
+    max_subject_length: int,
+    max_header_length: int,
+    allow_underscore_scope: bool,
+    subject_lowercase_mode: str,
+    imperative_mode: str,
+) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    lines = message.splitlines()
+    if not lines:
+        return (["Message is empty."], warnings)
+
+    header = lines[0]
+    header_for_match = header.strip()
+    errors.extend(check_header_spacing(header))
+
+    header_re = build_header_re(allow_underscore_scope)
+    match = header_re.match(header_for_match)
+    if not match:
+        return (
+            [
+                "Header must match '<type>(<scope>)!: <subject>' using allowed Conventional Commit types."
+            ],
+            warnings,
         )
 
+    commit_type = match.group("type")
+    subject = match.group("subject")
+    has_breaking_bang = bool(match.group("breaking"))
+
+    if commit_type not in ALLOWED_TYPES:
+        errors.append(f"Type '{commit_type}' is not allowed.")
+
+    errors.extend(check_header_length(header_for_match, max_header_length))
+    check_subject(
+        subject,
+        max_subject_length,
+        subject_lowercase_mode,
+        imperative_mode,
+        errors,
+        warnings,
+    )
+
+    errors.extend(check_body_separator(lines))
+
+    content_lines = lines[2:]
+    first_footer_index = leading_footer_index(content_lines)
+    if first_footer_index is None:
+        first_footer_index = paragraph_footer_index(content_lines)
+    if first_footer_index is not None:
+        errors.extend(check_footer_section(content_lines, first_footer_index))
+
+    errors.extend(check_breaking_mentions(message, lines, has_breaking_bang))
     return errors, warnings
 
 

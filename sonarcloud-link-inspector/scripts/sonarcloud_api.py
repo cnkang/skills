@@ -9,6 +9,28 @@ from typing import Any, Dict, Iterable, Optional
 import requests
 
 
+def _check_read_only(method: str, path: str) -> None:
+    """Reject anything other than a GET against an /api/ path."""
+    if method != "GET" or not path.startswith("/api/"):
+        raise ValueError("Only read-only API GET requests are supported")
+
+
+def _is_retryable(response: requests.Response) -> bool:
+    """Return True for throttled or server-side failures worth retrying."""
+    return response.status_code == 429 or 500 <= response.status_code < 600
+
+
+def _response_payload(response: requests.Response) -> Dict[str, Any]:
+    """Return the JSON object payload, rejecting redirects and non-object bodies."""
+    if 300 <= response.status_code < 400:
+        raise requests.HTTPError("API redirects are not followed", response=response)
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+        raise ValueError("Expected a JSON object from the API")
+    return payload
+
+
 class SonarCloudClient:
     def __init__(
         self,
@@ -44,30 +66,26 @@ class SonarCloudClient:
             headers["Authorization"] = f"Bearer {self.token}"
         self.session.headers.update(headers)
 
+    def _retry_delay(self, response: requests.Response, attempt: int) -> float:
+        """Return the backoff delay before the next attempt, honoring Retry-After."""
+        delay = self.retry_backoff_seconds * (attempt + 1)
+        if response.status_code != 429:
+            return delay
+        try:
+            return max(delay, min(60.0, float(response.headers.get("Retry-After", "0"))))
+        except (TypeError, ValueError):
+            return delay
+
     def _request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        if method != "GET" or not path.startswith("/api/"):
-            raise ValueError("Only read-only API GET requests are supported")
+        _check_read_only(method, path)
         url = f"{self.api_base_url}{path}"
         for attempt in range(self.max_retries + 1):
             try:
                 response = self.session.request(method, url, params=params or {}, timeout=self.timeout_seconds, allow_redirects=False)
-                retryable = response.status_code == 429 or 500 <= response.status_code < 600
-                if retryable and attempt < self.max_retries:
-                    delay = self.retry_backoff_seconds * (attempt + 1)
-                    if response.status_code == 429:
-                        try:
-                            delay = max(delay, min(60.0, float(response.headers.get("Retry-After", "0"))))
-                        except (TypeError, ValueError):
-                            pass
-                    time.sleep(delay)
+                if _is_retryable(response) and attempt < self.max_retries:
+                    time.sleep(self._retry_delay(response, attempt))
                     continue
-                if 300 <= response.status_code < 400:
-                    raise requests.HTTPError("API redirects are not followed", response=response)
-                response.raise_for_status()
-                payload = response.json()
-                if not isinstance(payload, dict):
-                    raise ValueError("Expected a JSON object from the API")
-                return payload
+                return _response_payload(response)
             except (requests.Timeout, requests.ConnectionError):
                 if attempt >= self.max_retries:
                     raise

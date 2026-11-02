@@ -17,8 +17,28 @@ from build import ROOT, build_all, validate_tag
 from validate_skills import SKILLS, frontmatter
 
 
+# Git options this module passes deliberately; any other option-like argument is
+# rejected so a validated tag or ref can never be reinterpreted as a flag.
+GIT_OPTIONS = frozenset({'-t', '--porcelain', '--untracked-files=no', '--format=%(contents)'})
+GIT_ARG_RE = re.compile(r'[A-Za-z0-9_./@{}^~+-]+')
+
+
+def checked_git_arg(value: str) -> str:
+    """Validate one Git argument, rejecting flags and shell metacharacters."""
+    if not isinstance(value, str) or "\x00" in value or "\n" in value:
+        raise ValueError('Invalid Git argument')
+    if value.startswith('-'):
+        if value not in GIT_OPTIONS:
+            raise ValueError('Refusing option-like Git argument')
+        return value
+    if not GIT_ARG_RE.fullmatch(value):
+        raise ValueError('Invalid Git argument')
+    return value
+
+
 def git(root: Path, *args: str) -> str:
-    return subprocess.check_output(['git', '-C', str(root), *args], text=True).strip()
+    command = ['git', '-C', str(root), *(checked_git_arg(arg) for arg in args)]
+    return subprocess.check_output(command, text=True).strip()
 
 
 def validate_source(root: Path, tag: str, main_ref: str = 'refs/remotes/origin/main') -> tuple[str, str]:
@@ -29,7 +49,8 @@ def validate_source(root: Path, tag: str, main_ref: str = 'refs/remotes/origin/m
     sha = git(root, 'rev-parse', f'{ref}^{{commit}}')
     if git(root, 'rev-parse', 'HEAD') != sha:
         raise ValueError('Current checkout does not match snapshot commit')
-    if subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', sha, main_ref], capture_output=True).returncode:
+    if subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor',
+                       checked_git_arg(sha), checked_git_arg(main_ref)], capture_output=True).returncode:
         raise ValueError('Snapshot commit is not merged into main')
     if git(root, 'status', '--porcelain', '--untracked-files=no'):
         raise ValueError('Release checkout has tracked changes')
@@ -103,24 +124,37 @@ class GitHubAPI:
             self.request('POST', url, data=stream, headers={'Content-Type': 'application/octet-stream'})
 
 
+def preflight_assets(api, assets: list[dict], paths: list[Path]) -> list[Path]:
+    """Return the missing assets, refusing duplicates or differing files."""
+    missing = []
+    for path in paths:
+        matches = [a for a in assets if a['name'] == path.name]
+        if len(matches) > 1:
+            raise ValueError(f'Duplicate release asset: {path.name}')
+        if not matches:
+            missing.append(path)
+        elif api.download_asset(matches[0]) != path.read_bytes():
+            raise ValueError(f'Release asset differs: {path.name}; preserve it and investigate source/toolchain; use a new approved snapshot if necessary')
+    return missing
+
+
+def verify_uploaded_assets(api, release: dict, paths: list[Path]) -> None:
+    """Confirm every requested asset is present exactly once with the same bytes."""
+    final = api.list_assets(release['id'])
+    for path in paths:
+        matches = [a for a in final if a['name'] == path.name]
+        if len(matches) != 1 or api.download_asset(matches[0]) != path.read_bytes():
+            raise ValueError(f'Uploaded asset verification failed: {path.name}; retry the same tag after investigating')
+
+
 def attach_assets(api, tag: str, sha: str, notes: str, paths: list[Path]) -> None:
     release = api.find_release(tag)
     if release is None:
         release = api.create_draft(tag, sha, notes)
     if release['tag_name'] != tag:
         raise ValueError('Release tag mismatch')
-    assets = api.list_assets(release['id'])
-    missing = []
     # Preflight the entire catalog before uploading any missing asset.
-    for path in paths:
-        matches = [a for a in assets if a['name'] == path.name]
-        if len(matches) > 1:
-            raise ValueError(f'Duplicate release asset: {path.name}')
-        if matches:
-            if api.download_asset(matches[0]) != path.read_bytes():
-                raise ValueError(f'Release asset differs: {path.name}; preserve it and investigate source/toolchain; use a new approved snapshot if necessary')
-        else:
-            missing.append(path)
+    missing = preflight_assets(api, api.list_assets(release['id']), paths)
     if missing and not release['draft']:
         raise ValueError('Published release is missing WorkBuddy assets; do not overwrite or move its tag. Prepare a new approved snapshot and draft release')
     for path in missing:
@@ -130,11 +164,7 @@ def attach_assets(api, tag: str, sha: str, notes: str, paths: list[Path]) -> Non
         if not current['draft'] or current['tag_name'] != tag:
             raise ValueError('Release left Draft state during upload; inspect manually')
         api.upload_asset(current, path)
-    final = api.list_assets(release['id'])
-    for path in paths:
-        matches = [a for a in final if a['name'] == path.name]
-        if len(matches) != 1 or api.download_asset(matches[0]) != path.read_bytes():
-            raise ValueError(f'Uploaded asset verification failed: {path.name}; retry the same tag after investigating')
+    verify_uploaded_assets(api, release, paths)
     print(f'All {len(paths)} release assets verified; publication remains a maintainer decision')
 
 
@@ -147,15 +177,15 @@ def main() -> int:
     sha, notes = validate_source(ROOT, args.snapshot_tag)
     if args.check_source:
         print(f'Validated merged annotated snapshot: {args.snapshot_tag} ({sha})')
-        return 0
-    paths = build_all(ROOT, args.output_dir, args.snapshot_tag)
-    api = GitHubAPI(os.environ['GITHUB_REPOSITORY'], os.environ['GITHUB_TOKEN'])
-    attach_assets(api, args.snapshot_tag, sha, notes, list(paths))
+    else:
+        paths = build_all(ROOT, args.output_dir, args.snapshot_tag)
+        api = GitHubAPI(os.environ['GITHUB_REPOSITORY'], os.environ['GITHUB_TOKEN'])
+        attach_assets(api, args.snapshot_tag, sha, notes, list(paths))
     return 0
 
 
 if __name__ == '__main__':
     try:
         raise SystemExit(main())
-    except (ValueError, OSError, subprocess.CalledProcessError, requests.RequestException) as exc:
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
         raise SystemExit(f'WorkBuddy release failed: {exc}')
