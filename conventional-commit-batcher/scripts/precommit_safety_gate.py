@@ -163,6 +163,166 @@ def matches_any(path: str, patterns: Sequence[re.Pattern[str]]) -> bool:
     return any(pattern.search(path) for pattern in patterns)
 
 
+def protected_branch_findings(branch: str, allowed: bool) -> list[Finding]:
+    """Flag a protected or release-oriented branch unless explicitly acknowledged."""
+    if allowed or not PROTECTED_BRANCH_RE.search(branch):
+        return []
+    return [
+        Finding(
+            code="protected_branch",
+            severity="confirm",
+            message="Current branch looks protected or release-oriented.",
+            details=(branch,),
+        )
+    ]
+
+
+def conflict_findings(added_lines: Sequence[str]) -> list[Finding]:
+    """Block staged content that still contains merge conflict markers."""
+    conflict_lines = [line for line in added_lines if CONFLICT_MARKER_RE.search(line)]
+    if not conflict_lines:
+        return []
+    return [
+        Finding(
+            code="conflict_markers",
+            severity="block",
+            message="Unresolved merge conflict markers found in staged content.",
+            details=tuple(conflict_lines[:5]),
+        )
+    ]
+
+
+def _bounded_match(matches: list[str], message: str, limit: int = 5) -> None:
+    """Append a redacted match while keeping the reported list bounded."""
+    if len(matches) < limit:
+        matches.append(message)
+
+
+def _file_content_matches(
+    added_lines_by_file: dict[str, Sequence[str]],
+) -> tuple[set[str], list[str]]:
+    """Collect sensitive-content files and redacted matches from per-file lines."""
+    files: set[str] = set()
+    matches: list[str] = []
+    for path, lines in added_lines_by_file.items():
+        for line in lines:
+            if matches_any(line, SENSITIVE_CONTENT_PATTERNS):
+                files.add(path)
+                _bounded_match(
+                    matches, f"{path}: sensitive pattern detected (content withheld)"
+                )
+    return files, matches
+
+
+def sensitive_content_hits(
+    added_lines: Sequence[str],
+    added_lines_by_file: dict[str, Sequence[str]] | None,
+) -> tuple[set[str], list[str]]:
+    """Return the files and redacted matches for sensitive content patterns."""
+    if added_lines_by_file:
+        return _file_content_matches(added_lines_by_file)
+    matches: list[str] = []
+    for line in added_lines:
+        if matches_any(line, SENSITIVE_CONTENT_PATTERNS):
+            _bounded_match(matches, "sensitive pattern detected (content withheld)")
+    return set(), matches
+
+
+def sensitive_findings(
+    staged_paths: Sequence[str],
+    added_lines: Sequence[str],
+    added_lines_by_file: dict[str, Sequence[str]] | None,
+) -> list[Finding]:
+    """Report sensitive paths and redacted sensitive content for review."""
+    findings: list[Finding] = []
+    sensitive_paths = [
+        path for path in staged_paths if matches_any(path, SENSITIVE_PATH_PATTERNS)
+    ]
+    content_files, content_matches = sensitive_content_hits(added_lines, added_lines_by_file)
+
+    if sensitive_paths:
+        findings.append(
+            Finding(
+                code="sensitive_paths",
+                severity="confirm",
+                message="Potentially sensitive file paths found in staged changes. Please review these files before commit.",
+                details=tuple(sorted(sensitive_paths)[:10]),
+            )
+        )
+    if content_matches:
+        details: list[str] = []
+        if content_files:
+            details.extend(
+                f"file: {path}" for path in sorted(content_files)[:10]
+            )
+        details.extend(f"match: {item}" for item in content_matches)
+
+        findings.append(
+            Finding(
+                code="sensitive_content",
+                severity="confirm",
+                message="Potentially sensitive content patterns found in staged additions. Please check these files/hunks.",
+                details=tuple(details[:12]),
+            )
+        )
+    return findings
+
+
+def local_artifact_findings(staged_paths: Sequence[str]) -> list[Finding]:
+    """Report local or generated artifact paths staged for commit."""
+    local_artifacts = [
+        path for path in staged_paths if matches_any(path, LOCAL_ARTIFACT_PATTERNS)
+    ]
+    if not local_artifacts:
+        return []
+    return [
+        Finding(
+            code="local_artifacts",
+            severity="confirm",
+            message="Local/generated artifact patterns found in staged paths.",
+            details=tuple(sorted(local_artifacts)[:10]),
+        )
+    ]
+
+
+def large_or_binary_findings(
+    numstat_rows: Sequence[tuple[str, str, str]],
+    file_sizes: dict[str, int],
+    max_file_size_kb: int,
+) -> list[Finding]:
+    """Report binary or oversized files staged for commit."""
+    binary_paths = sorted(
+        {
+            path
+            for added, deleted, path in numstat_rows
+            if added == "-" or deleted == "-"
+        }
+    )
+    large_paths = sorted(
+        {
+            path
+            for path, size in file_sizes.items()
+            if size > max_file_size_kb * 1024
+        }
+    )
+    if not (binary_paths or large_paths):
+        return []
+    details = list(binary_paths)
+    details.extend(
+        f"{path} ({file_sizes[path]} bytes)"
+        for path in large_paths
+        if path not in binary_paths
+    )
+    return [
+        Finding(
+            code="large_or_binary",
+            severity="confirm",
+            message="Potential binary or large files found in staged content.",
+            details=tuple(details[:10]),
+        )
+    ]
+
+
 def evaluate_findings(
     *,
     branch: str,
@@ -178,135 +338,27 @@ def evaluate_findings(
     allow_protected_branch: bool,
     allow_large_or_binary: bool,
 ) -> list[Finding]:
-    findings: list[Finding] = []
-
     if not staged_has_changes:
-        findings.append(
+        return [
             Finding(
                 code="empty_staged",
                 severity="block",
                 message="Staged area is empty. Do not run commit with no staged changes.",
                 details=(),
             )
-        )
-        return findings
+        ]
 
-    if (not allow_protected_branch) and PROTECTED_BRANCH_RE.search(branch):
-        findings.append(
-            Finding(
-                code="protected_branch",
-                severity="confirm",
-                message="Current branch looks protected or release-oriented.",
-                details=(branch,),
-            )
-        )
-
-    conflict_lines = [line for line in added_lines if CONFLICT_MARKER_RE.search(line)]
-    if conflict_lines:
-        findings.append(
-            Finding(
-                code="conflict_markers",
-                severity="block",
-                message="Unresolved merge conflict markers found in staged content.",
-                details=tuple(conflict_lines[:5]),
-            )
-        )
-
+    findings: list[Finding] = []
+    findings.extend(protected_branch_findings(branch, allow_protected_branch))
+    findings.extend(conflict_findings(added_lines))
     if not allow_sensitive:
-        sensitive_paths = [
-            path for path in staged_paths if matches_any(path, SENSITIVE_PATH_PATTERNS)
-        ]
-        sensitive_content_matches: list[str] = []
-        sensitive_content_files: set[str] = set()
-
-        if added_lines_by_file:
-            for path, lines in added_lines_by_file.items():
-                for line in lines:
-                    if not matches_any(line, SENSITIVE_CONTENT_PATTERNS):
-                        continue
-                    sensitive_content_files.add(path)
-                    if len(sensitive_content_matches) < 5:
-                        sensitive_content_matches.append(
-                            f"{path}: sensitive pattern detected (content withheld)"
-                        )
-        else:
-            for line in added_lines:
-                if not matches_any(line, SENSITIVE_CONTENT_PATTERNS):
-                    continue
-                if len(sensitive_content_matches) < 5:
-                    sensitive_content_matches.append("sensitive pattern detected (content withheld)")
-
-        if sensitive_paths:
-            findings.append(
-                Finding(
-                    code="sensitive_paths",
-                    severity="confirm",
-                    message="Potentially sensitive file paths found in staged changes. Please review these files before commit.",
-                    details=tuple(sorted(sensitive_paths)[:10]),
-                )
-            )
-        if sensitive_content_matches:
-            details: list[str] = []
-            if sensitive_content_files:
-                details.extend(
-                    f"file: {path}" for path in sorted(sensitive_content_files)[:10]
-                )
-            details.extend(f"match: {item}" for item in sensitive_content_matches)
-
-            findings.append(
-                Finding(
-                    code="sensitive_content",
-                    severity="confirm",
-                    message="Potentially sensitive content patterns found in staged additions. Please check these files/hunks.",
-                    details=tuple(details[:12]),
-                )
-            )
-
+        findings.extend(sensitive_findings(staged_paths, added_lines, added_lines_by_file))
     if not allow_local_artifacts:
-        local_artifacts = [
-            path for path in staged_paths if matches_any(path, LOCAL_ARTIFACT_PATTERNS)
-        ]
-        if local_artifacts:
-            findings.append(
-                Finding(
-                    code="local_artifacts",
-                    severity="confirm",
-                    message="Local/generated artifact patterns found in staged paths.",
-                    details=tuple(sorted(local_artifacts)[:10]),
-                )
-            )
-
+        findings.extend(local_artifact_findings(staged_paths))
     if not allow_large_or_binary:
-        binary_paths = sorted(
-            {
-                path
-                for added, deleted, path in numstat_rows
-                if added == "-" or deleted == "-"
-            }
+        findings.extend(
+            large_or_binary_findings(numstat_rows, file_sizes, max_file_size_kb)
         )
-        large_paths = sorted(
-            {
-                path
-                for path, size in file_sizes.items()
-                if size > max_file_size_kb * 1024
-            }
-        )
-        if binary_paths or large_paths:
-            details = list(binary_paths)
-            details.extend(
-                f"{path} ({file_sizes[path]} bytes)"
-                for path in large_paths
-                if path not in binary_paths
-            )
-            findings.append(
-                Finding(
-                    code="large_or_binary",
-                    severity="confirm",
-                    message="Potential binary or large files found in staged content.",
-                    details=tuple(details[:10]),
-                )
-            )
-
     return findings
 
 
