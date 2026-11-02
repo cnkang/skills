@@ -13,7 +13,7 @@ Desktop, Gateway, CLI and other configured writer processes, and confirm shutdow
 completed before retrying. Embedded storage also rejects concurrent read clients
 while a provider holds its file lock.
 
-Runtime 0.5.4 reports a redacted lifecycle code/type when initialization fails.
+Runtime 0.5.5 reports a redacted lifecycle code/type when initialization fails.
 `writer_busy` identifies the lease conflict; other initialization failures need
 their reported code and type investigated. Runtime permits a new initialization
 attempt after failed-attempt cleanup completes. When the Hermes host does not retry
