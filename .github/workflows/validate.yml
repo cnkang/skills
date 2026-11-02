@@ -326,6 +326,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The scanner host lives in the workflow, not in a data file, so a
+          # pull request cannot redirect the token by editing a properties file.
+          SONAR_HOST_URL: https://sonarcloud.io
 
   required-checks:
     name: Required checks
@@ -345,11 +348,19 @@ jobs:
       - name: Require every test job to succeed
         env:
           RESULTS: ${{ toJSON(needs) }}
+          # A fork pull request has no access to the SonarCloud token, so the scan
+          # is skipped there. Every other skip still fails the gate.
+          SONAR_MAY_SKIP: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           python3 - <<'PY'
           import json, os
           results = json.loads(os.environ['RESULTS'])
-          failed = {job: data['result'] for job, data in results.items() if data['result'] != 'success'}
+          optional = {'sonarcloud'} if os.environ.get('SONAR_MAY_SKIP') == 'true' else set()
+          failed = {
+              job: data['result']
+              for job, data in results.items()
+              if data['result'] != 'success' and not (job in optional and data['result'] == 'skipped')
+          }
           if failed:
               raise SystemExit(f'Required jobs did not succeed: {failed}')
           print('All package, distribution, historical and current plugin contracts, Hermes E2E, standalone and Pi host jobs passed')
