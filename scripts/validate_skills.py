@@ -15,7 +15,8 @@ QDRANT_SKILLS = ("qdrant-memory",)
 # Deliberate catalog changes only; never discover fixtures or nested packages as skills.
 SKILLS = LEGACY_SKILLS + QDRANT_SKILLS
 FIELDS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
-LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)")
+ENTRYPOINT = "SKILL.md"
+LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)(?:\s[^)]*)?\)")
 RESOURCE = re.compile(r"(?<![\w/])(?:scripts|references|examples|assets|agents)/[\w./-]+")
 IGNORED = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache"}
 
@@ -47,12 +48,9 @@ def check_target(root: Path, source: Path, target: str, errors: list[str]) -> No
         errors.append(f"{source}: missing reference {target}")
 
 
-def validate_skill(root: Path) -> list[str]:
+def check_identity(root: Path, data: dict) -> list[str]:
+    """Check the required frontmatter fields and their value constraints."""
     errors: list[str] = []
-    try:
-        data = frontmatter(root / "SKILL.md")
-    except (ValueError, OSError, yaml.YAMLError) as exc:
-        return [f"{root}: invalid entrypoint ({exc})"]
     name = data.get("name")
     if not isinstance(name, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name) or len(name) > 64 or name != root.name:
         errors.append(f"{root}: name must match folder and naming constraints")
@@ -62,51 +60,88 @@ def validate_skill(root: Path) -> list[str]:
         value = data.get(field)
         if (field == "description" or value is not None) and (not isinstance(value, str) or not 0 < len(value) <= limit):
             errors.append(f"{root}: invalid {field}")
-    metadata = data.get("metadata", {})
-    if not isinstance(metadata, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in metadata.items()):
-        errors.append(f"{root}: metadata must map strings to strings")
-    elif not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][\w.-]+)?", metadata.get("version", "")):
-        errors.append(f"{root}: metadata.version must be a quoted semantic version")
+    errors.extend(check_metadata(root, data))
     if data.get("license") != "MIT" or not (root / "LICENSE").is_file():
         errors.append(f"{root}: independently distributed MIT license is missing")
+    return errors
+
+
+def check_metadata(root: Path, data: dict) -> list[str]:
+    metadata = data.get("metadata", {})
+    if not isinstance(metadata, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in metadata.items()):
+        return [f"{root}: metadata must map strings to strings"]
+    if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][\w.-]+)?", metadata.get("version", "")):
+        return [f"{root}: metadata.version must be a quoted semantic version"]
+    return []
+
+
+def check_python_file(path: Path) -> list[str]:
+    try:
+        ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (SyntaxError, UnicodeError) as exc:
+        return [f"{path}: Python syntax error ({exc})"]
+    return []
+
+
+def check_markdown_file(root: Path, path: Path) -> list[str]:
+    errors: list[str] = []
+    text = path.read_text(encoding="utf-8")
+    for target in LINK.findall(text):
+        check_target(root, path, target, errors)
+    # Resource mentions are relative to the package unless explicitly linked.
+    if path.name == ENTRYPOINT:
+        for target in RESOURCE.findall(text):
+            check_target(root, path, target.rstrip("."), errors)
+        if re.search(r"\bTODO\b|\bTBD\b|\[INSERT", text):
+            errors.append(f"{path}: unfinished entrypoint placeholder")
+    return errors
+
+
+def check_files(root: Path) -> list[str]:
+    """Check every packaged file for symlinks, syntax and broken references."""
+    errors: list[str] = []
     for path in files_under(root):
         if not path.resolve().is_relative_to(root.resolve()):
             errors.append(f"{path}: package-external symlink")
-        if path.name == "SKILL.md" and path != root / "SKILL.md":
+        if path.name == ENTRYPOINT and path != root / ENTRYPOINT:
             errors.append(f"{path}: duplicate nested entrypoint")
         if path.suffix == ".py":
-            try:
-                ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            except (SyntaxError, UnicodeError) as exc:
-                errors.append(f"{path}: Python syntax error ({exc})")
-        if path.suffix != ".md":
-            continue
-        text = path.read_text(encoding="utf-8")
-        for target in LINK.findall(text):
-            check_target(root, path, target, errors)
-        # Resource mentions are relative to the package unless explicitly linked.
-        if path.name == "SKILL.md":
-            for target in RESOURCE.findall(text):
-                check_target(root, path, target.rstrip("."), errors)
-            if re.search(r"\bTODO\b|\bTBD\b|\[INSERT", text):
-                errors.append(f"{path}: unfinished entrypoint placeholder")
+            errors.extend(check_python_file(path))
+        if path.suffix == ".md":
+            errors.extend(check_markdown_file(root, path))
+    return errors
+
+
+def check_ui(root: Path, name: str | None) -> list[str]:
     ui = root / "agents" / "openai.yaml"
-    if ui.exists():
-        try:
-            config = yaml.safe_load(ui.read_text(encoding="utf-8"))
-            interface = config["interface"]
-            short = interface["short_description"]
-            if not 25 <= len(short) <= 64 or f"${name}" not in interface["default_prompt"]:
-                errors.append(f"{ui}: invalid UI description or invocation prompt")
-        except (KeyError, TypeError, yaml.YAMLError):
-            errors.append(f"{ui}: invalid UI metadata")
+    if not ui.exists():
+        return []
+    try:
+        config = yaml.safe_load(ui.read_text(encoding="utf-8"))
+        interface = config["interface"]
+        short = interface["short_description"]
+        if not 25 <= len(short) <= 64 or f"${name}" not in interface["default_prompt"]:
+            return [f"{ui}: invalid UI description or invocation prompt"]
+    except (KeyError, TypeError, yaml.YAMLError):
+        return [f"{ui}: invalid UI metadata"]
+    return []
+
+
+def validate_skill(root: Path) -> list[str]:
+    try:
+        data = frontmatter(root / ENTRYPOINT)
+    except (ValueError, OSError, yaml.YAMLError) as exc:
+        return [f"{root}: invalid entrypoint ({exc})"]
+    errors = check_identity(root, data)
+    errors.extend(check_files(root))
+    errors.extend(check_ui(root, data.get("name")))
     return errors
 
 
 def validate_repository(root: Path) -> list[str]:
     errors = []
-    entries = [p for p in files_under(root) if p.name == "SKILL.md"]
-    expected = {root / name / "SKILL.md" for name in SKILLS}
+    entries = [p for p in files_under(root) if p.name == ENTRYPOINT]
+    expected = {root / name / ENTRYPOINT for name in SKILLS}
     if set(entries) != expected:
         errors.append("repository must expose exactly the controlled unique top-level skill entrypoints: " + ", ".join(SKILLS))
     for name in SKILLS:
@@ -114,10 +149,7 @@ def validate_repository(root: Path) -> list[str]:
     for folder in (root / "scripts", root / "tests"):
         if folder.exists():
             for path in folder.rglob("*.py"):
-                try:
-                    ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-                except SyntaxError as exc:
-                    errors.append(f"{path}: {exc}")
+                errors.extend(check_python_file(path))
     return errors
 
 
@@ -125,7 +157,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", nargs="?", type=Path, default=Path(__file__).resolve().parents[1])
     args = parser.parse_args()
-    errors = validate_skill(args.path) if (args.path / "SKILL.md").exists() else validate_repository(args.path)
+    errors = validate_skill(args.path) if (args.path / ENTRYPOINT).exists() else validate_repository(args.path)
     for error in errors:
         print(error)
     if not errors:
