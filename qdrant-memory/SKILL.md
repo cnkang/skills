@@ -23,6 +23,7 @@ Read only the reference needed for the request:
 | Search/save facts, replace/delete by exact ID, inspect provenance | [Usage](references/usage.md) | Scoped MCP/Hermes `qdrant_memory_*` tools or standalone CLI |
 | Status, diagnostics, inventory/export, authorized retry/scope deletion | [Maintenance](references/maintenance.md) | Standalone `qdrant-memory --home PROFILE` or existing Hermes CLI |
 | Mem0 JSON/collection dry-run, import, resume/retry-failed, verification | [Migration](references/migration.md) | Selected CLI's `migrate mem0` command |
+| Codex native v1/v2 inspection, migration, verified export and safe exit | [Codex portability](references/codex.md) | Runtime with `codex` CLI support; check `--help` |
 
 Discover compatible scoped tools first. If absent, use the configured standalone
 CLI. Hermes's existing tools/CLI remain compatible. Read [runtime setup](references/runtime.md),
@@ -42,6 +43,13 @@ prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
 strip scope checks. MCP does not automatically capture every conversation turn.
 
 ## Shared boundaries
+
+One Memory. Multiple Agents. No Lock-in. Users must be able to read their exported
+data without this skill, a proprietary service or a continued subscription.
+Prefer documented harness import/export interfaces when available. Keep standard
+JSON and human-readable handoff available when native import is unsupported.
+Never equate an exported file with verified native adoption. Uninstalling an
+integration must preserve memory, backups and original harness data.
 
 For shared production deployments, read [shared security](references/shared-security.md).
 Do not distribute Qdrant write keys to agents or bypass destination claims. New
