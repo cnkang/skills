@@ -140,11 +140,12 @@ runtime separately. Skill 0.4.0 documents Codex native-memory import and portabl
 JSON/Markdown handoff with Runtime 0.6.0. Handoff verification does not establish
 native adoption. Exports remain readable without the service or a subscription.
 Check the [release list](https://github.com/cnkang/skills/releases) before choosing a snapshot.
-The current installer selects Runtime 0.6.0; the corresponding MCP distribution
-is 0.3.0. Confirm both versions are publicly available before exact-version
-installation. If unavailable, use the
-[published snapshot guide](https://github.com/cnkang/skills/blob/skills-20261102.2/README.md)
-until publication; source instructions do not make a package available on PyPI.
+The bundled Runtime installer selects Runtime 0.6.0 and installs its `mcp`
+extra. The Runtime CLI can serve stdio MCP directly; this does not install the
+separate, optional `qdrant-memory-mcp` distribution. Check that distribution's
+PyPI release before installing an exact version. Until Skill 0.4.0 is published,
+use the
+[published snapshot guide](https://github.com/cnkang/skills/blob/skills-20261102.2/README.md).
 Older compatibility baselines remain documented in the
 [compatibility guide](docs/qdrant-memory-compatibility.md). Upgrading the Runtime
 does not change Hermes defaults. It supports MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
