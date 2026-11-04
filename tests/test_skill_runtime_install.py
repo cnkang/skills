@@ -93,6 +93,9 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
             similar.append(added["id"])
         assert len(set(similar)) == 2
 
+        pinned_home = tmp_path / "pinned runtime home"
+        assert json.loads(run([result["command"], "--home", str(pinned_home), "init"]))["ok"]
+
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
 
@@ -113,6 +116,19 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
                     assert not response.model_dump(by_alias=True)["isError"]
                     response = await session.call_tool("qdrant_memory_delete", {"id": saved["id"]})
                     assert not response.model_dump(by_alias=True)["isError"]
+
+            pinned_parameters = StdioServerParameters(
+                command=result["command"],
+                args=["--home", str(pinned_home), "mcp"],
+                env=env,
+            )
+            async with stdio_client(pinned_parameters) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    tools = await session.list_tools()
+                    assert {tool.name for tool in tools.tools} == {
+                        "qdrant_memory_" + name for name in ("search", "add", "update", "delete")
+                    }
 
         asyncio.run(check())
         found = json.loads(run([executable, "--home", str(home), "search", "--query", "similarity-fixture: cats"]))
