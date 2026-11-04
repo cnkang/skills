@@ -445,10 +445,10 @@ h2==4.4.1 \
     --hash=sha256:0e25f1462b23c9cb82d9eb02e28bc706dac2a68cb457c6a0d74d63c8a2a5d0e6 \
     --hash=sha256:4e866ffb1a869ae14dd9b5e6beb5c24a13da0495ad72b65925ded182521c1516
     # via httpx
-hermes-plugin-qdrant-memory==0.5.5 \
-    --hash=sha256:13bb11b5a189dbe50bc6362347962ea356d59ce034878e35259221127aede268 \
-    --hash=sha256:5623e2df0576dbe26335511134b7681adf98cd5aff9d8b08b41a2957aab6de57
-    # via -r requirements-current-runtime-ci.in
+hermes-plugin-qdrant-memory==0.6.0 \
+    --hash=sha256:484a3cdd45ee5ecff92b76be062046597a7fcf9e58ad9667a993a80b77ef6a15 \
+    --hash=sha256:5099eb7adf0a7aac27c23dd663f36fc48782fcb7b5a24618dab1aec4c9d0099c
+    # via -r .github/requirements-current-runtime-ci.in
 hpack==4.2.0 \
     --hash=sha256:0895cfa3b5531fc65fe439c05eb65144f123bf7a394fcaa56aa423548d8e45c0 \
     --hash=sha256:858ac0b02280fa582b5080d68db0899c62a80375e0e5413a74970c5e518b6986
@@ -780,7 +780,7 @@ pyjwt==2.15.1 \
 pytest==9.0.3 \
     --hash=sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9 \
     --hash=sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c
-    # via -r requirements-current-runtime-ci.in
+    # via -r .github/requirements-current-runtime-ci.in
 python-multipart==0.0.33 \
     --hash=sha256:8f16c07b36add9da6b2ee87d3efcaf0a45a6de9c3d0a5dd94e9ccf7675a7bc45 \
     --hash=sha256:b8112424a6abd162ec08d390565dd113ad699f2fe6fef3c987b8bbcbfe9e390d
@@ -808,6 +808,7 @@ pywin32==312 ; sys_platform == 'win32' \
     --hash=sha256:dab4f65ac9c4e48400a2a0530c46c3c579cd5905ecd11b80692373915269208b \
     --hash=sha256:dc90147579a905b8635e1b0ec6514967dcb07e6e0d9c42f1477feef14cac23bb
     # via
+    #   hermes-plugin-qdrant-memory
     #   mcp
     #   portalocker
 pyyaml==6.0.3 \
@@ -884,7 +885,7 @@ pyyaml==6.0.3 \
     --hash=sha256:f7057c9a337546edc7973c0d3ba84ddcdf0daa14533c2065749c9075001090e6 \
     --hash=sha256:fa160448684b4e94d80416c0fa4aac48967a969efe22931448d853ada8baf926 \
     --hash=sha256:fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0
-    # via -r requirements-current-runtime-ci.in
+    # via -r .github/requirements-current-runtime-ci.in
 qdrant-client==1.20.0 \
     --hash=sha256:0ab261197a497d16f3bf8a663c22e994f485c9fd7212d3c8b07c1a9de32fc152 \
     --hash=sha256:58ff8aec0c56d2dd4d9f0cae1940c280b364bfde18715d4ccc10c3e118bcd053
@@ -898,11 +899,11 @@ referencing==0.37.0 \
 requests==2.34.2 \
     --hash=sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0 \
     --hash=sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed
-    # via -r requirements-current-runtime-ci.in
+    # via -r .github/requirements-current-runtime-ci.in
 rich==14.3.3 \
     --hash=sha256:793431c1f8619afa7d3b52b2cdec859562b950ea0d4b6b505397612db8d5362d \
     --hash=sha256:b8daa0b9e4eef54dd8cf7c86c03713f53241884e814f4e2f5fb342fe520f639b
-    # via -r requirements-current-runtime-ci.in
+    # via -r .github/requirements-current-runtime-ci.in
 rpds-py==2026.9.1 \
     --hash=sha256:00ba2d8c7dd4ee537978ddf4b3fbd712bef2d8751603f7f3146b3f4287768e25 \
     --hash=sha256:01445c8d194aa032a08e944f16567672da1c62dbdbefd8b6d0693032e290cf68 \
@@ -1038,7 +1039,7 @@ rpds-py==2026.9.1 \
 ruamel-yaml==0.18.17 \
     --hash=sha256:9091cd6e2d93a3a4b157ddb8fabf348c3de7f1fb1381346d985b6b247dcd8d3c \
     --hash=sha256:9c8ba9eb3e793efdf924b60d521820869d5bf0cb9c6f1b82d82de8295e290b9d
-    # via -r requirements-current-runtime-ci.in
+    # via -r .github/requirements-current-runtime-ci.in
 ruamel-yaml-clib==0.2.15 ; python_full_version < '3.15' and platform_python_implementation == 'CPython' \
     --hash=sha256:014181cdec565c8745b7cbc4de3bf2cc8ced05183d986e6d1200168e5bb59490 \
     --hash=sha256:04d21dc9c57d9608225da28285900762befbb0165ae48482c15d8d4989d4af14 \

@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.8 | Agent-neutral memory tools/CLI, maintenance and Mem0 migration. New installs use Runtime 0.5.5, which keeps the provider initialization failure fix. Standalone runtime and MCP work without Hermes. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.0 | Agent-neutral memory tools/CLI, maintenance, Mem0 migration and Codex v1/v2 portability. New installs use Runtime 0.6.0. Portable exports preserve a safe exit across harnesses; native adoption requires client verification. Standalone runtime and MCP work without Hermes. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
@@ -136,12 +136,18 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately. Skill 0.3.4 includes the private installer security fixes.
+runtime separately. Skill 0.4.0 documents Codex native-memory import and portable
+JSON/Markdown handoff with Runtime 0.6.0. Handoff verification does not establish
+native adoption. Exports remain readable without the service or a subscription.
 Check the [release list](https://github.com/cnkang/skills/releases) before choosing a snapshot.
-It remains compatible with Runtime 0.2.2 and the corresponding MCP 0.1.3.
-Runtime 0.3.0 additionally offers explicitly selected CPU embedding. Upgrading
-the Runtime does not require replacing the Skill or changing Hermes defaults.
-Both support MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
+The current installer selects Runtime 0.6.0; the corresponding MCP distribution
+is 0.3.0. Confirm both versions are publicly available before exact-version
+installation. If unavailable, use the
+[published snapshot guide](https://github.com/cnkang/skills/blob/skills-20261102.2/README.md)
+until publication; source instructions do not make a package available on PyPI.
+Older compatibility baselines remain documented in the
+[compatibility guide](docs/qdrant-memory-compatibility.md). Upgrading the Runtime
+does not change Hermes defaults. It supports MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
 configuration remain the same. The installer verifies the Runtime's compatible
 server adapter.
 The commands pin exact PyPI versions:
@@ -155,13 +161,12 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp]==0.2.2'
+  'hermes-plugin-qdrant-memory[mcp]==0.6.0'
 ```
 
 The backend retains its original repository/distribution name. Its standalone
-CLI and stdio MCP server require no Hermes installation. The original v0.1.0
-release does not contain these interfaces. The command pins a PyPI release.
-For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.1.3
+CLI and stdio MCP server require no Hermes installation.
+For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.3.0
 qdrant-memory-mcp --home /private/path/profile mcp`. Configure
 and initialize the profile first. Both install choices share the Runtime.
 
@@ -220,8 +225,8 @@ For [cross-agent sharing](qdrant-memory/references/shared-memory.md), released
 mode configures the same user/profile and `agent_id: null`. This is one shared
 partition, and current embedded/MCP writers access it sequentially under the
 profile lease. Explicit agent IDs remain private. Concurrent cross-agent
-sharing requires the opt-in single-owner service released in Runtime 0.4.0.
-The 0.2.2 install baseline below supports sequential private-profile reuse only.
+sharing requires the opt-in single-owner service. See the shared-memory guide
+for explicit setup, grants and destination protection.
 
 | Workflow | Examples | Interface |
 |---|---|---|

@@ -57,7 +57,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.5.5" in lock
+    assert "hermes-plugin-qdrant-memory==0.6.0" in lock
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])
@@ -108,8 +108,11 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     import re
     assert re.fullmatch(r"[0-9a-f]{40}", checkouts[0]["ref"])
     assert checkouts[0]["ref"] in (ROOT / "qdrant-memory/references/runtime.md").read_text(encoding="utf-8")
-    for document in ("README.md", "README_zh-CN.md", "qdrant-memory/references/runtime.md"):
-        assert "hermes-plugin-qdrant-memory[mcp]==0.2.2" in (ROOT / document).read_text(encoding="utf-8")
+    for document in ("README.md", "README_zh-CN.md"):
+        assert "hermes-plugin-qdrant-memory[mcp]==0.6.0" in (ROOT / document).read_text(encoding="utf-8")
+    assert "hermes-plugin-qdrant-memory[mcp]==0.2.2" in (
+        ROOT / "qdrant-memory/references/runtime.md"
+    ).read_text(encoding="utf-8")
     assert any('[mcp]' in step.get("run", "") for step in job["steps"])
     assert any("tests/standalone" in step.get("run", "") for step in job["steps"])
     assert any("check_test_report.py" in step.get("run", "") and "--minimum-tests 27" in step["run"] for step in job["steps"])

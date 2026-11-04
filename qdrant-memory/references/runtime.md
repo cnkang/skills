@@ -4,19 +4,32 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
 private compatibility baseline for this skill. These minimum versions do not
-provide the Runtime 0.5.0 Owner controls. Current published releases are Runtime
-0.5.5 and MCP distribution 0.2.9, and the installer accepts an installed Runtime that is at
+provide the Runtime 0.5.0 Owner controls. This skill targets Runtime
+0.6.0 and MCP distribution 0.3.0; verify package availability before installing.
+The installer accepts an installed Runtime that is at
 least the requested version. For MCP-focused agents, prefer the metadata-only
 [MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
 
-## Install Runtime 0.5.5 for Owner controls
+Older CPU profiles may use FastEmbed 0.9.0. Runtime 0.5.5 and later use the
+0.9.1 pipeline with a different fingerprint. Keep the old environment, cache and
+store for rollback. An authorized upgrade exports through the old Runtime and
+re-embeds into a new profile/collection, verifies, then switches clients. Never
+edit stored fingerprints or ready markers to force compatibility.
+
+Explicit CPU model preparation in Runtime 0.6.0 allows fifteen minutes per
+artifact within a thirty-minute total network budget, enforcing pinned
+sizes/hashes and atomic cache publication. Managed launchers allow forty
+minutes for setup. Authorize the initial model download explicitly; ordinary
+memory operations do not download models.
+
+## Install Runtime 0.6.0 for Owner controls and Codex portability
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.5.5
+  --venv /private/path/qdrant-owner-env --version 0.6.0
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
@@ -106,7 +119,7 @@ available, the agent can run the installed skill's [installer](../scripts/instal
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-env --version 0.5.5
+  --venv /private/path/qdrant-env --version 0.6.0
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
@@ -126,11 +139,11 @@ Choose a new path to retry rather than deleting another installation.
 Use a new private environment for an authorized upgrade. Back up the profile and
 destination and retain the same collection, scope and embedding pipeline.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.5.5 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
+`--version 0.6.0 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The Runtime 0.5.5 standalone acceptance uses the immutable release commit
-`2865fe586bf64a0ebc9532afe85da2bddd9ced7f`. The separate Runtime 0.2.2
+The Runtime 0.6.0 standalone acceptance uses the immutable release commit
+`dee6777432f17523db75f6be32cf3ef15e48235c`. The separate Runtime 0.2.2
 compatibility lane retains commit `c85d2bce788b117dddd854bb124971f7de8e564c`.
 The published release tag is the source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
@@ -202,7 +215,7 @@ with `--revision`. Explicit immutable source installation remains a separate
 operator-authorized development route. Existing environments are verified without
 reinstallation, so this flag does not retroactively certify their bytes.
 
-New installations default to Runtime 0.5.5. Runtime 0.2.2 remains the tested
+New installations default to Runtime 0.6.0. Runtime 0.2.2 remains the tested
 private-compatibility baseline in explicit examples and CI fixture pins. Runtime
 0.4.0 adds the separately configured shared owner. Use Runtime 0.5.0 or later for
 protected policy, doctor and remote Owner features, and discover its schemas before

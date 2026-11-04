@@ -1,5 +1,18 @@
 # Changelog
 
+## skills-20261104.1 — 2026-11-04 (UTC)
+
+### qdrant-memory 0.4.0
+
+- Default new installations to Runtime 0.6.0 and retain the explicit Runtime
+  0.2.2 compatibility baseline. Update the current-release CI lock and examples.
+- Document Codex v1/v2 inspection, authorized migration and bounded portable
+  handoff, including supported Windows local-file security checks.
+- Keep native adoption separate from checksum verification: handoff remains
+  HANDOFF_PENDING with native_verified=false until confirmed in the client.
+- Preserve standard JSON/Markdown exports, original harness data and stored
+  memories when an integration is removed. The four other skills are unchanged.
+
 ## skills-20261102.2 — 2026-11-02 (UTC)
 
 ### qdrant-memory 0.3.8
