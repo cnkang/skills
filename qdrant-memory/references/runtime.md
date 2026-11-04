@@ -136,8 +136,10 @@ venv, then verifies package version, imports and CLI. A matching existing enviro
 is reused without an upgrade. An incomplete or different-version environment fails
 and is retained, with a suggestion to choose a new private environment.
 Choose a new path to retry rather than deleting another installation.
-Use a new private environment for an authorized upgrade. Back up the profile and
-destination and retain the same collection, scope and embedding pipeline.
+Use a new private environment for an authorized Runtime upgrade. Back up the
+profile and destination, and retain the same scope. Reuse the collection only
+when the embedding pipeline is unchanged. For FastEmbed 0.9.0 to 0.9.1, use the
+new profile and collection procedure above.
 For an explicitly authorized candidate/development/fallback source, use
 `--version 0.6.0 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
