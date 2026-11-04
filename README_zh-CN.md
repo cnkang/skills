@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | 只读查看 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.3.8 | 面向各类 agent 的记忆工具/CLI、维护及 Mem0 迁移流程。新安装默认使用 Runtime 0.5.5，它保留 Provider 初始化失败修复。独立运行时和 MCP 无需 Hermes 即可工作。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.0 | 面向各类 agent 的记忆工具/CLI、维护、Mem0 迁移及 Codex v1/v2 可移植流程。新安装默认使用 Runtime 0.6.0。通用导出保留跨 harness 的退出路径；原生采纳需由客户端验证。独立运行时和 MCP 无需 Hermes 即可工作。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -130,11 +130,16 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装。Skill 0.3.4 包含私有安装器安全修复。
+作用域。skill 和运行时分别安装。Skill 0.4.0 说明 Runtime 0.6.0 的 Codex
+原生记忆导入与可移植 JSON/Markdown 交接。交接验证不等于原生系统已接管；
+导出内容无需服务或订阅即可读取。
 选择快照前请检查[发布列表](https://github.com/cnkang/skills/releases)。
-继续兼容 Runtime 0.2.2 及对应的 MCP 0.1.3。Runtime 0.3.0 还提供可显式选择的
-CPU Embedding；升级 Runtime 无需替换 Skill，也不会改变 Hermes 默认配置。
-两者均支持 MCP Python SDK 1.x 和 2.x，四个 scoped 工具及 stdio 配置保持一致。
+当前安装器选择 Runtime 0.6.0，对应的 MCP 分发版本为 0.3.0。使用精确版本安装前
+须确认版本已公开发布。若尚未发布，请先使用
+[已发布快照指南](https://github.com/cnkang/skills/blob/skills-20261102.2/README_zh-CN.md)；
+源码指引不代表对应包已在 PyPI 可用。旧版兼容基线保留在[兼容性指南](docs/qdrant-memory-compatibility.md)。
+升级 Runtime 不会改变 Hermes 默认配置。支持 MCP Python SDK 1.x 和 2.x，
+四个 scoped 工具及 stdio 配置保持一致。
 安装器会验证运行时兼容的服务端适配器。
 以下命令固定安装精确的 PyPI 版本：
 
@@ -147,12 +152,11 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # 按需要选择其他支持的 agent ID，或多个 ID。
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp]==0.2.2'
+  'hermes-plugin-qdrant-memory[mcp]==0.6.0'
 ```
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
-原 v0.1.0 没有这些入口，以上命令固定安装 PyPI 发行版本。
-主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.1.3
+主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.3.0
 qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
 两种安装方式共用 Runtime。
 
@@ -205,8 +209,7 @@ JSON CLI 使用这些指引。
 [跨 agent 共享](qdrant-memory/references/shared-memory.md)时，已发布模式使用相同的
 用户/profile 和 `agent_id: null`。这是一个共享分区，当前 Embedded/MCP 写入方
 在 profile 租约下按顺序访问它。显式 agent ID 仍保持私有。并发跨 agent 共享
-需要显式选择启用 Runtime 0.4.0 发布的单 owner 服务。下文的 0.2.2 安装基线
-仅支持私有 profile 的顺序复用。
+需要显式选择启用单 owner 服务。配置、授权与目的地保护见共享记忆指南。
 
 | 流程 | 示例 | 入口 |
 |---|---|---|
