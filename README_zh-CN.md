@@ -134,10 +134,11 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 原生记忆导入与可移植 JSON/Markdown 交接。交接验证不等于原生系统已接管；
 导出内容无需服务或订阅即可读取。
 选择快照前请检查[发布列表](https://github.com/cnkang/skills/releases)。
-当前安装器选择 Runtime 0.6.0，对应的 MCP 分发版本为 0.3.0。使用精确版本安装前
-须确认版本已公开发布。若尚未发布，请先使用
-[已发布快照指南](https://github.com/cnkang/skills/blob/skills-20261102.2/README_zh-CN.md)；
-源码指引不代表对应包已在 PyPI 可用。旧版兼容基线保留在[兼容性指南](docs/qdrant-memory-compatibility.md)。
+自带的 Runtime 安装器选择 Runtime 0.6.0 并安装其 `mcp` extra。Runtime CLI
+可直接提供 stdio MCP 服务；该命令不会安装独立且可选的
+`qdrant-memory-mcp` 分发包。使用该分发包的精确版本前，先确认其 PyPI
+发布状态。Skill 0.4.0 发布前，请使用[已发布快照指南](https://github.com/cnkang/skills/blob/skills-20261102.2/README_zh-CN.md)。
+旧版兼容基线保留在[兼容性指南](docs/qdrant-memory-compatibility.md)。
 升级 Runtime 不会改变 Hermes 默认配置。支持 MCP Python SDK 1.x 和 2.x，
 四个 scoped 工具及 stdio 配置保持一致。
 安装器会验证运行时兼容的服务端适配器。

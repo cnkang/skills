@@ -2,13 +2,14 @@
 
 This skill supplies instructions. The shared [Qdrant memory backend](https://github.com/cnkang/hermes-plugin-qdrant-memory) supplies storage, embeddings, scope, ledger, ownership and recovery. Its repository name preserves the original Hermes plugin distribution. The standalone CLI and stdio MCP do not require Hermes.
 
-The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3, the verified
-private compatibility baseline for this skill. These minimum versions do not
-provide the Runtime 0.5.0 Owner controls. This skill targets Runtime
-0.6.0 and MCP distribution 0.3.0; verify package availability before installing.
-The installer accepts an installed Runtime that is at
-least the requested version. For MCP-focused agents, prefer the metadata-only
-[MCP distribution](https://github.com/cnkang/qdrant-memory-mcp).
+The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3,
+the verified private compatibility baseline for this skill. These minimum
+versions do not provide the Runtime 0.5.0 Owner controls. This skill targets
+Runtime 0.6.0. Its `mcp` extra provides the standalone stdio server directly.
+The optional metadata-only [MCP distribution](https://pypi.org/project/qdrant-memory-mcp/)
+is versioned independently; verify its PyPI release before installing an exact
+version. The installer accepts an installed Runtime that is at least the
+requested version.
 
 Older CPU profiles may use FastEmbed 0.9.0. Runtime 0.5.5 and later use the
 0.9.1 pipeline with a different fingerprint. Keep the old environment, cache and
