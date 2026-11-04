@@ -145,10 +145,12 @@ For an explicitly authorized candidate/development/fallback source, use
 `--version 0.6.0 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The Runtime 0.6.0 standalone acceptance uses the immutable release commit
-`dee6777432f17523db75f6be32cf3ef15e48235c`. The separate Runtime 0.2.2
-compatibility lane retains commit `c85d2bce788b117dddd854bb124971f7de8e564c`.
-The published release tag is the source of truth.
+The immutable Runtime 0.6.0 release commit is
+`dee6777432f17523db75f6be32cf3ef15e48235c`; CI's current-release acceptance
+installs published Runtime 0.6.0 from PyPI and exercises the default installer
+path. The standalone compatibility lane retains Runtime 0.2.2 at commit
+`c85d2bce788b117dddd854bb124971f7de8e564c`. The published release tag is the
+source of truth.
 For Hermes users, the pin preserves transcript-author isolation across restarts.
 Unknown historical attribution disables whole-transcript supplementary extraction
 until an explicit fresh transcript reset. Attributed per-turn writes continue.
