@@ -156,9 +156,13 @@ python3 -m venv /private/path/qdrant-env
 ```
 
 后端保留原仓库及分发包名称，但独立 CLI 和 stdio MCP 不需要安装 Hermes。
-主要使用 MCP 的 agent 可优先选择 `uvx --from qdrant-memory-mcp==0.3.0
-qdrant-memory-mcp --home /private/path/profile mcp`；先配置并初始化 profile。
-两种安装方式共用 Runtime。
+主要使用 MCP 的 agent 可运行上方已安装的 Runtime 0.6.0 命令，直接启动
+stdio MCP server。先配置并初始化 profile：
+
+```bash
+/private/path/qdrant-env/bin/qdrant-memory \
+  --home /private/path/profile mcp
+```
 
 后端缺失时，获得安装授权的 agent 也可以执行安装后的 skill 自带脚本：
 

@@ -166,9 +166,13 @@ python3 -m venv /private/path/qdrant-env
 
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation.
-For MCP-focused agents, prefer `uvx --from qdrant-memory-mcp==0.3.0
-qdrant-memory-mcp --home /private/path/profile mcp`. Configure
-and initialize the profile first. Both install choices share the Runtime.
+For MCP-focused agents, use the published Runtime 0.6.0 command installed
+above to start its stdio MCP server. Configure and initialize the profile first:
+
+```bash
+/private/path/qdrant-env/bin/qdrant-memory \
+  --home /private/path/profile mcp
+```
 
 If the backend is missing, an agent authorized to set it up can instead run the
 bundled installer from the installed skill directory:
