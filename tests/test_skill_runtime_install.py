@@ -78,7 +78,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         if sdk_requirement:
             run([result["python"], "-m", "pip", "install", sdk_requirement])
             assert json.loads(run([sys.executable, str(installer), "--venv", str(venv), *selection]))["ok"]
-        executable = result["command"]
+        executable = default_result["command"]
         assert json.loads(run([executable, "--home", str(home), "init"]))["ok"]
         assert json.loads(run([executable, "--home", str(home), "doctor"]))["ok"]
         saved = json.loads(run([executable, "--home", str(home), "add", "--text", "Installation acceptance remembers this fact"]))
@@ -114,7 +114,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         found = json.loads(run([executable, "--home", str(home), "search", "--query", "similarity-fixture: cats"]))
         assert set(similar) <= {memory["id"] for memory in found["memories"]}
         # Reuse a verified installation without another pip invocation.
-        assert json.loads(run([sys.executable, str(installer), "--venv", str(venv), *selection]))["command"] == executable
+        assert json.loads(run([sys.executable, str(installer), "--venv", str(default_venv)]))["command"] == executable
         # A registered Hermes plugin produces the advisory on the verify path.
         (isolated / ".hermes/plugins/qdrant-memory").mkdir(parents=True)
         (isolated / ".hermes/config.yaml").write_text("memory:\n  provider: qdrant-memory\n", encoding="utf-8")
