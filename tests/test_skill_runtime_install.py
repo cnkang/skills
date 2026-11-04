@@ -94,6 +94,10 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         assert len(set(similar)) == 2
 
         pinned_home = tmp_path / "pinned runtime home"
+        pinned_home.mkdir()
+        pinned_config = json.loads((home / "qdrant-memory.json").read_text(encoding="utf-8"))
+        pinned_config["scope"]["user_id"] = "pinned-runtime"
+        (pinned_home / "qdrant-memory.json").write_text(json.dumps(pinned_config), encoding="utf-8")
         assert json.loads(run([result["command"], "--home", str(pinned_home), "init"]))["ok"]
 
         from mcp import ClientSession, StdioServerParameters
