@@ -88,7 +88,7 @@ exit 0
             result = subprocess.run(
                 [str(powershell), "-NoProfile", "-NonInteractive", "-Command", script],
                 shell=False, env={"SystemRoot": root, "WINDIR": root, "QM_INSTALL_PARENT": str(parent)},
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30,
             )
         except subprocess.TimeoutExpired as exc:
             raise ValueError(WINDOWS_ACL_UNVERIFIED) from exc
