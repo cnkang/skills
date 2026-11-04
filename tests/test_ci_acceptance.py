@@ -147,6 +147,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     installer = next(step for step in job["steps"] if "test_skill_runtime_install.py" in step.get("run", ""))
     assert installer["if"] == "runner.os == 'Linux'"
     assert installer["env"]["QDRANT_SKILL_INSTALL_E2E"] == "1"
+    assert installer["env"]["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"] == "0.6.0"
     assert installer["env"]["QDRANT_SKILL_MCP_REQUIREMENT"] == "${{ matrix.mcp.requirement }}"
     assert installer["env"]["QDRANT_SKILL_INSTALL_REVISION"] == checkouts[0]["ref"]
     assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/tree/${{ github.event.pull_request.head.sha || github.sha }}"

@@ -229,7 +229,7 @@ jobs:
   qdrant-standalone:
     name: Standalone CLI and MCP acceptance (${{ matrix.os }}, SDK ${{ matrix.mcp.name }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -269,10 +269,11 @@ jobs:
           node-version: '24'
       - name: Install locked Pi CLI
         run: npm ci --prefix tests/agent-hosts/pi --ignore-scripts --no-audit --no-fund
-      - name: Install skill and missing backend in a fresh environment
+      - name: Install skill and verify the public Runtime default
         if: runner.os == 'Linux'
         env:
           QDRANT_SKILL_INSTALL_E2E: '1'
+          QDRANT_SKILL_INSTALL_DEFAULT_VERSION: '0.6.0'
           QDRANT_SKILL_MCP_REQUIREMENT: ${{ matrix.mcp.requirement }}
           QDRANT_SKILL_INSTALL_REVISION: c85d2bce788b117dddd854bb124971f7de8e564c
           QDRANT_STANDALONE_ROOT: ${{ github.workspace }}/.standalone-plugin
