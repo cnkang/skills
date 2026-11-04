@@ -3,6 +3,7 @@ import asyncio
 import importlib.util
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -32,7 +33,9 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
             return result.stdout
 
         source = os.environ.get("QDRANT_SKILLS_SOURCE", str(ROOT))
-        run(["npx", "--yes", "skills@1.7.0", "add", source, "--skill", "qdrant-memory", "-a", "codex", "-g", "-y"])
+        npx = shutil.which("npx.cmd" if os.name == "nt" else "npx")
+        assert npx is not None
+        run([npx, "--yes", "skills@1.7.0", "add", source, "--skill", "qdrant-memory", "-a", "codex", "-g", "-y"])
         installed = isolated / ".agents/skills/qdrant-memory"
         installer = installed / "scripts/install_runtime.py"
         selection = ["--version", "0.2.2"]
@@ -77,6 +80,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         sdk_requirement = os.environ.get("QDRANT_SKILL_MCP_REQUIREMENT")
         if sdk_requirement:
             run([result["python"], "-m", "pip", "install", sdk_requirement])
+            run([default_result["python"], "-m", "pip", "install", sdk_requirement])
             assert json.loads(run([sys.executable, str(installer), "--venv", str(venv), *selection]))["ok"]
         executable = default_result["command"]
         assert json.loads(run([executable, "--home", str(home), "init"]))["ok"]
