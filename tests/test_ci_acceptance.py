@@ -10,6 +10,17 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from check_test_report import validate_report
 
 
+def _active_lock_requirements(lock: str) -> set[str]:
+    requirements = set()
+    for line in lock.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        requirement = line.split("#", 1)[0].split("\\", 1)[0].split(";", 1)[0].strip()
+        if requirement:
+            requirements.add(requirement)
+    return requirements
+
+
 @pytest.mark.parametrize("xml", [
     '<testsuites/>',
     '<testsuite><testcase name="fixture"><skipped/></testcase></testsuite>',
@@ -29,6 +40,19 @@ def test_successful_acceptance(tmp_path):
     validate_report(path, 1)
     with pytest.raises(ValueError):
         validate_report(path, 2)
+
+
+def test_active_lock_requirement_ignores_comments():
+    lock = "\n".join(
+        [
+            "# hermes-plugin-qdrant-memory==0.6.0",
+            "hermes-plugin-qdrant-memory==0.6.1 \\",
+            "    # via requirements.in",
+        ]
+    )
+    requirements = _active_lock_requirements(lock)
+    assert "hermes-plugin-qdrant-memory==0.6.1" in requirements
+    assert "hermes-plugin-qdrant-memory==0.6.0" not in requirements
 
 
 def test_runtime_ci_is_required_pinned_and_opted_in():
@@ -57,7 +81,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.6.0" in lock
+    assert "hermes-plugin-qdrant-memory==0.6.0" in _active_lock_requirements(lock)
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])
