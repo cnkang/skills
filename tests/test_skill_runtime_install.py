@@ -65,6 +65,15 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
             assert revision in (installed / "references/runtime.md").read_text()
         else:
             assert origin["source"] is None
+        default_version = os.environ["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"]
+        assert default_version == "0.6.0"
+        default_venv = tmp_path / "fresh default runtime"
+        default_result = json.loads(run([sys.executable, str(installer), "--venv", str(default_venv)]))
+        assert default_result["ok"]
+        default_origin = json.loads(run([default_result["python"], "-I", "-c", "import importlib.metadata as m, json, qdrant_memory; d=m.distribution('hermes-plugin-qdrant-memory'); print(json.dumps({'origin': qdrant_memory.__file__, 'version': d.version, 'source': json.loads(d.read_text('direct_url.json') or 'null')}))"]))
+        assert Path(default_origin["origin"]).is_relative_to(default_venv)
+        assert default_origin["version"] == default_result["installed_version"] == default_version
+        assert default_origin["source"] is None
         sdk_requirement = os.environ.get("QDRANT_SKILL_MCP_REQUIREMENT")
         if sdk_requirement:
             run([result["python"], "-m", "pip", "install", sdk_requirement])
