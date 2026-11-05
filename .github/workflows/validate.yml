@@ -303,9 +303,107 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  workflow-security:
+    name: Workflow security analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install verified actionlint 1.7.12
+        env:
+          ACTIONLINT_ARCHIVE: ${{ runner.temp }}/actionlint.tar.gz
+        run: |
+          curl --fail --silent --show-error --location --proto "=https" --proto-redir "=https" --output "$ACTIONLINT_ARCHIVE" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $ACTIONLINT_ARCHIVE" | sha256sum --check
+          tar -xzf "$ACTIONLINT_ARCHIVE" -C "$RUNNER_TEMP" actionlint
+      - name: Validate workflow syntax, expressions and shell steps
+        run: '"$RUNNER_TEMP/actionlint" -color'
+      - name: Audit workflow security with zizmor 1.32.0
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          advanced-security: false
+          online-audits: false
+          version: 1.32.0
+          persona: regular
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install verified gitleaks 8.30.1
+        env:
+          GITLEAKS_ARCHIVE: ${{ runner.temp }}/gitleaks.tar.gz
+        run: |
+          curl --fail --silent --show-error --location --proto "=https" --proto-redir "=https" --output "$GITLEAKS_ARCHIVE" https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $GITLEAKS_ARCHIVE" | sha256sum --check
+          tar -xzf "$GITLEAKS_ARCHIVE" -C "$RUNNER_TEMP" gitleaks
+      - name: Scan the commits introduced by this event
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -eu
+          scan_range="$HEAD_SHA"
+          if [ "$EVENT_NAME" = pull_request ] || [ "$EVENT_NAME" = push ]; then
+            case "${BASE_SHA:-}" in
+              "" | 0000000000000000000000000000000000000000) ;;
+              *)
+                if git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+                  scan_range="$BASE_SHA..$HEAD_SHA"
+                fi
+                ;;
+            esac
+          fi
+          echo "Scanning $scan_range"
+          "$RUNNER_TEMP/gitleaks" git --no-banner --redact --exit-code 1 --log-opts="$scan_range" .
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-3.0, GPL-2.0, GPL-3.0, SSPL-1.0
+          comment-summary-in-pr: never
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 120
+      - name: Install verified OSV-Scanner 2.7.0
+        env:
+          OSV_BINARY: ${{ runner.temp }}/osv-scanner
+        run: |
+          curl --fail --silent --show-error --location --proto "=https" --proto-redir "=https" --output "$OSV_BINARY" https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+          echo "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  $OSV_BINARY" | sha256sum --check
+          chmod +x "$OSV_BINARY"
+      - name: Scan the hash-pinned CI locks that dependency review cannot see
+        env:
+          OSV_BINARY: ${{ runner.temp }}/osv-scanner
+        run: |
+          set -eu
+          args=()
+          for lock in .github/requirements-*.txt; do
+            args+=(--lockfile="$lock")
+          done
+          test "${#args[@]}" -gt 0
+          "$OSV_BINARY" scan source "${args[@]}"
+
   sonarcloud:
     name: SonarCloud quality gate
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Fork and Dependabot pull requests never receive the token.
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -348,27 +446,38 @@ jobs:
       - qdrant-current-runtime-e2e
       - pi-host
       - qdrant-standalone
+      - workflow-security
+      - secret-scan
+      - dependency-review
       - sonarcloud
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Require every test job to succeed
         env:
-          RESULTS: ${{ toJSON(needs) }}
-          # A fork pull request has no access to the SonarCloud token, so the scan
-          # is skipped there. Every other skip still fails the gate.
-          SONAR_MAY_SKIP: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          NEEDS: ${{ toJSON(needs) }}
+          EVENT_NAME: ${{ github.event_name }}
+          FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          DEPENDABOT: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]' }}
+        run: python3 scripts/check_required_checks.py
+      - name: Record why each job ended the way it did
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          python3 - <<'PY'
-          import json, os
-          results = json.loads(os.environ['RESULTS'])
-          optional = {'sonarcloud'} if os.environ.get('SONAR_MAY_SKIP') == 'true' else set()
-          failed = {
-              job: data['result']
-              for job, data in results.items()
-              if data['result'] != 'success' and not (job in optional and data['result'] == 'skipped')
-          }
-          if failed:
-              raise SystemExit(f'Required jobs did not succeed: {failed}')
-          print('All package, distribution, historical and current plugin contracts, Hermes E2E, standalone and Pi host jobs passed')
-          PY
+          {
+            echo "## Job outcomes"
+            echo ""
+            echo "Columns: job, conclusion, runner, executed steps."
+            echo "An empty runner with zero steps means the job never started."
+            echo ""
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" \
+              --jq '.jobs[] | [.name, (.conclusion // .status), (.runner_name // "-"), ((.steps // []) | length)] | @tsv' || true
+          } >> "$GITHUB_STEP_SUMMARY"
