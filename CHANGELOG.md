@@ -1,5 +1,13 @@
 # Changelog
 
+## skills-20261105.1 — 2026-11-05 (UTC)
+
+### qdrant-memory 0.4.0
+
+- Rebuild the versioned snapshot after CI and release-guide updates. The
+  qdrant-memory skill source is unchanged from `skills-20261104.1`; other skill
+  package versions are unchanged.
+
 ## skills-20261104.1 — 2026-11-04 (UTC)
 
 ### qdrant-memory 0.4.0
