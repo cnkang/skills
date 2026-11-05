@@ -1,8 +1,10 @@
 """Fail-closed evaluation of the Required checks aggregate.
 
-The gate reads only the job results that GitHub reports and the identity of the
-triggering event. It never inspects code, so a contribution cannot change the
-verdict beyond making a job fail.
+The gate reads the job results that GitHub reports and the identity of the
+triggering event. The `required-checks` job runs this file from the checkout of
+the event under evaluation, so a pull request that edits this file or that job
+can change the verdict. Review changes to both; the accepted risk is recorded in
+docs/ci-security-audit.md (F-09).
 """
 
 from __future__ import annotations

@@ -55,8 +55,9 @@ that graph does not index. The pull-request job therefore runs OSV-Scanner 2.7.0
 over those locks as a second, targeted check. It queries the free OSV database,
 needs no account, and fails on every advisory the database reports.
 
-If GitHub's dependency graph starts covering those files, the OSV step can be
-removed without changing the gate.
+Dependency Review reports only vulnerabilities that a pull request introduces.
+Indexing those locks would not make it check unchanged dependencies, so the OSV
+step stays.
 
 ## CodeRabbit
 
