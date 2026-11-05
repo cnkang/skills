@@ -139,5 +139,5 @@ fails, so an empty runner with zero steps is visible without reading the API.
 - The `workbuddy-release.yml` attach job holds `contents: write` behind a tag.
   It never runs for a pull request.
 - OSV-Scanner and Dependency Review overlap on purpose only for the hash locks.
-  If GitHub's dependency graph starts indexing those locks, the OSV step can be
-  removed.
+  Indexing those locks would not make Dependency Review check unchanged
+  dependencies, so the OSV step stays.
