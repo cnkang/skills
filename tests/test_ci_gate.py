@@ -11,7 +11,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from check_required_checks import ALWAYS_REQUIRED, evaluate  # noqa: E402
+from check_required_checks import ALWAYS_REQUIRED, evaluate, main  # noqa: E402
 
 WORKFLOWS = ROOT / ".github/workflows"
 
@@ -129,6 +129,20 @@ def test_gate_step_executes_the_committed_script():
     )
     assert result.returncode == 1
     assert "::error::sonarcloud=cancelled" in result.stdout
+
+
+def test_main_reads_the_environment(monkeypatch, capsys):
+    """The workflow entry point maps environment variables to the decision."""
+    monkeypatch.setenv("NEEDS", json.dumps(_needs()))
+    monkeypatch.setenv("EVENT_NAME", "pull_request")
+    monkeypatch.setenv("FORK_PR", "false")
+    monkeypatch.setenv("DEPENDABOT", "false")
+    assert main() == 0
+    assert "All required jobs succeeded" in capsys.readouterr().out
+
+    monkeypatch.setenv("NEEDS", json.dumps(_needs(**{"qdrant-e2e": {"result": "cancelled"}})))
+    assert main() == 1
+    assert "::error::qdrant-e2e=cancelled" in capsys.readouterr().out
 
 
 def test_gate_needs_cover_every_reported_result():
