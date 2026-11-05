@@ -1,0 +1,7 @@
+# Workflow files execute with repository authority.
+/.github/CODEOWNERS @cnkang
+/.github/workflows/ @cnkang
+/.github/requirements-*.txt @cnkang
+/scripts/ @cnkang
+/qdrant-memory/scripts/ @cnkang
+/tests/agent-hosts/ @cnkang
