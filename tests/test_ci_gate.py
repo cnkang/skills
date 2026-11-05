@@ -222,6 +222,14 @@ def test_security_tools_are_pinned():
     assert "--redact" in secret
 
 
+def test_secret_scan_covers_every_merge_shape():
+    """A merge commit must be scanned against its first parent, not skipped."""
+    job = _workflow("validate.yml")["jobs"]["secret-scan"]
+    step = next(item for item in job["steps"] if item.get("name") == "Scan the commits introduced by this event")
+    assert "--diff-merges=first-parent" in step["run"]
+    assert "--diff-merges=remerge" not in step["run"]
+
+
 def test_scorecard_runs_only_on_trusted_events():
     """Scorecard publishes with OIDC and never gates a pull request."""
     workflow = _workflow("scorecard.yml")
