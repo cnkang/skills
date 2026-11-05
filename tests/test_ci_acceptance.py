@@ -97,6 +97,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     assert set(jobs["required-checks"]["needs"]) == {
         "packages", "distribution", "qdrant-contract", "qdrant-e2e",
         "qdrant-current-runtime-e2e", "pi-host", "qdrant-standalone", "sonarcloud",
+        "workflow-security", "secret-scan", "dependency-review",
     }
     assert jobs["required-checks"]["if"] == "always()"
 
