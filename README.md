@@ -143,9 +143,8 @@ Check the [release list](https://github.com/cnkang/skills/releases) before choos
 The bundled Runtime installer selects Runtime 0.6.0 and installs its `mcp`
 extra. The Runtime CLI can serve stdio MCP directly; this does not install the
 separate, optional `qdrant-memory-mcp` distribution. Check that distribution's
-PyPI release before installing an exact version. Until Skill 0.4.0 is published,
-use the
-[published snapshot guide](https://github.com/cnkang/skills/blob/skills-20261102.2/README.md).
+PyPI release before installing an exact version. Skill 0.4.0 is available in the
+[published snapshot guide](https://github.com/cnkang/skills/blob/skills-20261104.1/README.md).
 Older compatibility baselines remain documented in the
 [compatibility guide](docs/qdrant-memory-compatibility.md). Upgrading the Runtime
 does not change Hermes defaults. It supports MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
