@@ -21,13 +21,15 @@ injection enabled; capture is independent. It asks DSH's current model route to
 extract candidates and sends those candidates, not the raw assistant transcript,
 to the authenticated Python Owner. DSH's configured model still receives the
 turn content for extraction. Use a distinct Owner token for each unrelated DSH
-profile. Runtime remains responsible for scope, relation review, deduplication,
+profile. On a shared Owner, bind each unrelated profile to a distinct logical
+agent and private space.
+Runtime remains responsible for scope, relation review, deduplication,
 durable receipts and Qdrant writes. No automatic sharing between DSH, Hermes,
 or WorkBuddy private profiles is implied.
 
 For preview configuration, profile-local migration and rollback, compatibility
-and validation evidence, read the [native setup guide](https://github.com/cnkang/qdrant-memory-mcp/blob/main/integrations/dsh/native/README.md)
-and [validation report](https://github.com/cnkang/qdrant-memory-mcp/blob/main/docs/dsh-native/validation.md).
+and validation evidence, read the [native setup guide](https://github.com/cnkang/qdrant-memory-mcp/blob/cf51170b79b31d780f5227913ae3f1092ad0e8d9/integrations/dsh/native/README.md)
+and [validation report](https://github.com/cnkang/qdrant-memory-mcp/blob/cf51170b79b31d780f5227913ae3f1092ad0e8d9/docs/dsh-native/validation.md).
 The synthetic tests and profile install smoke do not establish real-model,
 AgentLoop, Qdrant/CPU embedding, or desktop GUI acceptance.
 
