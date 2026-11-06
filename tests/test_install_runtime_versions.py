@@ -24,6 +24,8 @@ def installer(monkeypatch):
     # Native ACL behavior has separate real-platform tests. These unit tests
     # replace subprocesses to inspect only the installation/probe contract.
     monkeypatch.setattr(module, "_require_private_parent", lambda _path: None)
+    monkeypatch.setattr(module, "_require_darwin_allow_acl", lambda _path: None)
+    monkeypatch.setattr(module, "_require_private_windows_file", lambda _path: None, raising=False)
     return module
 
 
@@ -164,6 +166,7 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     target = tmp_path / "fresh"
     lock = tmp_path / "requirements.txt"
     lock.write_text("# trusted operator-supplied lock")
+    lock.chmod(0o600)
     calls = []
     monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir(exist_ok=True))
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
@@ -194,6 +197,7 @@ def test_hash_lock_requires_requested_runtime_version(installer, tmp_path, monke
         target.mkdir()
     lock = tmp_path / "requirements.txt"
     lock.write_text("# trusted operator-supplied lock")
+    lock.chmod(0o600)
     calls = []
     monkeypatch.setattr(installer.venv.EnvBuilder, "create", lambda self, path: path.mkdir(exist_ok=True))
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
@@ -220,6 +224,137 @@ def test_writable_existing_venv_rejected_before_execution(installer, tmp_path, m
     with pytest.raises(SystemExit):
         installer.main()
     assert target.stat().st_mode & 0o777 == 0o777
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
+def test_group_or_world_writable_lock_rejected_before_execution(installer, tmp_path, monkeypatch, capsys):
+    target = tmp_path / "fresh"
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# attacker-writable lock")
+    lock.chmod(0o666)
+    monkeypatch.setattr(installer.subprocess, "run", lambda *a, **k: pytest.fail("must not execute"))
+    monkeypatch.setattr(
+        sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)]
+    )
+    with pytest.raises(SystemExit) as exc:
+        installer.main()
+    assert exc.value.code == 2
+    assert "group/world-writable" in capsys.readouterr().err
+    assert not target.exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX file-type check")
+def test_directory_as_lock_rejected_before_execution(installer, tmp_path, monkeypatch, capsys):
+    lock = tmp_path / "lockdir"
+    lock.mkdir()
+    monkeypatch.setattr(installer.subprocess, "run", lambda *a, **k: pytest.fail("must not execute"))
+    monkeypatch.setattr(
+        sys, "argv", ["installer", "--venv", str(tmp_path / "fresh"), "--requirements-lock", str(lock)]
+    )
+    with pytest.raises(SystemExit) as exc:
+        installer.main()
+    assert exc.value.code == 2
+    assert "regular file" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
+def test_lock_in_writable_directory_rejected_before_execution(
+    installer, tmp_path, monkeypatch, capsys
+):
+    parent = tmp_path / "shared"
+    parent.mkdir()
+    parent.chmod(0o777)
+    lock = parent / "requirements.txt"
+    lock.write_text("# lock in a shared directory")
+    monkeypatch.setattr(installer.subprocess, "run", lambda *a, **k: pytest.fail("must not execute"))
+    monkeypatch.setattr(
+        sys, "argv", ["installer", "--venv", str(tmp_path / "fresh"), "--requirements-lock", str(lock)]
+    )
+    with pytest.raises(SystemExit) as exc:
+        installer.main()
+    assert exc.value.code == 2
+    assert "private, user-owned directory" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
+def test_lock_under_writable_ancestor_rejected(installer, tmp_path, monkeypatch, capsys):
+    shared = tmp_path / "shared"
+    shared.mkdir()
+    shared.chmod(0o777)
+    private = shared / "private"
+    private.mkdir()
+    private.chmod(0o700)
+    lock = private / "requirements.txt"
+    lock.write_text("# lock reachable through a writable ancestor")
+    lock.chmod(0o600)
+    monkeypatch.setattr(installer.subprocess, "run", lambda *a, **k: pytest.fail("must not execute"))
+    monkeypatch.setattr(
+        sys, "argv", ["installer", "--venv", str(tmp_path / "fresh"), "--requirements-lock", str(lock)]
+    )
+    with pytest.raises(SystemExit) as exc:
+        installer.main()
+    assert exc.value.code == 2
+    assert "replaceable by another account" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ancestor walk")
+def test_lock_ancestor_acl_probe_visits_lock_and_ancestors(installer, tmp_path, monkeypatch):
+    """Every component that can replace the lock is passed to the ACL probe."""
+    checked = []
+    monkeypatch.setattr(installer, "_require_private_parent", lambda _path: None)
+    monkeypatch.setattr(
+        installer, "_require_darwin_allow_acl", lambda path: checked.append(path)
+    )
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# lock")
+    lock.chmod(0o600)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    assert installer._resolve_lock(parser, args) == lock.resolve()
+    assert lock.resolve() in checked
+    assert lock.resolve().parent.parent in checked
+
+
+def test_missing_lock_file_is_rejected(installer, tmp_path):
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=tmp_path / "missing", revision=None)
+    with pytest.raises(SystemExit):
+        installer._resolve_lock(parser, args)
+
+
+def test_lock_probe_failure_is_reported(installer, tmp_path, monkeypatch, capsys):
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# lock")
+    lock.chmod(0o600)
+
+    def fail(_path):
+        raise ValueError("probe failed")
+
+    monkeypatch.setattr(installer, "_require_private_parent", fail)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    with pytest.raises(SystemExit):
+        installer._resolve_lock(parser, args)
+    assert "probe failed" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX ancestor walk")
+def test_ancestor_acl_failure_is_reported(installer, tmp_path, monkeypatch, capsys):
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# lock")
+    lock.chmod(0o600)
+    monkeypatch.setattr(installer, "_require_private_parent", lambda _path: None)
+
+    def fail_ancestor(path):
+        if path != lock.resolve():
+            raise ValueError("ancestor ACL")
+
+    monkeypatch.setattr(installer, "_require_darwin_allow_acl", fail_ancestor)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    with pytest.raises(SystemExit):
+        installer._resolve_lock(parser, args)
+    assert "ancestor ACL" in capsys.readouterr().err
 
 
 def test_source_revision_cannot_use_release_hash_lock(installer, tmp_path, monkeypatch):

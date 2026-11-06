@@ -44,6 +44,78 @@ def test_windows_acl_process_failure_is_not_a_permission_diagnosis(native_instal
         native_installer._require_private_parent(tmp_path)
 
 
+@pytest.mark.parametrize("code,message", [
+    (0, None), (3, "other-account write ACL"),
+    (1, "Cannot verify"), (7, "Cannot verify"),
+])
+def test_windows_lock_file_acl_process_failure_is_not_a_permission_diagnosis(
+    native_installer, tmp_path, monkeypatch, code, message
+):
+    def windows_directory(buffer, _size):
+        buffer.value = "C:\\Windows"
+        return len(buffer.value)
+
+    kernel = SimpleNamespace(GetWindowsDirectoryW=windows_directory)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **kw: kernel, raising=False)
+    monkeypatch.setattr(native_installer, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(
+        native_installer.subprocess, "run",
+        lambda argv, **kw: subprocess.CompletedProcess(argv, code),
+    )
+    lock = tmp_path / "requirements.txt"
+    if message:
+        with pytest.raises(ValueError, match=message):
+            native_installer._require_private_windows_file(lock)
+    else:
+        native_installer._require_private_windows_file(lock)
+
+
+def test_windows_acl_probe_fails_closed_without_a_windows_directory(native_installer, tmp_path, monkeypatch):
+    kernel = SimpleNamespace(GetWindowsDirectoryW=lambda buffer, size: 0)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **kw: kernel, raising=False)
+    monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
+    with pytest.raises(ValueError, match="Cannot verify"):
+        native_installer._require_windows_acl(tmp_path, directory=True, label="parent")
+
+
+def test_windows_acl_probe_fails_closed_on_timeout(native_installer, tmp_path, monkeypatch):
+    def windows_directory(buffer, _size):
+        buffer.value = "C:\\Windows"
+        return len(buffer.value)
+
+    kernel = SimpleNamespace(GetWindowsDirectoryW=windows_directory)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **kw: kernel, raising=False)
+    monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
+
+    def timeout(*_args, **_kwargs):
+        raise subprocess.TimeoutExpired("powershell", 30)
+
+    monkeypatch.setattr(native_installer.subprocess, "run", timeout)
+    with pytest.raises(ValueError, match="Cannot verify"):
+        native_installer._require_windows_acl(tmp_path, directory=False, label="lock file")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX no-op check")
+def test_windows_acl_probe_is_a_noop_off_windows(native_installer, tmp_path):
+    """POSIX callers must not need a Windows toolchain."""
+    native_installer._require_windows_acl(tmp_path, directory=True, label="parent")
+
+
+@pytest.mark.skipif(sys.platform != "darwin" or sys.version_info < (3, 11), reason="Native macOS lock ACL test")
+def test_macos_lock_allow_acl_is_rejected(native_installer, tmp_path):
+    lock = tmp_path / "requirements.txt"
+    lock.write_text("# lock")
+    lock.chmod(0o600)
+    rule = "everyone allow read,write"
+    subprocess.run(["/bin/chmod", "+a", rule, str(lock)], check=True)
+    try:
+        with pytest.raises(ValueError, match="ACL"):
+            native_installer._require_darwin_allow_acl(lock)
+    finally:
+        subprocess.run(["/bin/chmod", "-RN", str(lock)], check=True)
+
+
 @pytest.mark.skipif(sys.platform != "darwin" or sys.version_info < (3, 11), reason="Native macOS installer test")
 def test_macos_inherited_allow_acl_is_rejected_before_creation(native_installer, tmp_path, monkeypatch, capsys):
     parent = tmp_path / "acl-parent"
