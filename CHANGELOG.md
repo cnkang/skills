@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### qdrant-memory 0.4.1 candidate
+
+- Verify Codex profile selection through the plugin's effective environment and
+  launcher doctor; a standalone CLI status command only checks its own path.
+- Distinguish the logical embedding model from its immutable ONNX artifact
+  repository.
+
 ## skills-20261105.1 — 2026-11-05 (UTC)
 
 ### qdrant-memory 0.4.0

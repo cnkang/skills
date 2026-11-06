@@ -17,18 +17,24 @@ explicit embedding-provider choice. For the recommended local CPU option:
 qdrant-memory setup --profile "/absolute/new/profile" --embedding-provider fastembed
 ```
 
-If the new profile path differs from the launcher's configured location, the
-Codex host environment must carry it. The launcher selects
-`QDRANT_MEMORY_CODEX_PROFILE` when that variable is set, and otherwise uses
-`<root>/profile` under its own runtime root. When the user confirms a profile
-outside that path, instruct them to set `QDRANT_MEMORY_CODEX_PROFILE` to the
-absolute profile path in the Codex host environment, then reconnect the host
-and verify — for example through `qdrant-memory --home "/absolute/new/profile"
-status` — that the intended profile is selected before using the memory tools.
+The launcher selects `QDRANT_MEMORY_CODEX_PROFILE` when that variable is set;
+otherwise it selects `<QDRANT_MEMORY_CODEX_ROOT or ~/.qdrant-memory/codex>/profile`.
+Before using memory tools, inspect the effective environment of the Codex MCP
+server and confirm that this resolves to the approved absolute profile path. If
+needed, set `QDRANT_MEMORY_CODEX_PROFILE` to that path in the Codex host
+environment and reconnect the host. When the packaged launcher is available,
+`node <plugin-root>/launcher.mjs doctor` with the same effective environment
+invokes Runtime `doctor` against the profile selected by the plugin launcher.
+The separate command `qdrant-memory --home "/absolute/new/profile" status`
+checks only the path explicitly passed to that CLI process; it does not prove
+which profile the Codex plugin selected.
 
 This command prepares the pinned CPU model when it is not already cached. Before
-running it, ask for explicit permission to download the model and state the
-source and size: `Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q`, revision
+running it, ask for explicit permission to download the model and state both
+identifiers: the logical model is
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; its immutable
+ONNX artifacts are downloaded from
+`Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q`, revision
 `faf4aa4225822f3bc6376869cb1164e8e3feedd0`, **252,138,706 bytes** total, 384
 dimensions. Runtime verifies each artifact's pinned size and SHA-256 and
 publishes the cache atomically. If the user declines, stop before setup. The
