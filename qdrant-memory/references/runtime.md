@@ -213,12 +213,20 @@ Installation ignores ambient pip configuration (`PIP_CONFIG_FILE` is the null
 device). Service credentials are not passed to installation subprocesses. For a
 reviewed release dependency set, pass `--requirements-lock /absolute/path/lock.txt`.
 The trusted lock must cover the requested Runtime with its MCP extra and every
-transitive dependency using exact versions and SHA256 hashes. This enables pip
-`--require-hashes --only-binary=:all:`. Missing hashes or unavailable wheels fail
-closed. No fallback to a source build is attempted. This option cannot be combined
-with `--revision`. Explicit immutable source installation remains a separate
-operator-authorized development route. Existing environments are verified without
-reinstallation, so this flag does not retroactively certify their bytes.
+transitive dependency using exact versions and SHA256 hashes. On POSIX the file
+must be a regular file owned by the current user, not group- or world-writable,
+its containing directory must be user-owned and private, and no ancestor may be
+owned by another non-root account or group- or world-writable without the
+sticky bit; otherwise the lock or its path could supply its own integrity root.
+On macOS the lock file and its ancestors must also carry no `allow` ACL
+entries. Windows validates the regular-file shape and checks both the directory
+and file DACLs. This
+enables pip `--require-hashes --only-binary=:all:`. Missing hashes or
+unavailable wheels fail closed. No fallback to a source build is attempted.
+This option cannot be combined with `--revision`. Explicit immutable source
+installation remains a separate operator-authorized development route. Existing
+environments are verified without reinstallation, so this flag does not
+retroactively certify their bytes.
 
 New installations default to Runtime 0.6.0. Runtime 0.2.2 remains the tested
 private-compatibility baseline in explicit examples and CI fixture pins. Runtime

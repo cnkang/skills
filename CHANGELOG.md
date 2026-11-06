@@ -4,6 +4,9 @@
 
 ### qdrant-memory 0.4.1 candidate
 
+- Require `--requirements-lock`, its containing directory and every ancestor to
+  be free of other-account writes (and macOS allow ACLs) before pip consumes
+  it; Windows checks the directory and file DACLs.
 - Verify Codex profile selection through the plugin's effective environment and
   launcher doctor; a standalone CLI status command only checks its own path.
 - Distinguish the logical embedding model from its immutable ONNX artifact
