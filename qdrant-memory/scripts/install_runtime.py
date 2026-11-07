@@ -133,7 +133,7 @@ def _require_private_windows_file(path: Path) -> None:
         _require_windows_acl(ancestor, directory=True, label="lock ancestor")
 
 
-_COMMENT_LINE_RE = re.compile(r"(^|\s+)#")
+_COMMENT_LINE_RE = re.compile(r"(^|\s+)#.*$")
 _VALUE_OPTIONS = frozenset(
     {
         "-i",
@@ -200,11 +200,11 @@ def _require_self_contained_lock(lock: Path) -> None:
     except OSError as exc:
         raise ValueError("Cannot read the requirements lock") from exc
     for line in _logical_lock_lines(text):
-        stripped = line.lstrip()
-        if not stripped or stripped.startswith("#"):
+        stripped = _COMMENT_LINE_RE.sub("", line).strip()
+        if not stripped:
             continue
         try:
-            tokens = shlex.split(stripped, comments=True, posix=True)
+            tokens = shlex.split(stripped, comments=False, posix=True)
         except ValueError as exc:
             raise ValueError("Cannot parse the requirements lock") from exc
         skip_value = False
