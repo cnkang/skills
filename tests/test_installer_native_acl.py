@@ -59,16 +59,26 @@ def test_windows_lock_file_acl_process_failure_is_not_a_permission_diagnosis(
     monkeypatch.setattr(ctypes, "WinDLL", lambda *a, **kw: kernel, raising=False)
     monkeypatch.setattr(native_installer, "sys", SimpleNamespace(platform="win32"))
     monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
-    monkeypatch.setattr(
-        native_installer.subprocess, "run",
-        lambda argv, **kw: subprocess.CompletedProcess(argv, code),
-    )
+    calls = []
+
+    def run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, code)
+
+    monkeypatch.setattr(native_installer.subprocess, "run", run)
     lock = tmp_path / "requirements.txt"
     if message:
         with pytest.raises(ValueError, match=message):
             native_installer._require_private_windows_file(lock)
     else:
         native_installer._require_private_windows_file(lock)
+    assert "[System.IO.File]" in calls[0][0][-1]
+    assert calls[0][1]["env"]["QM_INSTALL_FILE"] == str(lock)
+    assert "QM_INSTALL_PARENT" not in calls[0][1]["env"]
+    if message is None:
+        assert len(calls) > 1
+        assert all("[System.IO.Directory]" in call[0][-1] for call in calls[1:])
+        assert all("QM_INSTALL_PARENT" in call[1]["env"] for call in calls[1:])
 
 
 def test_windows_acl_probe_fails_closed_without_a_windows_directory(native_installer, tmp_path, monkeypatch):
