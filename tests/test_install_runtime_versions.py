@@ -327,6 +327,10 @@ def test_lock_ancestor_acl_probe_visits_lock_and_ancestors(installer, tmp_path, 
         "-c \\\nconstraints.txt",
         "some-package==1.0 -r other.txt",
         "some-package==1.0 --constraint=constraints.txt",
+        '"--requirement" "other.txt"',
+        "--require-hashes -r other.txt",
+        "--requi other.txt",
+        "--const other.txt",
     ],
 )
 def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, directive):
@@ -346,7 +350,9 @@ def test_lock_text_that_mentions_include_options_is_not_rejected(installer, tmp_
     lock = tmp_path / "requirements.txt"
     lock.write_text(
         "# -r is mentioned here only\n"
-        "some-package @ https://example.com/-r/wheel.whl\n",
+        "some-package @ https://example.com/-r/wheel.whl\n"
+        '--find-links "-r"\n'
+        '--index-url "https://example.com/-r"\n',
         encoding="utf-8",
     )
     lock.chmod(0o600)
