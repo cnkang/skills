@@ -57,6 +57,10 @@ $ErrorActionPreference = 'Stop'
 $acl = [System.IO.__KIND__]::GetAccessControl($env:__VARIABLE__)
 $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 $owners = @($user, 'S-1-5-18', 'S-1-5-32-544')
+try {
+    $ti = (New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList 'NT SERVICE\\TrustedInstaller').Translate([System.Security.Principal.SecurityIdentifier]).Value
+    $owners += $ti
+} catch { }
 $owner = $acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value
 if ($owners -notcontains $owner) { exit 3 }
 $allowed = $owners + @('S-1-3-0', 'S-1-3-4')
@@ -126,8 +130,28 @@ def _require_private_parent(parent: Path) -> None:
 
 
 def _require_private_windows_file(path: Path) -> None:
-    """Reject a Windows lock file whose own DACL grants other-account writes."""
+    """Reject a Windows lock file or replaceable ancestor with an unsafe DACL."""
     _require_windows_acl(path, directory=False, label="lock file")
+    for ancestor in path.parents[1:]:
+        _require_windows_acl(ancestor, directory=True, label="lock ancestor")
+
+
+def _require_self_contained_lock(lock: Path) -> None:
+    """Reject a lock that would make pip read another, unvalidated file."""
+    try:
+        lines = lock.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        raise ValueError("Cannot read the requirements lock") from exc
+    for line in lines:
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith(("-r", "-c")) or re.match(
+            r"--(?:requirement|constraint)(?:=|\s|$)", stripped
+        ):
+            raise ValueError(
+                "--requirements-lock must be self-contained; remove -r/-c includes"
+            )
 
 
 def _release_key(version: str) -> tuple[int, int, int]:
@@ -480,6 +504,7 @@ def _resolve_lock(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
         _require_private_parent(lock.parent)
         _require_darwin_allow_acl(lock)
         _require_private_windows_file(lock)
+        _require_self_contained_lock(lock)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
         parser.error(str(exc) or "Cannot verify the requirements-lock permissions")
     if os.name != "nt":
@@ -493,7 +518,7 @@ def _resolve_lock(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
             or parent_info.st_mode & 0o022
         ):
             parser.error("--requirements-lock must be in a private, user-owned directory")
-        for ancestor in lock.parent.parents:
+        for ancestor in lock.parents:
             try:
                 ancestor_info = ancestor.stat()
             except OSError:
@@ -565,10 +590,9 @@ def _create_venv(target: Path) -> None:
 def _pip_selection(target: Path, requirement: str, lock: Path | None) -> tuple[list[str], Path]:
     """Return the pip arguments and working directory for the install."""
     if lock:
-        # Read the operator's lock in place: relative includes and local
-        # artifact paths must resolve against its own directory.
-        lock_path = Path(lock).resolve()
-        return ["--require-hashes", "--only-binary=:all:", "-r", str(lock_path)], lock_path.parent
+        # Use the already resolved and validated path. Re-resolving here could
+        # follow a replacement between validation and pip's read.
+        return ["--require-hashes", "--only-binary=:all:", "-r", str(lock)], lock.parent
     # Keep the requested version out of the argv; pip reads it from a
     # file this installer writes inside the private venv root.
     requirement_file = target / "runtime-requirements.txt"
