@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import stat
 from pathlib import Path
@@ -133,9 +134,44 @@ def _require_private_windows_file(path: Path) -> None:
 
 
 _COMMENT_LINE_RE = re.compile(r"(^|\s+)#")
-_INCLUDE_OPTION_RE = re.compile(
-    r"(?<!\S)(?:--(?:requirement|constraint)(?==|\s|$)|-[rc])"
+_VALUE_OPTIONS = frozenset(
+    {
+        "-i",
+        "--index-url",
+        "--pypi-url",
+        "--extra-index-url",
+        "-f",
+        "--find-links",
+        "-e",
+        "--editable",
+        "--trusted-host",
+        "--no-binary",
+        "--only-binary",
+        "--hash",
+        "--config-settings",
+        "--global-option",
+        "--install-option",
+        "--progress-bar",
+        "--root",
+        "--target",
+        "--prefix",
+        "--src",
+        "--upgrade-strategy",
+        "--platform",
+        "--python-version",
+        "--implementation",
+        "--abi",
+        "--build",
+    }
 )
+
+
+def _is_include_option(token: str) -> bool:
+    """Return whether one pip option token selects another requirements file."""
+    name = token.split("=", 1)[0]
+    if name.startswith("--") and len(name) > 2:
+        return "--requirement".startswith(name) or "--constraint".startswith(name)
+    return name.startswith(("-r", "-c"))
 
 
 def _logical_lock_lines(text: str):
@@ -167,10 +203,22 @@ def _require_self_contained_lock(lock: Path) -> None:
         stripped = line.lstrip()
         if not stripped or stripped.startswith("#"):
             continue
-        if _INCLUDE_OPTION_RE.search(stripped):
-            raise ValueError(
-                "--requirements-lock must be self-contained; remove -r/-c includes"
-            )
+        try:
+            tokens = shlex.split(stripped, comments=True, posix=True)
+        except ValueError as exc:
+            raise ValueError("Cannot parse the requirements lock") from exc
+        skip_value = False
+        for token in tokens:
+            if skip_value:
+                skip_value = False
+                continue
+            if token in _VALUE_OPTIONS:
+                skip_value = True
+                continue
+            if _is_include_option(token):
+                raise ValueError(
+                    "--requirements-lock must be self-contained; remove -r/-c includes"
+                )
 
 
 def _release_key(version: str) -> tuple[int, int, int]:
