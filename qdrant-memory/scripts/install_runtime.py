@@ -56,11 +56,7 @@ _WINDOWS_ACL_SCRIPT = """
 $ErrorActionPreference = 'Stop'
 $acl = [System.IO.__KIND__]::GetAccessControl($env:__VARIABLE__)
 $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$owners = @($user, 'S-1-5-18', 'S-1-5-32-544')
-try {
-    $ti = (New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList 'NT SERVICE\\TrustedInstaller').Translate([System.Security.Principal.SecurityIdentifier]).Value
-    $owners += $ti
-} catch { }
+$owners = @($user, 'S-1-5-18', 'S-1-5-32-544', 'S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464')
 $owner = $acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value
 if ($owners -notcontains $owner) { exit 3 }
 $allowed = $owners + @('S-1-3-0', 'S-1-3-4')
@@ -136,19 +132,42 @@ def _require_private_windows_file(path: Path) -> None:
         _require_windows_acl(ancestor, directory=True, label="lock ancestor")
 
 
+_COMMENT_LINE_RE = re.compile(r"(^|\s+)#")
+_INCLUDE_OPTION_RE = re.compile(
+    r"(?<!\S)(?:--(?:requirement|constraint)(?==|\s|$)|-[rc])"
+)
+
+
+def _logical_lock_lines(text: str):
+    """Join backslash continuations the way pip does before option scanning."""
+    pending = None
+    for line in text.splitlines():
+        if not line.endswith("\\") or _COMMENT_LINE_RE.match(line):
+            if _COMMENT_LINE_RE.match(line):
+                # Keep comments separate; pip does not continue them.
+                line = " " + line
+            if pending is not None:
+                yield pending + line
+                pending = None
+            else:
+                yield line
+        else:
+            pending = (pending or "") + line.strip("\\")
+    if pending is not None:
+        yield pending
+
+
 def _require_self_contained_lock(lock: Path) -> None:
     """Reject a lock that would make pip read another, unvalidated file."""
     try:
-        lines = lock.read_text(encoding="utf-8", errors="replace").splitlines()
+        text = lock.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
         raise ValueError("Cannot read the requirements lock") from exc
-    for line in lines:
+    for line in _logical_lock_lines(text):
         stripped = line.lstrip()
         if not stripped or stripped.startswith("#"):
             continue
-        if stripped.startswith(("-r", "-c")) or re.match(
-            r"--(?:requirement|constraint)(?:=|\s|$)", stripped
-        ):
+        if _INCLUDE_OPTION_RE.search(stripped):
             raise ValueError(
                 "--requirements-lock must be self-contained; remove -r/-c includes"
             )
