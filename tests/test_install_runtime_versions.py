@@ -311,8 +311,29 @@ def test_lock_ancestor_acl_probe_visits_lock_and_ancestors(installer, tmp_path, 
     parser = installer.argparse.ArgumentParser()
     args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
     assert installer._resolve_lock(parser, args) == lock.resolve()
-    assert lock.resolve() in checked
-    assert lock.resolve().parent.parent in checked
+    assert set(checked) == {lock.resolve(), *lock.resolve().parents}
+
+
+@pytest.mark.parametrize(
+    "directive",
+    [
+        "-r other.txt",
+        "--requirement other.txt",
+        "--requirement=other.txt",
+        "-c constraints.txt",
+        "--constraint=constraints.txt",
+    ],
+)
+def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, directive):
+    """Pip must read only the file whose path and ancestors were validated."""
+    lock = tmp_path / "requirements.txt"
+    lock.write_text(directive + "\n", encoding="utf-8")
+    lock.chmod(0o600)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    with pytest.raises(SystemExit):
+        installer._resolve_lock(parser, args)
+    assert "self-contained" in capsys.readouterr().err
 
 
 def test_missing_lock_file_is_rejected(installer, tmp_path):
