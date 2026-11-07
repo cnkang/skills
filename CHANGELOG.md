@@ -6,7 +6,10 @@
 
 - Require `--requirements-lock`, its containing directory and every ancestor to
   be free of other-account writes (and macOS allow ACLs) before pip consumes
-  it; Windows checks the directory and file DACLs.
+  it; POSIX permits a writable ancestor such as a root-owned mode-1777
+  directory only when its sticky bit prevents replacement. Windows checks the
+  directory, every ancestor, and file DACLs. The lock must be self-contained:
+  `-r`/`-c` includes are rejected so pip reads only the validated file.
 - Verify Codex profile selection through the plugin's effective environment and
   launcher doctor; a standalone CLI status command only checks its own path.
 - Distinguish the logical embedding model from its immutable ONNX artifact
