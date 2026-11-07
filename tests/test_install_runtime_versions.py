@@ -322,6 +322,11 @@ def test_lock_ancestor_acl_probe_visits_lock_and_ancestors(installer, tmp_path, 
         "--requirement=other.txt",
         "-c constraints.txt",
         "--constraint=constraints.txt",
+        "-r \\\n  other.txt",
+        "--requirement \\\nother.txt",
+        "-c \\\nconstraints.txt",
+        "some-package==1.0 -r other.txt",
+        "some-package==1.0 --constraint=constraints.txt",
     ],
 )
 def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, directive):
@@ -334,6 +339,20 @@ def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, d
     with pytest.raises(SystemExit):
         installer._resolve_lock(parser, args)
     assert "self-contained" in capsys.readouterr().err
+
+
+def test_lock_text_that_mentions_include_options_is_not_rejected(installer, tmp_path):
+    """A URL or comment containing '-r' is not a requirements include."""
+    lock = tmp_path / "requirements.txt"
+    lock.write_text(
+        "# -r is mentioned here only\n"
+        "some-package @ https://example.com/-r/wheel.whl\n",
+        encoding="utf-8",
+    )
+    lock.chmod(0o600)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    assert installer._resolve_lock(parser, args) == lock.resolve()
 
 
 def test_missing_lock_file_is_rejected(installer, tmp_path):
