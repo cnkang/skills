@@ -41,12 +41,13 @@ For DeepSeek Harness, read [DSH setup](references/dsh.md). For WorkBuddy, read
 DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update,
 delete under the same prefix). A different configured server name changes that
 prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
-strip scope checks. The published DSH MCP Bundle and Python overlay provide
+strip scope checks. The published DSH Bundle and Python/uvx overlay provide
 explicit memory tools and do not automatically capture or prefetch conversation
-turns. A separate unpublished native Cordis source preview adds opt-in capture
-and recall for a compatible Runtime; it is not supported by current published
-Runtime packages. Read [DSH setup](references/dsh.md) before describing that
-preview as available.
+turns. An unpublished source candidate in the same-name Bundle adds an optional
+Native lifecycle; it is not a separate Cordis package. `native-owner` exposes
+no MCP tools, while `unified-owner` combines the lifecycle with four explicit
+MCP tools. The candidate is not a published or release-ready install. Read
+[DSH setup](references/dsh.md) before describing it as available.
 
 ## Shared boundaries
 

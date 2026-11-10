@@ -43,9 +43,10 @@ Runtime remains responsible for scope, relation review, deduplication,
 durable receipts and Qdrant writes. No automatic sharing between DSH, Hermes,
 or WorkBuddy private profiles is implied.
 
-For preview configuration, profile-local migration and rollback, compatibility
-and validation evidence, read [PR #81](https://github.com/cnkang/qdrant-memory-mcp/pull/81)
-and its [release gap report](https://github.com/cnkang/qdrant-memory-mcp/blob/codex/dsh-native-v1/docs/dsh-native/release-readiness.md).
+For preview configuration, profile-local migration and rollback, read the
+[candidate Bundle configuration guide](https://github.com/cnkang/qdrant-memory-mcp/blob/2ed833df84658837f3c31dfc6fc5e2d64a6f9401/integrations/dsh/bundle/README.md).
+For compatibility and validation evidence, read [PR #81](https://github.com/cnkang/qdrant-memory-mcp/pull/81)
+and its [release gap report](https://github.com/cnkang/qdrant-memory-mcp/blob/2ed833df84658837f3c31dfc6fc5e2d64a6f9401/docs/dsh-native/release-readiness.md).
 The synthetic tests and profile install smoke do not establish real-model,
 AgentLoop, Qdrant/CPU embedding, or desktop GUI acceptance.
 
@@ -71,6 +72,11 @@ uses one Host entry to select one storage mode for the profile. Follow the
 for the exact Bundle command and the current status. Do not install both
 routes in one profile.
 
+The four-tool discovery and acceptance steps below apply to `legacy` and
+`unified-owner`. `native-owner` opens no MCP connection and provides no MCP
+tools; use `unified-owner` when you need explicit MCP tools alongside the
+Native lifecycle.
+
 With server name `qdrant-memory`, discover:
 
 | Tool | Operation |
@@ -85,8 +91,10 @@ Explicitly forward required credential variables in the trusted MCP configuratio
 with `!!js process.env.VARIABLE`. Do not put secret values in YAML, arguments,
 Skill text, transcripts or diagnostics. Respect DSH tool approval and cancellation.
 
-A connected transport and four discovered tools do not establish backend
-readiness. If preparation is pending or fails, report that no operation succeeded.
+For `legacy` and `unified-owner`, a connected transport and four discovered
+tools do not establish backend readiness. If preparation is pending or fails,
+report that no operation succeeded. These MCP checks do not apply to
+`native-owner`, which has no MCP transport or tools.
 After an interruption, the outcome of a write can stay unknown. Do not repeat
 an uncertain write unless a repeat is safe for that operation. To check the
 result, compare the exact operation and its ID, not search ranking. For
