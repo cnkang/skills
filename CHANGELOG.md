@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### qdrant-memory 0.4.2 candidate
+
+- Default new installs and current-release acceptance to the published Runtime
+  0.6.1 wheel; pin its immutable source commit for explicit source verification.
+- Document Runtime 0.6.1's authenticated Owner extraction-v1 candidate-event
+  boundary without implying that the Skill installs Codex hooks or authorizes
+  automatic capture.
+- Correct DSH guidance: Runtime 0.6.1 is published, while protected Cloud,
+  full UPDATE/CONFLICT and cross-client, and Desktop acceptance remain
+  unverified release gates.
+- Keep the Skills snapshot status explicit: latest published qdrant-memory is
+  0.4.0; this source candidate has not been published as a new snapshot.
+
 ### qdrant-memory 0.4.1 candidate
 
 - Require `--requirements-lock`, its containing directory and every ancestor to

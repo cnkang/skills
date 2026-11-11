@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.0 | Agent-neutral memory tools/CLI, maintenance, Mem0 migration and Codex v1/v2 portability. New installs use Runtime 0.6.0. Portable exports preserve a safe exit across harnesses; native adoption requires client verification. Standalone runtime and MCP work without Hermes. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.2 candidate | Agent-neutral memory tools/CLI, maintenance, Mem0 migration and Codex v1/v2 portability. New installs use Runtime 0.6.1. Portable exports preserve a safe exit across harnesses; native adoption requires client verification. Standalone runtime and MCP work without Hermes. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
@@ -136,14 +136,17 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately. Skill 0.4.0 documents Codex native-memory import and portable
-JSON/Markdown handoff with Runtime 0.6.0. Handoff verification does not establish
+runtime separately. The qdrant-memory 0.4.2 source candidate uses Runtime 0.6.1
+and documents Codex native-memory import, portable JSON/Markdown handoff, and the
+Owner extraction-v1 candidate-event boundary. The latest published Skills
+snapshot [skills-20261105.1](https://github.com/cnkang/skills/releases/tag/skills-20261105.1)
+still contains qdrant-memory 0.4.0. Handoff verification does not establish
 native adoption. Exports remain readable without the service or a subscription.
-The bundled Runtime installer selects Runtime 0.6.0 and installs its `mcp`
+The bundled Runtime installer selects Runtime 0.6.1 and installs its `mcp`
 extra. The Runtime CLI can serve stdio MCP directly; this does not install the
 separate, optional `qdrant-memory-mcp` distribution. Check that distribution's
-PyPI release before installing an exact version. Skill 0.4.0 is packaged as a
-versioned snapshot; check the [release list](https://github.com/cnkang/skills/releases)
+PyPI release before installing an exact version. The 0.4.2 source candidate is
+not yet in a published Skills snapshot; check the [release list](https://github.com/cnkang/skills/releases)
 for availability and the matching guide.
 Older compatibility baselines remain documented in the
 [compatibility guide](docs/qdrant-memory-compatibility.md). Upgrading the Runtime
@@ -161,12 +164,12 @@ npx skills@latest add cnkang/skills --skill qdrant-memory -a codex -g
 # Choose another supported agent ID, or multiple IDs, as needed.
 python3 -m venv /private/path/qdrant-env
 /private/path/qdrant-env/bin/python -m pip install \
-  'hermes-plugin-qdrant-memory[mcp]==0.6.0'
+  'hermes-plugin-qdrant-memory[mcp]==0.6.1'
 ```
 
 The backend retains its original repository/distribution name. Its standalone
 CLI and stdio MCP server require no Hermes installation.
-For MCP-focused agents, use the published Runtime 0.6.0 command installed
+For MCP-focused agents, use the published Runtime 0.6.1 command installed
 above to start its stdio MCP server. Configure and initialize the profile first:
 
 ```bash
