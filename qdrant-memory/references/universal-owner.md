@@ -2,8 +2,19 @@
 
 Owner remote access and lifecycle features require Runtime 0.5.0, which is
 published. MCP distributions can select older Runtime versions: check the
-installed dependency before use. Skill 0.3.3 provides guidance and does not
+installed dependency before use. This Skill provides guidance and does not
 install or authorize the Runtime. Host adapters need separate verification.
+
+Runtime 0.6.1 adds the versioned `qdrant-memory/extraction-v1` candidate-event
+input to the authenticated Owner lifecycle. A verified adapter may submit
+bounded extracted candidates instead of sending a raw turn to the Owner. The
+event schema and command details are defined by the installed Runtime; inspect
+`qdrant-memory remote-event --help` and the immutable [Runtime 0.6.1 Owner
+guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/2696122405e3324a1e227c131e0f9b2a320dd23c/docs/shared-memory/remote-owner.md).
+Candidate text and model-produced fields remain untrusted data. They do not
+select the principal, grant, agent, space or access policy. Runtime 0.6.1 does
+not by itself install a Codex lifecycle adapter, authorize automatic capture,
+or establish a host's real-world acceptance.
 
 Do not use a source version string as proof of feature support. Before use,
 confirm that the installed Runtime provides these commands:

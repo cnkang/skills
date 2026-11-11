@@ -5,7 +5,7 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3,
 the verified private compatibility baseline for this skill. These minimum
 versions do not provide the Runtime 0.5.0 Owner controls. This skill targets
-Runtime 0.6.0. Its `mcp` extra provides the standalone stdio server directly.
+Runtime 0.6.1. Its `mcp` extra provides the standalone stdio server directly.
 The optional metadata-only [MCP distribution](https://pypi.org/project/qdrant-memory-mcp/)
 is versioned independently; verify its PyPI release before installing an exact
 version. The installer accepts an installed Runtime that is at least the
@@ -17,20 +17,20 @@ store for rollback. An authorized upgrade exports through the old Runtime and
 re-embeds into a new profile/collection, verifies, then switches clients. Never
 edit stored fingerprints or ready markers to force compatibility.
 
-Explicit CPU model preparation in Runtime 0.6.0 allows fifteen minutes per
+Since Runtime 0.6.0, explicit CPU model preparation allows fifteen minutes per
 artifact within a thirty-minute total network budget, enforcing pinned
 sizes/hashes and atomic cache publication. Managed launchers allow forty
 minutes for setup. Authorize the initial model download explicitly; ordinary
 memory operations do not download models.
 
-## Install Runtime 0.6.0 for Owner controls and Codex portability
+## Install Runtime 0.6.1 for Owner controls and Codex portability
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.6.0
+  --venv /private/path/qdrant-owner-env --version 0.6.1
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
@@ -120,7 +120,7 @@ available, the agent can run the installed skill's [installer](../scripts/instal
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-env --version 0.6.0
+  --venv /private/path/qdrant-env --version 0.6.1
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
@@ -142,12 +142,12 @@ profile and destination, and retain the same scope. Reuse the collection only
 when the embedding pipeline is unchanged. For FastEmbed 0.9.0 to 0.9.1, use the
 new profile and collection procedure above.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.6.0 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
+`--version 0.6.1 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The immutable Runtime 0.6.0 release commit is
-`dee6777432f17523db75f6be32cf3ef15e48235c`; CI's current-release acceptance
-installs published Runtime 0.6.0 from PyPI and exercises the default installer
+The immutable Runtime 0.6.1 release commit is
+`2696122405e3324a1e227c131e0f9b2a320dd23c`; CI's current-release acceptance
+installs published Runtime 0.6.1 from PyPI and exercises the default installer
 path. The standalone compatibility lane retains Runtime 0.2.2 at commit
 `c85d2bce788b117dddd854bb124971f7de8e564c`. The published release tag is the
 source of truth.
@@ -229,7 +229,7 @@ installation remains a separate operator-authorized development route. Existing
 environments are verified without reinstallation, so this flag does not
 retroactively certify their bytes.
 
-New installations default to Runtime 0.6.0. Runtime 0.2.2 remains the tested
+New installations default to Runtime 0.6.1. Runtime 0.2.2 remains the tested
 private-compatibility baseline in explicit examples and CI fixture pins. Runtime
 0.4.0 adds the separately configured shared owner. Use Runtime 0.5.0 or later for
 protected policy, doctor and remote Owner features, and discover its schemas before

@@ -81,7 +81,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.6.0" in _active_lock_requirements(lock)
+    assert "hermes-plugin-qdrant-memory==0.6.1" in _active_lock_requirements(lock)
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])
@@ -134,7 +134,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     assert re.fullmatch(r"[0-9a-f]{40}", checkouts[0]["ref"])
     assert checkouts[0]["ref"] in (ROOT / "qdrant-memory/references/runtime.md").read_text(encoding="utf-8")
     for document in ("README.md", "README_zh-CN.md"):
-        assert "hermes-plugin-qdrant-memory[mcp]==0.6.0" in (ROOT / document).read_text(encoding="utf-8")
+        assert "hermes-plugin-qdrant-memory[mcp]==0.6.1" in (ROOT / document).read_text(encoding="utf-8")
     assert "hermes-plugin-qdrant-memory[mcp]==0.2.2" in (
         ROOT / "qdrant-memory/references/runtime.md"
     ).read_text(encoding="utf-8")
@@ -148,7 +148,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     installer = next(step for step in job["steps"] if "test_skill_runtime_install.py" in step.get("run", ""))
     assert "if" not in installer
     assert installer["env"]["QDRANT_SKILL_INSTALL_E2E"] == "1"
-    assert installer["env"]["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"] == "0.6.0"
+    assert installer["env"]["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"] == "0.6.1"
     assert installer["env"]["QDRANT_SKILL_MCP_REQUIREMENT"] == "${{ matrix.mcp.requirement }}"
     assert installer["env"]["QDRANT_SKILL_INSTALL_REVISION"] == checkouts[0]["ref"]
     assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/tree/${{ github.event.pull_request.head.sha || github.sha }}"

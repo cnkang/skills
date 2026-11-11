@@ -12,11 +12,12 @@ not automatically capture or prefetch turns. The existing Bundle's
 `0.2.0-rc.1` source candidate adds optional Native lifecycle under the same
 `@cnkang/qdrant-memory-dsh-bundle` npm name. The private Native module remains
 canonical source, not a second publication. The candidate requires DSH `0.2.2-rc.1` and Node.js
-`>=24.9.0`; it requires a companion Python Runtime supporting the versioned
-`qdrant-memory/extraction-v1` candidate event. That Runtime contract is not
-available in the currently published Runtime packages, so do not present the
-candidate as a published or release-ready install yet. Runtime 0.6.1 public-wheel,
-protected Ollama Cloud and Desktop acceptance remain release gates.
+`>=24.9.0`; its extraction-v1 event prerequisite is available in published
+Runtime 0.6.1. This clears a Runtime publication prerequisite only. The DSH
+source candidate is not a published or release-ready install: its protected
+Ollama Cloud matrix, full UPDATE/CONFLICT and Hermes/Codex acceptance matrix,
+and Desktop GUI acceptance remain unverified release gates. The currently
+published Bundle remains 0.1.6.
 
 The candidate defaults to `mode: legacy`, preserving the existing four tools
 without requiring an Owner token. It rejects automatic memory in Legacy mode.
