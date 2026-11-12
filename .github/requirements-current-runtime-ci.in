@@ -1,6 +1,6 @@
 # Source pins for requirements-current-runtime-ci.txt (Python 3.14). Regenerate the lock with:
 #   cd .github && uv pip compile --universal --python-version 3.14 --generate-hashes requirements-current-runtime-ci.in -o requirements-current-runtime-ci.txt
-hermes-plugin-qdrant-memory[mcp]==0.6.1
+hermes-plugin-qdrant-memory[mcp]==0.6.2
 pytest==9.0.3
 PyYAML==6.0.3
 requests==2.34.2

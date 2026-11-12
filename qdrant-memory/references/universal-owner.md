@@ -16,6 +16,15 @@ select the principal, grant, agent, space or access policy. Runtime 0.6.1 does
 not by itself install a Codex lifecycle adapter, authorize automatic capture,
 or establish a host's real-world acceptance.
 
+Runtime 0.6.2 adds receipt-scoped recovery for lifecycle events persisted and
+later marked `FAILED`. An authenticated retry validates the stored operation
+plan, requeues only failed operations and returns the event to `PENDING`; it
+does not reset unrelated writes or re-extract the turn. `QUARANTINED` events
+remain operator-controlled, and malformed plans fail closed. A client must
+make an explicitly authorized retry request for the same event receipt; the
+release does not retry automatically. Inspect the installed
+`qdrant-memory remote-event --help` for its exact command syntax and scope.
+
 Do not use a source version string as proof of feature support. Before use,
 confirm that the installed Runtime provides these commands:
 

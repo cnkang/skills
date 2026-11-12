@@ -69,7 +69,7 @@ def test_npx_skill_installs_missing_runtime_and_calls_mcp(tmp_path):
         else:
             assert origin["source"] is None
         default_version = os.environ["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"]
-        assert default_version == "0.6.1"
+        assert default_version == "0.6.2"
         default_venv = tmp_path / "fresh default runtime"
         default_result = json.loads(run([sys.executable, str(installer), "--venv", str(default_venv)]))
         assert default_result["ok"]

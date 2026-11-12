@@ -13,11 +13,13 @@ not automatically capture or prefetch turns. The existing Bundle's
 `@cnkang/qdrant-memory-dsh-bundle` npm name. The private Native module remains
 canonical source, not a second publication. The candidate requires DSH `0.2.2-rc.1` and Node.js
 `>=24.9.0`; its extraction-v1 event prerequisite is available in published
-Runtime 0.6.1. This clears a Runtime publication prerequisite only. The DSH
+Runtime 0.6.1. Runtime 0.6.2 is now public and adds explicit recovery for
+persisted `FAILED` Owner events; the DSH adapter does not issue that operation
+automatically. This clears a Runtime publication prerequisite only. The DSH
 source candidate is not a published or release-ready install: its protected
-Ollama Cloud matrix, full UPDATE/CONFLICT and Hermes/Codex acceptance matrix,
-and Desktop GUI acceptance remain unverified release gates. The currently
-published Bundle remains 0.1.6.
+Ollama Cloud matrix is not yet green, full UPDATE/CONFLICT and cross-client
+acceptance is incomplete, and Desktop GUI acceptance remains unverified. The
+currently published Bundle remains 0.1.6.
 
 The candidate defaults to `mode: legacy`, preserving the existing four tools
 without requiring an Owner token. It rejects automatic memory in Legacy mode.
