@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## skills-20261112.1 — 2026-11-12 (UTC)
 
-### qdrant-memory 0.4.2 candidate
+### qdrant-memory 0.4.2
 
 - Default new installs and current-release acceptance to the published Runtime
   0.6.2 wheel; pin its immutable source commit for explicit source verification.
@@ -11,12 +11,12 @@
   events, without implying that the Skill installs Codex hooks or authorizes
   automatic capture.
 - Correct DSH guidance: Runtime 0.6.2 is published, while its protected Cloud
-  matrix is not yet green, full UPDATE/CONFLICT and cross-client acceptance is
-  incomplete, and Desktop acceptance remains unverified.
-- Keep the Skills snapshot status explicit: latest published qdrant-memory is
-  0.4.0; this source candidate has not been published as a new snapshot.
+  matrix, full UPDATE/CONFLICT and cross-client acceptance, and Desktop
+  acceptance remain release gates.
+- Publish qdrant-memory 0.4.2 in the versioned Skills snapshot; the other four
+  skill versions are unchanged.
 
-### qdrant-memory 0.4.1 candidate
+### Changes carried forward from the 0.4.1 source candidate
 
 - Require `--requirements-lock`, its containing directory and every ancestor to
   be free of other-account writes (and macOS allow ACLs) before pip consumes
