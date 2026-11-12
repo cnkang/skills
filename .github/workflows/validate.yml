@@ -168,7 +168,7 @@ jobs:
             *) echo "::error::Unsupported Runtime version; choose a version with a checked-in wheel hash lock"; exit 1 ;;
           esac
           python -m pip install --require-hashes --only-binary=:all: --no-deps \
-            -r ".github/runtime-wheel-locks/hermes-plugin-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt"
+            -r ".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt"
           python -m pip check
       - name: Resolve installed Runtime plugin package
         env:

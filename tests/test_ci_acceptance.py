@@ -98,7 +98,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
         "0.6.1": "5ad7835f454789c1bcb48d877a303ebb6f95e6084ab62d0ecaf50e4f44d26cc9",
     }
     for version, digest in expected_runtime_wheels.items():
-        wheel_lock = ROOT / f".github/runtime-wheel-locks/hermes-plugin-qdrant-memory-{version}.txt"
+        wheel_lock = ROOT / f".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-{version}.txt"
         contents = wheel_lock.read_text(encoding="utf-8")
         assert f"hermes-plugin-qdrant-memory=={version}" in _active_lock_requirements(contents)
         assert f"--hash=sha256:{digest}" in contents
