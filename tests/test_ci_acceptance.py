@@ -7,7 +7,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from check_test_report import validate_report
+from check_test_report import validate_report  # noqa: E402
 
 
 def _active_lock_requirements(lock: str) -> set[str]:
@@ -56,7 +56,18 @@ def test_active_lock_requirement_ignores_comments():
 
 
 def test_runtime_ci_is_required_pinned_and_opted_in():
-    jobs = yaml.safe_load((ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8"))["jobs"]
+    workflow = yaml.safe_load((ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8"))
+    if "on" not in workflow and True in workflow:
+        workflow["on"] = workflow.pop(True)
+    jobs = workflow["jobs"]
+    runtime_version_input = workflow["on"]["workflow_dispatch"]["inputs"]["qdrant_runtime_version"]
+    assert runtime_version_input == {
+        "description": "Exact hash-locked public Runtime for the compatibility E2E lane",
+        "required": False,
+        "default": "0.6.1",
+        "type": "choice",
+        "options": ["0.6.1", "0.6.0"],
+    }
     runtime = jobs["qdrant-e2e"]
     assert set(runtime["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
     refs = {step["with"]["repository"]: step["with"]["ref"] for step in runtime["steps"]
@@ -82,6 +93,24 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
     assert "hermes-plugin-qdrant-memory==0.6.1" in _active_lock_requirements(lock)
+    expected_runtime_wheels = {
+        "0.6.0": "484a3cdd45ee5ecff92b76be062046597a7fcf9e58ad9667a993a80b77ef6a15",
+        "0.6.1": "5ad7835f454789c1bcb48d877a303ebb6f95e6084ab62d0ecaf50e4f44d26cc9",
+    }
+    for version, digest in expected_runtime_wheels.items():
+        wheel_lock = ROOT / f".github/runtime-wheel-locks/hermes-plugin-qdrant-memory-{version}.txt"
+        contents = wheel_lock.read_text(encoding="utf-8")
+        assert f"hermes-plugin-qdrant-memory=={version}" in _active_lock_requirements(contents)
+        assert f"--hash=sha256:{digest}" in contents
+    selected_runtime = next(step for step in current["steps"]
+                            if step.get("name") == "Install selected hash-locked Runtime wheel")
+    assert selected_runtime["env"]["QDRANT_RUNTIME_VERSION"] == "${{ github.event.inputs.qdrant_runtime_version || '0.6.1' }}"
+    assert "0.6.0|0.6.1" in selected_runtime["run"]
+    assert "--require-hashes" in selected_runtime["run"] and "--no-deps" in selected_runtime["run"]
+    resolve_runtime = next(step for step in current["steps"]
+                           if step.get("name") == "Resolve installed Runtime plugin package")
+    assert "importlib.metadata.version" in resolve_runtime["run"]
+    assert "actual != expected" in resolve_runtime["run"]
     assert any("qdrant_memory.__file__" in step.get("run", "")
                and "GITHUB_ENV" in step.get("run", "") for step in current["steps"])
     assert any("Path('reports').mkdir" in step.get("run", "") for step in current["steps"])

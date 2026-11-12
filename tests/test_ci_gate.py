@@ -215,6 +215,7 @@ def test_security_tools_are_pinned():
     assert "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b" in review
     assert "osv-scanner_linux_amd64" in review
     assert ".github/requirements-*.txt" in review
+    assert ".github/runtime-wheel-locks/*.txt" in review
 
     secret = json.dumps(jobs["secret-scan"])
     assert "gitleaks_8.30.1_linux_x64.tar.gz" in secret
