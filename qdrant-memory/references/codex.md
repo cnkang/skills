@@ -17,6 +17,12 @@ scope or write authority. This Skill does not install a Codex hook adapter,
 enable automatic capture, or establish Codex host acceptance. Do not send
 transcripts or candidates to a remote model without explicit authorization.
 
+Runtime 0.6.2 can retry a persisted `FAILED` Owner event by its existing receipt
+after an authorized operator fixes the cause. This Runtime recovery does not
+install, enable or authorize Codex capture, and it never retries a
+`QUARANTINED` event automatically. Inspect the installed
+`qdrant-memory remote-event --help` before using the operation.
+
 Use an explicitly authorized canonical `--codex-home` (or CODEX_HOME). Inspect
 both v1 and v2 without reading chats, raw memories, credentials or unrelated
 agent data. Configuration inspection cannot prove effective client settings.

@@ -31,13 +31,16 @@ release commit `c85d2bce788b117dddd854bb124971f7de8e564c` (Runtime 0.2.2) as a
 compatibility baseline. Offline contracts skip explicitly when no plugin checkout
 is supplied. A supplied but invalid checkout fails. A separate mandatory
 Ubuntu/macOS/Windows job runs Hub fixtures and disposable runtime E2E against the
-published PyPI Runtime 0.6.1 package and Hermes pinned to
+published PyPI Runtime 0.6.2 package and Hermes pinned to
 `4787e4d56fc8d9265d4c7d3c0fe5accee86b4078`. The test reconstructs the host plugin
 root from installed wheel files, so this lane validates the public artifact rather
 than a Runtime source checkout. Ordinary package jobs leave these environment-driven
 tests disabled. Dedicated acceptance jobs reject any skip, failure, error or
 insufficient test count and retain JUnit reports for 14 days. `Required checks`
 fails if any package, distribution, contract, Hermes E2E or Pi host job fails or is skipped.
+Runtime `v0.6.2` is pinned to source commit
+`913fa705922b5bfeb29d52f102cfc6385a4d0436`; its public wheel is verified by SHA-256
+`4606d1529092104d5594866032c61a02376c127f2ffc483c0442a7549b40c264`.
 A separate required three-platform standalone matrix installs the pinned
 backend independently with MCP SDK 1.x and 2.x. It also exercises real JSON
 CLI subprocesses and an official MCP client without Hermes source or fake host
@@ -50,13 +53,13 @@ isolated global Codex directory. It executes that
 installed package's backend installer in a fresh venv. The installer fetches
 an exact PyPI release by default, or a separately configured immutable source
 when testing a newer, unpublished Runtime candidate. Source selection is never
-a fallback for the published Runtime 0.6.1 default. It verifies version and source provenance,
+a fallback for the published Runtime 0.6.2 default. It verifies version and source provenance,
 CLI init/doctor/add, official stdio MCP discovery/search/delete and safe reuse.
 The installation report has a required zero-skip gate. Embeddings use localhost
 fixtures, with no Hermes installation or paid model calls.
 
 For current-release local acceptance, install `requirements-runtime-tests.txt`
-and `hermes-plugin-qdrant-memory==0.6.1` from PyPI into an isolated environment.
+and `hermes-plugin-qdrant-memory==0.6.2` from PyPI into an isolated environment.
 Set `QDRANT_MEMORY_PLUGIN_ROOT` to the installed `qdrant_memory` package
 directory. Then run:
 
@@ -82,7 +85,7 @@ exercise an LLM, automatic extraction, remote Qdrant or abrupt process terminati
 
 Install the skill independently, then install/configure the shared backend using
 [runtime setup](../qdrant-memory/references/runtime.md). The additive standalone
-installation defaults to exact PyPI Runtime 0.6.1. MCP-focused
+installation defaults to exact PyPI Runtime 0.6.2. MCP-focused
 agents may use the metadata-only distribution; both packages support MCP Python
 SDK 1.x and 2.x. Development/candidate
 installs require an explicitly chosen full SHA and expected version. Both retain

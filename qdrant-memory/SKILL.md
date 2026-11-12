@@ -73,9 +73,10 @@ Ordinary Hermes Native Provider capture does not automatically share private
 records. Runtime 0.5.0 Native Owner can capture to a project only through an
 explicitly approved grant rule and profile allowlist. For that path, read
 [Universal Owner](references/universal-owner.md). That reference describes
-Native Owner, HTTPS MCP, device credentials, Pi lifecycle tests, and the
-Runtime 0.6.1 extraction-v1 candidate-event contract. It does not provide a
-Codex hook adapter or establish host acceptance.
+Native Owner, HTTPS MCP, device credentials, Pi lifecycle tests, Runtime 0.6.1's
+extraction-v1 candidate-event contract, and Runtime 0.6.2's receipt-scoped
+failed-event recovery. It does not provide a Codex hook adapter or establish
+host acceptance.
 
 Loading this skill grants no save/edit/delete, retry/import, service-stop,
 overwrite, installation or configuration permission. Stay within the user's
