@@ -10,7 +10,7 @@
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | 审核或修复仓库/PR 质量门禁。可选探测脚本需 Python 3.10+；实际验证使用项目自己的工具链。 |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | 只读查看 EU/US SonarCloud 链接。需要 Python 3.10+、requests、网络；私有数据需要环境变量中的授权 token。 |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | 使用可用 Jev 工具进行有界语义判断。提供方可选；缺失时继续主任务。遥测需 Python 3.10+，仅使用标准库。 |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.2 候选版 | 面向各类 agent 的记忆工具/CLI、维护、Mem0 迁移及 Codex v1/v2 可移植流程。新安装默认使用 Runtime 0.6.2。通用导出保留跨 harness 的退出路径；原生采纳需由客户端验证。独立运行时和 MCP 无需 Hermes 即可工作。 |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.2 | 面向各类 agent 的记忆工具/CLI、维护、Mem0 迁移及 Codex v1/v2 可移植流程。新安装默认使用 Runtime 0.6.2。通用导出保留跨 harness 的退出路径；原生采纳需由客户端验证。独立运行时和 MCP 无需 Hermes 即可工作。 |
 
 技能入口与包内说明默认使用英文。安装或加载 skill 不代表授权编辑、提交、推送或修改远端状态。多个 skills 可以按任务需要协作，不存在强制调用链。
 
@@ -130,16 +130,16 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装。qdrant-memory 0.4.2 源码候选使用 Runtime
+作用域。skill 和运行时分别安装。qdrant-memory 0.4.2 正式快照使用 Runtime
 0.6.2，并说明 Codex 原生记忆导入、可移植 JSON/Markdown 交接、Owner
 extraction-v1 候选事件边界，以及按回执限定的失败事件恢复。当前最新公开 Skills 快照
-[skills-20261105.1](https://github.com/cnkang/skills/releases/tag/skills-20261105.1)
-仍包含 qdrant-memory 0.4.0。交接验证不等于原生系统已接管；
+[skills-20261112.1](https://github.com/cnkang/skills/releases/tag/skills-20261112.1)
+已包含 qdrant-memory 0.4.2。交接验证不等于原生系统已接管；
 导出内容无需服务或订阅即可读取。
 自带的 Runtime 安装器选择 Runtime 0.6.2 并安装其 `mcp` extra。Runtime CLI
 可直接提供 stdio MCP 服务；该命令不会安装独立且可选的
 `qdrant-memory-mcp` 分发包。使用该分发包的精确版本前，先确认其 PyPI
-发布状态。0.4.2 源码候选尚未进入已发布 Skills 快照；请查看[发布列表](https://github.com/cnkang/skills/releases)确认可用性并查阅对应指南。
+发布状态。0.4.2 Skill 已进入正式快照；请查看[发布列表](https://github.com/cnkang/skills/releases)获取安装指南。
 旧版兼容基线保留在[兼容性指南](docs/qdrant-memory-compatibility.md)。
 升级 Runtime 不会改变 Hermes 默认配置。支持 MCP Python SDK 1.x 和 2.x，
 四个 scoped 工具及 stdio 配置保持一致。
