@@ -202,7 +202,7 @@ jobs:
           retention-days: 14
 
   qdrant-runtime-probe:
-    name: Optional Runtime compatibility probe (${{ inputs.qdrant_runtime_probe_version }})
+    name: Optional Runtime compatibility probe (manual dispatch only)
     if: github.event_name == 'workflow_dispatch' && inputs.qdrant_runtime_probe_version != 'none'
     runs-on: ubuntu-latest
     timeout-minutes: 10
