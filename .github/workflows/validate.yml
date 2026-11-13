@@ -6,12 +6,12 @@ on:
     branches: [main, 'codex/**']
   workflow_dispatch:
     inputs:
-      qdrant_runtime_version:
-        description: Exact hash-locked public Runtime for the compatibility E2E lane
+      qdrant_runtime_probe_version:
+        description: Optional exact hash-locked Runtime compatibility probe; the required lane always uses 0.6.2
         required: false
-        default: '0.6.2'
+        default: 'none'
         type: choice
-        options: ['0.6.2', '0.6.1', '0.6.0']
+        options: ['none', '0.6.0', '0.6.1', '0.6.2']
 
 permissions:
   contents: read
@@ -134,7 +134,7 @@ jobs:
           retention-days: 14
 
   qdrant-current-runtime-e2e:
-    name: Hermes Hub and disposable Qdrant E2E (Runtime ${{ github.event.inputs.qdrant_runtime_version || '0.6.2' }}, ${{ matrix.os }})
+    name: Hermes Hub and disposable Qdrant E2E (Runtime 0.6.2, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -158,21 +158,15 @@ jobs:
         run: >-
           python -m pip install --require-hashes --only-binary=:all:
           -r .github/requirements-current-runtime-ci.txt
-      - name: Install selected hash-locked Runtime wheel
-        env:
-          QDRANT_RUNTIME_VERSION: ${{ github.event.inputs.qdrant_runtime_version || '0.6.2' }}
+      - name: Install current hash-locked Runtime wheel
         shell: bash
         run: |
-          case "$QDRANT_RUNTIME_VERSION" in
-            0.6.0|0.6.1|0.6.2) ;;
-            *) echo "::error::Unsupported Runtime version; choose a version with a checked-in wheel hash lock"; exit 1 ;;
-          esac
           python -m pip install --require-hashes --only-binary=:all: --no-deps \
-            -r ".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt"
+            -r ".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-0.6.2.txt"
           python -m pip check
       - name: Resolve installed Runtime plugin package
         env:
-          QDRANT_RUNTIME_VERSION: ${{ github.event.inputs.qdrant_runtime_version || '0.6.2' }}
+          QDRANT_RUNTIME_VERSION: '0.6.2'
         shell: python
         run: |
           import importlib.metadata
@@ -203,6 +197,61 @@ jobs:
         if: always()
         with:
           name: current-runtime-e2e-${{ matrix.os }}
+          path: reports/*.xml
+          if-no-files-found: error
+          retention-days: 14
+
+  qdrant-runtime-probe:
+    name: Optional Runtime compatibility probe (${{ inputs.qdrant_runtime_probe_version }})
+    if: github.event_name == 'workflow_dispatch' && inputs.qdrant_runtime_probe_version != 'none'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: cnkang/hermes-agent
+          ref: 4787e4d56fc8d9265d4c7d3c0fe5accee86b4078 # tested immutable host baseline
+          path: .runtime-host
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.14'
+      - name: Install hash-locked Runtime compatibility test dependencies
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all:
+          -r .github/requirements-current-runtime-ci.txt
+      - name: Install selected hash-locked Runtime wheel
+        env:
+          QDRANT_RUNTIME_VERSION: ${{ inputs.qdrant_runtime_probe_version }}
+        shell: bash
+        run: |
+          case "$QDRANT_RUNTIME_VERSION" in
+            0.6.0|0.6.1|0.6.2) ;;
+            *) echo "::error::Unsupported Runtime probe; choose a version with a checked-in wheel hash lock"; exit 1 ;;
+          esac
+          python -m pip install --require-hashes --only-binary=:all: --no-deps \
+            -r ".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt"
+          python -m pip check
+      - name: Verify selected Runtime package version
+        env:
+          QDRANT_RUNTIME_VERSION: ${{ inputs.qdrant_runtime_probe_version }}
+        run: |
+          python -c "import importlib.metadata, os; actual = importlib.metadata.version('hermes-plugin-qdrant-memory'); expected = os.environ['QDRANT_RUNTIME_VERSION']; print(f'verified_probe_runtime={actual}'); raise SystemExit(actual != expected)"
+      - run: python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
+      - name: Run optional Hub and cross-process compatibility acceptance
+        env:
+          HERMES_SKILL_HOST_ROOT: ${{ github.workspace }}/.runtime-host
+          QDRANT_RUNTIME_E2E: '1'
+        run: python -m pytest -q tests/test_hermes_skill_paths.py tests/test_qdrant_runtime_e2e.py --junitxml=reports/runtime-probe.xml
+      - name: Reject skipped or empty compatibility probe
+        run: python scripts/check_test_report.py reports/runtime-probe.xml --minimum-tests 6
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: runtime-probe-${{ inputs.qdrant_runtime_probe_version }}
           path: reports/*.xml
           if-no-files-found: error
           retention-days: 14

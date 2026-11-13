@@ -60,13 +60,13 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     if "on" not in workflow and True in workflow:
         workflow["on"] = workflow.pop(True)
     jobs = workflow["jobs"]
-    runtime_version_input = workflow["on"]["workflow_dispatch"]["inputs"]["qdrant_runtime_version"]
+    runtime_version_input = workflow["on"]["workflow_dispatch"]["inputs"]["qdrant_runtime_probe_version"]
     assert runtime_version_input == {
-        "description": "Exact hash-locked public Runtime for the compatibility E2E lane",
+        "description": "Optional exact hash-locked Runtime compatibility probe; the required lane always uses 0.6.2",
         "required": False,
-        "default": "0.6.2",
+        "default": "none",
         "type": "choice",
-        "options": ["0.6.2", "0.6.1", "0.6.0"],
+        "options": ["none", "0.6.0", "0.6.1", "0.6.2"],
     }
     runtime = jobs["qdrant-e2e"]
     assert set(runtime["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
@@ -103,10 +103,10 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
         contents = wheel_lock.read_text(encoding="utf-8")
         assert f"hermes-plugin-qdrant-memory=={version}" in _active_lock_requirements(contents)
         assert f"--hash=sha256:{digest}" in contents
+    assert current["name"].startswith("Hermes Hub and disposable Qdrant E2E (Runtime 0.6.2,")
     selected_runtime = next(step for step in current["steps"]
-                            if step.get("name") == "Install selected hash-locked Runtime wheel")
-    assert selected_runtime["env"]["QDRANT_RUNTIME_VERSION"] == "${{ github.event.inputs.qdrant_runtime_version || '0.6.2' }}"
-    assert "0.6.0|0.6.1|0.6.2" in selected_runtime["run"]
+                            if step.get("name") == "Install current hash-locked Runtime wheel")
+    assert "requirements-runtime-qdrant-memory-0.6.2.txt" in selected_runtime["run"]
     assert "--require-hashes" in selected_runtime["run"] and "--no-deps" in selected_runtime["run"]
     resolve_runtime = next(step for step in current["steps"]
                            if step.get("name") == "Resolve installed Runtime plugin package")
@@ -124,11 +124,22 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     assert current_execution["env"]["HERMES_SKILL_HOST_ROOT"]
     assert any("current-runtime-e2e.xml --minimum-tests 6" in step.get("run", "")
                for step in current["steps"])
+
+    probe = jobs["qdrant-runtime-probe"]
+    assert probe["if"] == "github.event_name == 'workflow_dispatch' && inputs.qdrant_runtime_probe_version != 'none'"
+    assert set(probe["steps"][1]["with"].keys()) == {"repository", "ref", "path", "persist-credentials"}
+    probe_install = next(step for step in probe["steps"]
+                         if step.get("name") == "Install selected hash-locked Runtime wheel")
+    assert probe_install["env"]["QDRANT_RUNTIME_VERSION"] == "${{ inputs.qdrant_runtime_probe_version }}"
+    assert "0.6.0|0.6.1|0.6.2" in probe_install["run"]
+    assert "requirements-runtime-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt" in probe_install["run"]
+    assert "--require-hashes" in probe_install["run"] and "--no-deps" in probe_install["run"]
     assert set(jobs["required-checks"]["needs"]) == {
         "packages", "distribution", "qdrant-contract", "qdrant-e2e",
         "qdrant-current-runtime-e2e", "pi-host", "qdrant-standalone", "sonarcloud",
         "workflow-security", "secret-scan", "dependency-review",
     }
+    assert "qdrant-runtime-probe" not in jobs["required-checks"]["needs"]
     assert jobs["required-checks"]["if"] == "always()"
 
 
