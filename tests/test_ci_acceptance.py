@@ -126,6 +126,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                for step in current["steps"])
 
     probe = jobs["qdrant-runtime-probe"]
+    assert probe["name"] == "Optional Runtime compatibility probe (manual dispatch only)"
     assert probe["if"] == "github.event_name == 'workflow_dispatch' && inputs.qdrant_runtime_probe_version != 'none'"
     assert set(probe["steps"][1]["with"].keys()) == {"repository", "ref", "path", "persist-credentials"}
     probe_install = next(step for step in probe["steps"]
