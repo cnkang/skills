@@ -1,5 +1,15 @@
 # Changelog
 
+## skills-20261113.2 — 2026-11-13 (UTC)
+
+### qdrant-memory 0.4.4
+
+- Report the exact unsafe POSIX requirements-lock path and show how to remove
+  group/world write access without changing the existing security checks.
+- Reject pip environment-variable expansion in active lock lines after
+  continuation joining and comment removal; keep commented references valid.
+- Clarify the trusted requirements-lock rules in the Runtime reference.
+
 ## skills-20261113.1 — 2026-11-13 (UTC)
 
 ### qdrant-memory 0.4.3

@@ -319,7 +319,10 @@ def test_group_or_world_writable_lock_rejected_before_execution(installer, tmp_p
     with pytest.raises(SystemExit) as exc:
         installer.main()
     assert exc.value.code == 2
-    assert "group/world-writable" in capsys.readouterr().err
+    error = capsys.readouterr().err
+    assert "group/world-writable" in error
+    assert str(lock) in error
+    assert "chmod go-w" in error
     assert not target.exists()
 
 
@@ -353,7 +356,10 @@ def test_lock_in_writable_directory_rejected_before_execution(
     with pytest.raises(SystemExit) as exc:
         installer.main()
     assert exc.value.code == 2
-    assert "private, user-owned directory" in capsys.readouterr().err
+    error = capsys.readouterr().err
+    assert "private, user-owned directory" in error
+    assert str(parent) in error
+    assert "chmod go-w" in error
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX ownership and mode checks")
@@ -374,7 +380,10 @@ def test_lock_under_writable_ancestor_rejected(installer, tmp_path, monkeypatch,
     with pytest.raises(SystemExit) as exc:
         installer.main()
     assert exc.value.code == 2
-    assert "replaceable by another account" in capsys.readouterr().err
+    error = capsys.readouterr().err
+    assert "replaceable by another account" in error
+    assert str(shared) in error
+    assert "chmod go-w" in error
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX ancestor walk")
@@ -425,6 +434,33 @@ def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, d
     with pytest.raises(SystemExit):
         installer._resolve_lock(parser, args)
     assert "self-contained" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("directive", "rejected"),
+    [
+        pytest.param("${X} other.txt", True, id="line-start-include"),
+        pytest.param("--index-url ${PIP_INDEX_URL}", True, id="option-value"),
+        pytest.param("some-package==1.0 # ${COMMENT_ONLY}", False, id="comment"),
+        pytest.param("$\\\n{X} other.txt", True, id="continuation"),
+    ],
+)
+def test_pip_environment_expansion_is_rejected_after_comment_removal(
+    installer, tmp_path, capsys, directive, rejected, monkeypatch
+):
+    lock = tmp_path / "requirements.txt"
+    lock.write_text(directive + "\n", encoding="utf-8")
+    lock.chmod(0o600)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    monkeypatch.setenv("X", "-r")
+
+    if rejected:
+        with pytest.raises(SystemExit):
+            installer._resolve_lock(parser, args)
+        assert "pip environment-variable expansion" in capsys.readouterr().err
+    else:
+        assert installer._resolve_lock(parser, args) == lock.resolve()
 
 
 def test_invalid_utf8_requirements_lock_is_rejected(installer, tmp_path, capsys):
