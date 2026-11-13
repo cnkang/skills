@@ -1,5 +1,18 @@
 # Changelog
 
+## skills-20261113.1 — 2026-11-13 (UTC)
+
+### qdrant-memory 0.4.3
+
+- Reject pip requirements includes hidden behind a UTF-8 BOM and reject invalid
+  UTF-8 before invoking pip.
+- Keep strict Windows ACL checks on the selected lock and its immediate parent;
+  check higher ancestors for rights that can replace or redirect the path, and
+  ignore inherit-only entries when checking the ancestor itself.
+- Document DSH's opt-in automatic retries for eligible persisted Owner event
+  receipts and update the pinned Bundle guide and readiness report links.
+- The other four skill versions are unchanged.
+
 ## skills-20261112.1 — 2026-11-12 (UTC)
 
 ### qdrant-memory 0.4.2

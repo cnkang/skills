@@ -29,6 +29,86 @@ def installer(monkeypatch):
     return module
 
 
+@pytest.fixture
+def native_installer():
+    """Load the installer without stubbing platform ACL checks."""
+    spec = importlib.util.spec_from_file_location(
+        "native_release_installer", ROOT / "qdrant-memory/scripts/install_runtime.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_windows_lock_ancestor_probe_uses_replacement_rights(installer):
+    script = installer._windows_acl_script(directory=True, replacement_only=True)
+    assert "$mask = 0x100D0040" in script
+    assert "$skipInheritOnly = $true" in script
+    assert "AceFlags -band 0x08" in script
+
+
+def test_windows_lock_and_parent_probe_remains_strict(installer):
+    script = installer._windows_acl_script(directory=False, replacement_only=False)
+    assert "$mask = 0x500D0156" in script
+    assert "$skipInheritOnly = $false" in script
+
+
+def test_windows_lock_checks_parent_strictly_and_higher_ancestors_for_replacement(
+    native_installer, tmp_path, monkeypatch
+):
+    from types import SimpleNamespace
+
+    lock = tmp_path / "ancestor" / "private" / "requirements.txt"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("# lock\n", encoding="utf-8")
+    lock.chmod(0o600)
+    calls = []
+    monkeypatch.setattr(native_installer, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(native_installer, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(
+        native_installer,
+        "_require_windows_acl",
+        lambda path, **options: calls.append((path, options)),
+    )
+
+    parser = native_installer.argparse.ArgumentParser()
+    args = native_installer.argparse.Namespace(requirements_lock=lock, revision=None)
+    assert native_installer._resolve_lock(parser, args) == lock.resolve()
+
+    assert calls[0] == (
+        lock.parent,
+        {"directory": True, "label": "user-controlled parent"},
+    )
+    assert calls[1] == (lock, {"directory": False, "label": "lock file"})
+    assert calls[2:] == [
+        (
+            ancestor,
+            {"directory": True, "label": "lock ancestor", "replacement_only": True},
+        )
+        for ancestor in lock.resolve().parents[1:]
+    ]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="native Windows DACL behavior")
+def test_windows_lock_ancestor_allows_sibling_creation_right(
+    native_installer, tmp_path
+):
+    ancestor = tmp_path / "shared-parent"
+    parent = ancestor / "private"
+    parent.mkdir(parents=True)
+    lock = parent / "requirements.txt"
+    lock.write_text("# lock\n", encoding="utf-8")
+    subprocess.run(
+        ["icacls", str(ancestor), "/grant", "*S-1-5-11:(AD)"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    native_installer._require_private_windows_file(lock)
+
+
 @pytest.mark.parametrize("version,supported", [
     ((3, 11, 9), False), ((3, 11, 10), True),
     ((3, 12, 3), False), ((3, 12, 4), True), ((3, 13, 0), True),
@@ -318,6 +398,7 @@ def test_lock_ancestor_acl_probe_visits_lock_and_ancestors(installer, tmp_path, 
     "directive",
     [
         "-r other.txt",
+        "\ufeff-r other.txt",
         "--requirement other.txt",
         "--requirement=other.txt",
         "-c constraints.txt",
@@ -344,6 +425,18 @@ def test_requirements_lock_must_be_self_contained(installer, tmp_path, capsys, d
     with pytest.raises(SystemExit):
         installer._resolve_lock(parser, args)
     assert "self-contained" in capsys.readouterr().err
+
+
+def test_invalid_utf8_requirements_lock_is_rejected(installer, tmp_path, capsys):
+    lock = tmp_path / "requirements.txt"
+    lock.write_bytes(b"\xff-r other.txt\n")
+    lock.chmod(0o600)
+    parser = installer.argparse.ArgumentParser()
+    args = installer.argparse.Namespace(requirements_lock=lock, revision=None)
+
+    with pytest.raises(SystemExit):
+        installer._resolve_lock(parser, args)
+    assert "requirements lock as UTF-8" in capsys.readouterr().err
 
 
 def test_lock_text_that_mentions_include_options_is_not_rejected(installer, tmp_path):

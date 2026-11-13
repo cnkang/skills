@@ -10,7 +10,7 @@ Five skills for development and Qdrant memory workflows that you can install ind
 | [repository-quality-gate-fixer](repository-quality-gate-fixer/SKILL.md) | 0.8.1 | Audit or fix repository/PR quality gates. The optional probe requires Python 3.10+. Validation uses the project's own toolchain. |
 | [sonarcloud-link-inspector](sonarcloud-link-inspector/SKILL.md) | 1.1.1 | Inspect EU/US SonarCloud links using read-only requests. Requires Python 3.10+, requests, and network access. Private data requires an authorized token supplied through an environment variable. |
 | [dev-jev](dev-jev/SKILL.md) | 0.2.1 | Use available Jev tools for bounded semantic judgment. The provider is optional. Continue the main task when it is unavailable. Telemetry requires Python 3.10+ and uses only the standard library. |
-| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.2 | Agent-neutral memory tools/CLI, maintenance, Mem0 migration and Codex v1/v2 portability. New installs use Runtime 0.6.2. Portable exports preserve a safe exit across harnesses; native adoption requires client verification. Standalone runtime and MCP work without Hermes. |
+| [qdrant-memory](qdrant-memory/SKILL.md) | 0.4.3 | Agent-neutral memory tools/CLI, maintenance, Mem0 migration and Codex v1/v2 portability. New installs use Runtime 0.6.2. Portable exports preserve a safe exit across harnesses; native adoption requires client verification. Standalone runtime and MCP work without Hermes. |
 
 Skill entrypoints and bundled instructions use English by default. Installing or loading a skill does not authorize edits, commits, pushes, or remote changes. Skills can cooperate when the task calls for it. There is no mandatory invocation chain.
 
@@ -136,17 +136,17 @@ judgment and each skill's runtime dependencies.
 explicit edits, maintenance and Mem0 migration instructions. It supports Codex,
 OpenCode, Pi, Hermes and other agents that can call its CLI or MCP tools. Agents can share
 an authorized memory scope or keep private scopes. Install the skill and its
-runtime separately. The qdrant-memory 0.4.2 release uses Runtime 0.6.2
+runtime separately. The qdrant-memory 0.4.3 release uses Runtime 0.6.2
 and documents Codex native-memory import, portable JSON/Markdown handoff, the
-Owner extraction-v1 candidate-event boundary, and receipt-scoped failed-event
-recovery. The latest published Skills snapshot
-[skills-20261112.1](https://github.com/cnkang/skills/releases/tag/skills-20261112.1)
-includes qdrant-memory 0.4.2. Handoff verification does not establish native
+Owner extraction-v1 candidate-event boundary, DSH's opt-in automatic retry
+semantics, and stricter requirements-lock parsing. The latest published Skills
+snapshot [skills-20261113.1](https://github.com/cnkang/skills/releases/tag/skills-20261113.1)
+includes qdrant-memory 0.4.3. Handoff verification does not establish native
 adoption. Exports remain readable without the service or a subscription.
 The bundled Runtime installer selects Runtime 0.6.2 and installs its `mcp`
 extra. The Runtime CLI can serve stdio MCP directly; this does not install the
 separate, optional `qdrant-memory-mcp` distribution. Check that distribution's
-PyPI release before installing an exact version. The 0.4.2 Skill snapshot is
+PyPI release before installing an exact version. The 0.4.3 Skill snapshot is
 available from the [release list](https://github.com/cnkang/skills/releases)
 with its matching installation guide.
 Older compatibility baselines remain documented in the
