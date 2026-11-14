@@ -138,7 +138,7 @@ def test_unsupported_windows_build_creates_no_venv(installer, tmp_path, monkeypa
 
 @pytest.mark.parametrize(
     "installed,expected",
-    [("0.5.5", 1), ("0.6.0", 1), ("0.6.1", 1), ("0.6.2", 0), ("0.6.3", 0), ("0.5.3", 1), ("0.2.2", 1)],
+    [("0.5.5", 1), ("0.6.0", 1), ("0.6.1", 1), ("0.6.2", 1), ("0.6.3", 1), ("0.7.0", 0), ("0.5.3", 1), ("0.2.2", 1)],
 )
 def test_existing_version_checked_without_pip(installer, tmp_path, monkeypatch, capsys, installed, expected):
     target = tmp_path / "existing"
@@ -172,7 +172,7 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
 
     def run(command, **kwargs):
         calls.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.6.2", "source": None}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.7.0", "source": None}))
 
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target)])
@@ -180,8 +180,8 @@ def test_new_install_defaults_to_pinned_pypi(installer, tmp_path, monkeypatch, c
     assert calls[0][-2] == "-r"
     requirements = target / "runtime-requirements.txt"
     assert calls[0][-1] == str(requirements)
-    assert requirements.read_text() == "hermes-plugin-qdrant-memory[mcp]==0.6.2\n"
-    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.6.2"
+    assert requirements.read_text() == "hermes-plugin-qdrant-memory[mcp]==0.7.0\n"
+    assert json.loads(capsys.readouterr().out)["installed_version"] == "0.7.0"
 
 
 def test_posix_venv_links_managed_interpreter(installer, tmp_path, monkeypatch):
@@ -252,7 +252,7 @@ def test_hash_lock_uses_binary_only_and_ignores_pip_config(installer, tmp_path, 
     monkeypatch.setattr(installer, "hermes_advisory", lambda: "")
     def run(command, **kwargs):
         calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.6.2", "source": None}))
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps({"version": "0.7.0", "source": None}))
     monkeypatch.setattr(installer.subprocess, "run", run)
     monkeypatch.setattr(sys, "argv", ["installer", "--venv", str(target), "--requirements-lock", str(lock)])
     assert installer.main() == 0

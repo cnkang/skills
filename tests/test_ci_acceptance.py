@@ -62,11 +62,11 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     jobs = workflow["jobs"]
     runtime_version_input = workflow["on"]["workflow_dispatch"]["inputs"]["qdrant_runtime_probe_version"]
     assert runtime_version_input == {
-        "description": "Optional exact hash-locked Runtime compatibility probe; the required lane always uses 0.6.2",
+        "description": "Optional exact hash-locked Runtime compatibility probe; the required lane always uses 0.7.0",
         "required": False,
         "default": "none",
         "type": "choice",
-        "options": ["none", "0.6.0", "0.6.1", "0.6.2"],
+        "options": ["none", "0.6.0", "0.6.1", "0.6.2", "0.7.0"],
     }
     runtime = jobs["qdrant-e2e"]
     assert set(runtime["strategy"]["matrix"]["os"]) == {"ubuntu-latest", "macos-latest", "windows-latest"}
@@ -92,21 +92,22 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.6.2" in _active_lock_requirements(lock)
+    assert "hermes-plugin-qdrant-memory==0.7.0" in _active_lock_requirements(lock)
     expected_runtime_wheels = {
         "0.6.0": "484a3cdd45ee5ecff92b76be062046597a7fcf9e58ad9667a993a80b77ef6a15",
         "0.6.1": "5ad7835f454789c1bcb48d877a303ebb6f95e6084ab62d0ecaf50e4f44d26cc9",
         "0.6.2": "4606d1529092104d5594866032c61a02376c127f2ffc483c0442a7549b40c264",
+        "0.7.0": "931737e5ce30e5e708144a3fe88622f1daedbe233006c8b6a736623f72511ffa",
     }
     for version, digest in expected_runtime_wheels.items():
         wheel_lock = ROOT / f".github/runtime-wheel-locks/requirements-runtime-qdrant-memory-{version}.txt"
         contents = wheel_lock.read_text(encoding="utf-8")
         assert f"hermes-plugin-qdrant-memory=={version}" in _active_lock_requirements(contents)
         assert f"--hash=sha256:{digest}" in contents
-    assert current["name"].startswith("Hermes Hub and disposable Qdrant E2E (Runtime 0.6.2,")
+    assert current["name"].startswith("Hermes Hub and disposable Qdrant E2E (Runtime 0.7.0,")
     selected_runtime = next(step for step in current["steps"]
                             if step.get("name") == "Install current hash-locked Runtime wheel")
-    assert "requirements-runtime-qdrant-memory-0.6.2.txt" in selected_runtime["run"]
+    assert "requirements-runtime-qdrant-memory-0.7.0.txt" in selected_runtime["run"]
     assert "--require-hashes" in selected_runtime["run"] and "--no-deps" in selected_runtime["run"]
     resolve_runtime = next(step for step in current["steps"]
                            if step.get("name") == "Resolve installed Runtime plugin package")
@@ -132,7 +133,7 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
     probe_install = next(step for step in probe["steps"]
                          if step.get("name") == "Install selected hash-locked Runtime wheel")
     assert probe_install["env"]["QDRANT_RUNTIME_VERSION"] == "${{ inputs.qdrant_runtime_probe_version }}"
-    assert "0.6.0|0.6.1|0.6.2" in probe_install["run"]
+    assert "0.6.0|0.6.1|0.6.2|0.7.0" in probe_install["run"]
     assert "requirements-runtime-qdrant-memory-${QDRANT_RUNTIME_VERSION}.txt" in probe_install["run"]
     assert "--require-hashes" in probe_install["run"] and "--no-deps" in probe_install["run"]
     assert set(jobs["required-checks"]["needs"]) == {
@@ -176,7 +177,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     assert re.fullmatch(r"[0-9a-f]{40}", checkouts[0]["ref"])
     assert checkouts[0]["ref"] in (ROOT / "qdrant-memory/references/runtime.md").read_text(encoding="utf-8")
     for document in ("README.md", "README_zh-CN.md"):
-        assert "hermes-plugin-qdrant-memory[mcp]==0.6.2" in (ROOT / document).read_text(encoding="utf-8")
+        assert "hermes-plugin-qdrant-memory[mcp]==0.7.0" in (ROOT / document).read_text(encoding="utf-8")
     assert "hermes-plugin-qdrant-memory[mcp]==0.2.2" in (
         ROOT / "qdrant-memory/references/runtime.md"
     ).read_text(encoding="utf-8")
@@ -190,7 +191,7 @@ def test_standalone_acceptance_has_no_hermes_checkout_and_rejects_skips():
     installer = next(step for step in job["steps"] if "test_skill_runtime_install.py" in step.get("run", ""))
     assert "if" not in installer
     assert installer["env"]["QDRANT_SKILL_INSTALL_E2E"] == "1"
-    assert installer["env"]["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"] == "0.6.2"
+    assert installer["env"]["QDRANT_SKILL_INSTALL_DEFAULT_VERSION"] == "0.7.0"
     assert installer["env"]["QDRANT_SKILL_MCP_REQUIREMENT"] == "${{ matrix.mcp.requirement }}"
     assert installer["env"]["QDRANT_SKILL_INSTALL_REVISION"] == checkouts[0]["ref"]
     assert installer["env"]["QDRANT_SKILLS_SOURCE"] == "https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/tree/${{ github.event.pull_request.head.sha || github.sha }}"

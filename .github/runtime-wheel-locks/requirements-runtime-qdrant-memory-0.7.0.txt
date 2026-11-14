@@ -1,0 +1,2 @@
+hermes-plugin-qdrant-memory==0.7.0 \
+    --hash=sha256:931737e5ce30e5e708144a3fe88622f1daedbe233006c8b6a736623f72511ffa
