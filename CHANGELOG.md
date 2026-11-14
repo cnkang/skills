@@ -1,5 +1,18 @@
 # Changelog
 
+## skills-20261114.1 — 2026-11-14 (UTC)
+
+### qdrant-memory 0.4.5
+
+- Document the Runtime 0.7.0 policy upgrade: `upgrade plan`, `apply`, `resume`
+  and `status` for an existing destination, with the maintenance window,
+  blocker reference, recovery point and rollback boundaries.
+- Install Runtime 0.7.0 by default and verify the public wheel hash in the
+  current-runtime lane. The Runtime wheel lock covers 0.7.0 and the optional
+  probe keeps every earlier checked-in lock.
+- Keep the MCP boundary explicit: no maintenance route is exposed through MCP,
+  no connection creates payload indexes and no upgrade runs automatically.
+
 ## skills-20261113.2 — 2026-11-13 (UTC)
 
 ### qdrant-memory 0.4.4
