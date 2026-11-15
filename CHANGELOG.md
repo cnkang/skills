@@ -1,5 +1,11 @@
 # Changelog
 
+## skills-20261115.1 — 2026-11-15 (UTC)
+
+- Republish the controlled skill catalog at a new annotated snapshot whose
+  release notes list every skill version. Skill content and versions are
+  unchanged from `skills-20261114.1`. qdrant-memory remains 0.4.5.
+
 ## skills-20261114.1 — 2026-11-14 (UTC)
 
 ### qdrant-memory 0.4.5

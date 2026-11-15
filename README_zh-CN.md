@@ -134,7 +134,7 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 0.7.0，并说明 Codex 原生记忆导入、可移植 JSON/Markdown 交接、Owner
 extraction-v1 候选事件边界、DSH 的 opt-in 自动重试语义，以及更严格的
 requirements lock 校验。当前最新公开 Skills 快照
-[skills-20261114.1](https://github.com/cnkang/skills/releases/tag/skills-20261114.1)
+[skills-20261115.1](https://github.com/cnkang/skills/releases/tag/skills-20261115.1)
 已包含 qdrant-memory 0.4.5。交接验证不等于原生系统已接管；
 导出内容无需服务或订阅即可读取。
 自带的 Runtime 安装器选择 Runtime 0.7.0 并安装其 `mcp` extra。Runtime CLI

@@ -140,7 +140,7 @@ runtime separately. The qdrant-memory 0.4.5 release uses Runtime 0.7.0
 and documents Codex native-memory import, portable JSON/Markdown handoff, the
 Owner extraction-v1 candidate-event boundary, DSH's opt-in automatic retry
 semantics, and stricter requirements-lock parsing. The latest published Skills
-snapshot [skills-20261114.1](https://github.com/cnkang/skills/releases/tag/skills-20261114.1)
+snapshot [skills-20261115.1](https://github.com/cnkang/skills/releases/tag/skills-20261115.1)
 includes qdrant-memory 0.4.5. Handoff verification does not establish native
 adoption. Exports remain readable without the service or a subscription.
 The bundled Runtime installer selects Runtime 0.7.0 and installs its `mcp`
