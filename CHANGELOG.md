@@ -1,5 +1,18 @@
 # Changelog
 
+## skills-20261115.2 — 2026-11-15 (UTC)
+
+### qdrant-memory 0.4.6
+
+- Default the bundled Runtime installer to published Runtime 0.7.1 and verify
+  the 0.7.1 wheel SHA-256 in the required current-runtime lane.
+- Keep the 0.7.0 wheel lock as an explicit compatibility probe and retain the
+  0.2.2 standalone fixture; newer versions are accepted without reinstalling an
+  existing environment.
+- Document the 0.7.1 interrupted-upgrade recovery boundary: keep writers
+  isolated when resuming an interrupted plan, and replace a plan whose
+  maintenance window was broken instead of reusing its recovery point.
+
 ## skills-20261115.1 — 2026-11-15 (UTC)
 
 - Republish the controlled skill catalog at a new annotated snapshot whose
