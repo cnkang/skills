@@ -9,11 +9,12 @@ Loading this Skill does not authorize installing software or modifying a profile
 
 The published Bundle and Python/uvx overlay remain explicit MCP paths. They do
 not automatically capture or prefetch turns. The existing Bundle's
-`0.2.0-rc.1` source candidate adds optional Native lifecycle under the same
+`0.2.0-rc.3` public npm prerelease adds optional Native lifecycle under the same
 `@cnkang/qdrant-memory-dsh-bundle` npm name. The private Native module remains
-canonical source, not a second publication. The candidate requires DSH `0.2.2-rc.1` and Node.js
-`>=24.9.0`; its extraction-v1 event prerequisite is available in published
-Runtime 0.6.1. Runtime 0.6.2 is now public and adds recovery for persisted
+canonical source, not a second publication. It requires DSH `0.2.2-rc.1` and
+Node.js `>=24.9.0`; the published launcher pin is `0.1.0-rc.12` and selects
+Runtime 0.7.1. Runtime is public, but that does not establish model, Cloud or
+GUI acceptance. Runtime 0.6.2 added recovery for persisted
 Owner events. When `auto_capture.enabled` is true, DSH session recovery checks
 eligible receipts and automatically sends `remote-event --action retry` for
 `ACCEPTED`, `PENDING`, and `FAILED` events, reusing each stable event ID. This
@@ -21,11 +22,10 @@ does not ask for separate per-event confirmation; the Owner still checks the
 configured token, scope, and idempotent receipt. Enable automatic capture only
 when unattended retries are authorized for that profile. Disable it to stop
 background capture and recovery. This clears a Runtime publication
-prerequisite only. The DSH
-source candidate is not a published or release-ready install: its protected
+prerequisite only. The npm prerelease is installable, but real-model, full
+protected Cloud and Desktop GUI acceptance remain incomplete. The protected
 Ollama Cloud matrix is not yet green, full UPDATE/CONFLICT and cross-client
-acceptance is incomplete, and Desktop GUI acceptance remains unverified. The
-currently published Bundle remains 0.1.6.
+acceptance is incomplete, and Desktop GUI acceptance remains unverified.
 
 The candidate defaults to `mode: legacy`, preserving the existing four tools
 without requiring an Owner token. It rejects automatic memory in Legacy mode.

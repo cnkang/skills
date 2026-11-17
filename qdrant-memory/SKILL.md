@@ -14,7 +14,26 @@ migration from any agent with compatible MCP tools or command execution. The
 shared runtime owns embedding, storage, scope, ledger and recovery. Hermes
 additionally supplies its automatic extraction/prefetch lifecycle.
 
-## Choose the workflow
+## First choose: install, connect existing data, or daily use
+
+- **First install:** Hermes users should start with the Runtime's
+  [Agent installation guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/INSTALL.md)
+  and use its native Plugin Catalog path. Codex and other non-Hermes agents
+  should use the fixed-version stdio MCP path in the
+  [MCP quickstart](https://github.com/cnkang/qdrant-memory-mcp/blob/main/docs/quickstart.md).
+- **Connect an existing backend:** inspect the selected profile, provider,
+  collection and embedding model/dimensions read-only first. Installing this
+  Skill or a runtime does not authorize provider switching, initialization or
+  migration. Follow the operator workflow only after the user chooses and
+  authorizes those separate operations. If the user authorized installation
+  only, leave the current provider and data in place; do not run Hermes memory
+  setup, connect to a separate Qdrant collection, or request its credentials.
+  Ask separately before switching providers, connecting a destination or
+  migrating data.
+- **Daily use:** discover the configured `qdrant_memory_*` tools, then follow
+  [Usage](references/usage.md). Loading the Skill does not install software.
+
+## Choose the detailed workflow
 
 Read only the reference needed for the request:
 
@@ -42,13 +61,14 @@ For DeepSeek Harness, read [DSH setup](references/dsh.md). For WorkBuddy, read
 DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update,
 delete under the same prefix). A different configured server name changes that
 prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
-strip scope checks. The published DSH Bundle and Python/uvx overlay provide
-explicit memory tools and do not automatically capture or prefetch conversation
-turns. An unpublished source candidate in the same-name Bundle adds an optional
-Native lifecycle; it is not a separate Cordis package. `native-owner` exposes
-no MCP tools, while `unified-owner` combines the lifecycle with four explicit
-MCP tools. The candidate is not a published or release-ready install. Read
-[DSH setup](references/dsh.md) before describing it as available.
+strip scope checks. The public npm prerelease
+`@cnkang/qdrant-memory-dsh-bundle@0.2.0-rc.3` is installable and its guide pins
+launcher `0.1.0-rc.12` with Runtime 0.7.1. Published MCP paths provide explicit
+memory tools and do not automatically capture or prefetch conversation turns.
+The prerelease still lacks full protected live-model/Cloud and Desktop GUI
+acceptance. `native-owner` exposes no MCP tools, while `unified-owner` combines
+the lifecycle with four explicit MCP tools. Read [DSH setup](references/dsh.md)
+for current commands and verification boundaries.
 
 ## Shared boundaries
 
@@ -103,15 +123,24 @@ successful resume as proof that every payload stayed unchanged.
 ## Hermes interface choice
 
 Use one memory interface for each Hermes profile. Before you register an
-interface for Hermes, check `hermes plugins list`. If it lists qdrant-memory,
-do not register a second interface. Ask the user to enable it when needed
-(`hermes plugins enable qdrant-memory`), then run `hermes memory setup` and
-select qdrant-memory as the memory provider. Inform the user that Hermes
-needs no further setup. If the plugin cannot be used for that profile,
-register this skill's MCP server for that profile instead. If the plugin is
-not installed, recommend the Plugin Catalog install for Hermes
-(`hermes plugins install qdrant-memory`) and the same setup step. Other
-agents can still use this skill.
+interface for Hermes, check `hermes plugins list` and inspect the selected
+provider and existing data read-only. If qdrant-memory is already enabled, do
+not register a second interface. If the profile has an existing provider or
+memory data and the user authorized installation only, leave the provider
+unchanged and stop before `hermes memory setup` or connecting to a collection.
+Do not request Qdrant credentials just to install the plugin. Ask separately
+before switching providers, connecting a destination or migrating data.
+
+For a new, empty destination, or after the user explicitly authorizes a
+provider switch, follow the Runtime installation guide. Enable the plugin with
+`hermes plugins enable qdrant-memory`, then run the interactive
+`hermes memory setup` and select qdrant-memory only for the authorized target
+profile. If the plugin cannot be used for that profile, register this skill's
+MCP server only when the user chooses that interface. Other agents can still
+use this skill. The Catalog currently pins Runtime 0.6.3 and may lag PyPI; use
+the
+[installation guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/INSTALL.md)
+for the reviewed fixed-SHA source alternative.
 
 ## Verification
 
