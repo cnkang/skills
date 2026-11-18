@@ -101,6 +101,15 @@ type is a blocker: never delete or rebuild that index to make the plan pass.
 commits the effective policy. If it is interrupted, run `upgrade resume` with
 the same plan identifier.
 
+Resume keeps the recorded recovery point only while the plan's write watermark
+still matches this profile's local Ledger. A plan saved by an older Runtime has
+no watermark, so resume refuses it even when no local write occurred. A later
+local write across the stop-write boundary makes a watermark-enabled plan stale
+as well. In both cases review the blockers and run `upgrade plan --replace`. That
+command archives the old plan and its recovery point before it saves a new plan.
+The watermark covers this profile's local Ledger only, so keep every other writer
+stopped for the maintenance window.
+
 A remote destination needs `--confirm-writers-isolated` and
 `--accept-operator-backup`. Without both the Runtime refuses the apply. It holds
 no Qdrant administrative backup rights, so the operator owns the provider-side

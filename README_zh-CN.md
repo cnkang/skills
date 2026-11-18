@@ -130,17 +130,17 @@ CI 同时检查固定基线和最新 CLI。真实 agent 授权与调用行为的
 [qdrant-memory](qdrant-memory/SKILL.md) 提供通用 agent 的记忆检索、显式编辑、
 维护和 Mem0 迁移流程，面向 Codex、OpenCode、Pi、Hermes 及其他能调用其 CLI
 或 MCP 工具的 agent。多个 agent 可以共享授权的记忆作用域，也可以保留私有
-作用域。skill 和运行时分别安装。qdrant-memory 0.4.7 正式快照使用 Runtime
+作用域。skill 和运行时分别安装。qdrant-memory 0.4.7 发布使用 Runtime
 0.7.2，并说明 Codex 原生记忆导入、可移植 JSON/Markdown 交接、Owner
 extraction-v1 候选事件边界、DSH 的 opt-in 自动重试语义，以及更严格的
 requirements lock 校验。当前最新公开 Skills 快照
 [skills-20261115.2](https://github.com/cnkang/skills/releases/tag/skills-20261115.2)
-已包含 qdrant-memory 0.4.7。交接验证不等于原生系统已接管；
+已包含 qdrant-memory 0.4.6。0.4.7 快照在获批后发布。交接验证不等于原生系统已接管；
 导出内容无需服务或订阅即可读取。
 自带的 Runtime 安装器选择 Runtime 0.7.2 并安装其 `mcp` extra。Runtime CLI
 可直接提供 stdio MCP 服务；该命令不会安装独立且可选的
 `qdrant-memory-mcp` 分发包。使用该分发包的精确版本前，先确认其 PyPI
-发布状态。0.4.7 Skill 已进入正式快照；请查看[发布列表](https://github.com/cnkang/skills/releases)获取安装指南。
+发布状态。0.4.7 Skill 快照将在发布后进入[发布列表](https://github.com/cnkang/skills/releases)，并附对应安装指南。
 旧版兼容基线保留在[兼容性指南](docs/qdrant-memory-compatibility.md)。
 升级 Runtime 不会改变 Hermes 默认配置。支持 MCP Python SDK 1.x 和 2.x，
 四个 scoped 工具及 stdio 配置保持一致。
