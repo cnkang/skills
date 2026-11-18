@@ -92,7 +92,12 @@ def test_runtime_ci_is_required_pinned_and_opted_in():
                and "requirements-current-runtime-ci.txt" in step.get("run", "")
                for step in current["steps"])
     lock = (ROOT / ".github/requirements-current-runtime-ci.txt").read_text(encoding="utf-8")
-    assert "hermes-plugin-qdrant-memory==0.7.2" in _active_lock_requirements(lock)
+    active_runtime_pins = sorted(
+        requirement
+        for requirement in _active_lock_requirements(lock)
+        if requirement.startswith("hermes-plugin-qdrant-memory")
+    )
+    assert active_runtime_pins == ["hermes-plugin-qdrant-memory==0.7.2"]
     expected_runtime_wheels = {
         "0.6.0": "484a3cdd45ee5ecff92b76be062046597a7fcf9e58ad9667a993a80b77ef6a15",
         "0.6.1": "5ad7835f454789c1bcb48d877a303ebb6f95e6084ab62d0ecaf50e4f44d26cc9",
