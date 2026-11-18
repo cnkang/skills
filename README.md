@@ -140,16 +140,15 @@ runtime separately. The qdrant-memory 0.4.7 release uses Runtime 0.7.2
 and documents Codex native-memory import, portable JSON/Markdown handoff, the
 Owner extraction-v1 candidate-event boundary, DSH's opt-in automatic retry
 semantics, and stricter requirements-lock parsing. The latest published Skills
-snapshot [skills-20261115.2](https://github.com/cnkang/skills/releases/tag/skills-20261115.2)
-includes qdrant-memory 0.4.6. The 0.4.7 snapshot is published after
-approval. Handoff verification does not establish native
+snapshot [skills-20261118.1](https://github.com/cnkang/skills/releases/tag/skills-20261118.1)
+includes qdrant-memory 0.4.7. Handoff verification does not establish native
 adoption. Exports remain readable without the service or a subscription.
 The bundled Runtime installer selects Runtime 0.7.2 and installs its `mcp`
 extra. The Runtime CLI can serve stdio MCP directly; this does not install the
 separate, optional `qdrant-memory-mcp` distribution. Check that distribution's
-PyPI release before installing an exact version. The 0.4.7 Skill snapshot will
-appear in the [release list](https://github.com/cnkang/skills/releases) with its
-matching installation guide after publication.
+PyPI release before installing an exact version. The 0.4.7 Skill snapshot is
+available from the [release list](https://github.com/cnkang/skills/releases) with
+its matching installation guide.
 Older compatibility baselines remain documented in the
 [compatibility guide](docs/qdrant-memory-compatibility.md). Upgrading the Runtime
 does not change Hermes defaults. It supports MCP Python SDK 1.x and 2.x. The four scoped tools and stdio
