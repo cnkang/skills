@@ -9,7 +9,7 @@ installed Runtime CLI. Do not turn CLI maintenance into additional MCP tools.
 ## New isolated local profile
 
 Use this path only when the user wants a new profile and confirms a new
-user-controlled directory. The supported Runtime 0.7.1 `setup` command creates a
+user-controlled directory. The supported Runtime 0.7.2 `setup` command creates a
 private embedded profile and initializes its collection. It requires an
 explicit embedding-provider choice. For the recommended local CPU option:
 
@@ -76,7 +76,7 @@ local Ledger state. If the collection or fingerprint is incompatible, stop and
 explain the mismatch. Do not rebuild, re-embed or create a replacement
 collection without a separate, explicit migration decision.
 
-## Adopt a policy on an existing destination (Runtime 0.7.1)
+## Adopt a policy on an existing destination (Runtime 0.7.2)
 
 A destination written by an earlier Runtime keeps serving its dense path. It is
 reported as `legacy` until an operator applies a plan. Do not treat a missing

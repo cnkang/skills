@@ -1,5 +1,20 @@
 # Changelog
 
+## skills-20261118.1 — 2026-11-18 (UTC)
+
+### qdrant-memory 0.4.7
+
+- Default the bundled Runtime installer to published Runtime 0.7.2 and verify
+  the 0.7.2 wheel SHA-256 in the required current-runtime lane.
+- Keep the 0.7.1 wheel lock as an explicit compatibility probe and retain the
+  0.2.2 standalone fixture. A newer installed version is still accepted without
+  reinstalling an existing environment.
+- Document the Runtime 0.7.2 upgrade-plan write watermark. `apply` and `resume`
+  refuse an interrupted plan when a later local write crossed the stop-write
+  boundary. A plan without a watermark needs `upgrade plan --replace`.
+- State the watermark scope in the operator guidance. It covers writes recorded
+  in the selected profile's local Ledger only.
+
 ## skills-20261115.2 — 2026-11-15 (UTC)
 
 ### qdrant-memory 0.4.6

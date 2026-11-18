@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.4.6"
+  version: "0.4.7"
 ---
 
 # Qdrant memory
@@ -42,7 +42,7 @@ Read only the reference needed for the request:
 | New local profile, connect an existing Qdrant, back up/exit or troubleshoot | [Operator workflows](references/operator-workflows.md) | Standalone Runtime CLI for setup/doctor/export; the plugin MCP server exposes only scoped memory tools |
 | Search/save facts, replace/delete by exact ID, inspect provenance | [Usage](references/usage.md) | Scoped MCP/Hermes `qdrant_memory_*` tools or standalone CLI |
 | Status, diagnostics, inventory/export, authorized retry/scope deletion | [Maintenance](references/maintenance.md) | Standalone `qdrant-memory --home PROFILE` or existing Hermes CLI |
-| Adopt an existing destination onto the 0.7.1 Qdrant policy | [Operator workflows](references/operator-workflows.md) | Operator CLI `upgrade plan/apply/resume/status`; never exposed through MCP |
+| Adopt an existing destination onto the 0.7.2 Qdrant policy | [Operator workflows](references/operator-workflows.md) | Operator CLI `upgrade plan/apply/resume/status`; never exposed through MCP |
 | Mem0 JSON/collection dry-run, import, resume/retry-failed, verification | [Migration](references/migration.md) | Selected CLI's `migrate mem0` command |
 | Codex native v1/v2 inspection, migration, handoff or Owner candidate events | [Codex portability](references/codex.md) | Runtime CLI and, for Owner events, a separately verified adapter |
 
