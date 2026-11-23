@@ -9,7 +9,7 @@ installed Runtime CLI. Do not turn CLI maintenance into additional MCP tools.
 ## New isolated local profile
 
 Use this path only when the user wants a new profile and confirms a new
-user-controlled directory. The supported Runtime 0.7.2 `setup` command creates a
+user-controlled directory. The supported Runtime 0.7.3 `setup` command creates a
 private embedded profile and initializes its collection. It requires an
 explicit embedding-provider choice. For the recommended local CPU option:
 
@@ -76,7 +76,7 @@ local Ledger state. If the collection or fingerprint is incompatible, stop and
 explain the mismatch. Do not rebuild, re-embed or create a replacement
 collection without a separate, explicit migration decision.
 
-## Adopt a policy on an existing destination (Runtime 0.7.2)
+## Adopt a policy on an existing destination (Runtime 0.7.3)
 
 A destination written by an earlier Runtime keeps serving its dense path. It is
 reported as `legacy` until an operator applies a plan. Do not treat a missing
@@ -94,20 +94,35 @@ qdrant-memory --home "/absolute/profile" upgrade apply --plan PLAN_ID
 qdrant-memory --home "/absolute/profile" upgrade status
 ```
 
+Installing Runtime 0.7.3 does not adopt a policy on an existing destination.
+`upgrade plan`, `apply`, `resume` and `status` are operator maintenance commands,
+not ordinary MCP tools. They require an authorized maintenance window with all
+writers stopped.
+
 `plan` reports the blockers, the per-field index status and the data checkpoint.
 It saves one control-plane record and writes nothing else. A conflicting index
 type is a blocker: never delete or rebuild that index to make the plan pass.
 `apply` refuses a stale plan, takes a recovery point and re-verifies before it
 commits the effective policy. If it is interrupted, run `upgrade resume` with
-the same plan identifier.
+the same plan identifier, provided the stop-write boundary is still intact.
 
-Resume keeps the recorded recovery point only while the plan's write watermark
-still matches this profile's local Ledger. A plan saved by an older Runtime has
-no watermark, so resume refuses it even when no local write occurred. A later
-local write across the stop-write boundary makes a watermark-enabled plan stale
-as well. In both cases review the blockers and run `upgrade plan --replace`. That
-command archives the old plan and its recovery point before it saves a new plan.
-The watermark covers this profile's local Ledger only, so keep every other writer
+Runtime 0.7.3 binds the plan to the Ledger write watermark and reset epoch. Any
+Ledger write invalidates the plan, including an update that preserves point IDs
+and record counts; a reset also invalidates it if row IDs happen to repeat.
+Before publishing an embedded recovery point, Runtime verifies the Qdrant
+snapshot count and fingerprint plus the copied SQLite Ledger and watermark.
+Invalid backup markers or corrupt metadata fail closed. Unresolved Shared Owner
+receipts block maintenance.
+
+If apply stops because the filesystem is full, the valid checkpoint is preserved.
+Free space and retry the same plan; do not replace it just to retry an ENOSPC
+failure. If a writer crossed the stop-write boundary, or you cannot verify that
+the interrupted write state is unchanged, treat the plan as stale. Stop all
+writers, review blockers, then use `upgrade plan --replace` to archive the stale
+plan and create a new maintenance boundary. A replacement plan takes a new
+recovery point when applied. Never silently resume across an interrupted write.
+The watermark covers this profile's local Ledger only; it does not detect
+independent profiles, hosts or external Qdrant writers. Keep all such writers
 stopped for the maintenance window.
 
 A remote destination needs `--confirm-writers-isolated` and

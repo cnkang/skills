@@ -5,11 +5,10 @@ This skill supplies instructions. The shared [Qdrant memory backend](https://git
 The private compatibility examples pin Runtime 0.2.2 and MCP distribution 0.1.3,
 the verified private compatibility baseline for this skill. These minimum
 versions do not provide the Runtime 0.5.0 Owner controls. This skill targets
-Runtime 0.7.2. Its `mcp` extra provides the standalone stdio server directly.
-The optional metadata-only [MCP distribution](https://pypi.org/project/qdrant-memory-mcp/)
-is versioned independently; verify its PyPI release before installing an exact
-version. The installer accepts an installed Runtime that is at least the
-requested version.
+Runtime 0.7.3. Its `mcp` extra provides the standalone stdio server directly.
+The separately versioned metadata-only [MCP distribution](https://pypi.org/project/qdrant-memory-mcp/)
+is published at 0.3.7. The Runtime and MCP distribution versions are independent.
+The installer accepts an installed Runtime that is at least the requested version.
 
 Older CPU profiles may use FastEmbed 0.9.0. Runtime 0.5.5 and later use the
 0.9.1 pipeline with a different fingerprint. Keep the old environment, cache and
@@ -23,21 +22,26 @@ sizes/hashes and atomic cache publication. Managed launchers allow forty
 minutes for setup. Authorize the initial model download explicitly; ordinary
 memory operations do not download models.
 
-## Install Runtime 0.7.2 for Owner controls and Codex portability
+## Install Runtime 0.7.3 for Owner controls and Codex portability
 
 When Owner setup is explicitly authorized, select a new private environment and
 request the version that provides the controls:
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-owner-env --version 0.7.2
+  --venv /private/path/qdrant-owner-env --version 0.7.3
 /private/path/qdrant-owner-env/bin/qdrant-memory --help
 ```
 
-The published `v0.7.2` tag resolves to immutable source commit
-[`0ce83104fefbaecabe6b9e4560d3c83ee4e20438`](https://github.com/cnkang/hermes-plugin-qdrant-memory/commit/0ce83104fefbaecabe6b9e4560d3c83ee4e20438).
+The published `v0.7.3` tag resolves to immutable source commit
+[`62cf418f3de3ab59dd93989eb5f5c40131317605`](https://github.com/cnkang/hermes-plugin-qdrant-memory/commit/62cf418f3de3ab59dd93989eb5f5c40131317605).
 The PyPI wheel SHA-256 is
-`c0e5e82dc11eccff7f67ceaaa40caaa8df6396b14fbad7f55ceb116b6cf9efb9`.
+`ae41d7f7be6058f262e727e205914a81df4531a1a926226c79fd134a150e46ed`.
+Runtime 0.7.3 binds upgrade plans to the Ledger write watermark and reset epoch,
+verifies the Qdrant snapshot and copied SQLite Ledger before publishing an
+embedded recovery point, and preserves a valid checkpoint when storage is full.
+See [operator workflows](operator-workflows.md) for the resume and plan
+invalidation rules.
 
 This installs the CLI/MCP base. The HTTPS gateway also needs the optional remote
 dependencies and operator-configured TLS and credentials. Follow the pinned
@@ -133,7 +137,7 @@ available, the agent can run the installed skill's [installer](../scripts/instal
 
 ```bash
 python3 /path/to/installed/qdrant-memory/scripts/install_runtime.py \
-  --venv /private/path/qdrant-env --version 0.7.2
+  --venv /private/path/qdrant-env --version 0.7.3
 ```
 
 Use the actual installed skill path reported by `npx skills` (global Codex usually
@@ -155,12 +159,12 @@ profile and destination, and retain the same scope. Reuse the collection only
 when the embedding pipeline is unchanged. For FastEmbed 0.9.0 to 0.9.1, use the
 new profile and collection procedure above.
 For an explicitly authorized candidate/development/fallback source, use
-`--version 0.7.2 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
+`--version 0.7.3 --revision FULL_40_CHARACTER_SHA`. The installer verifies both
 version and VCS commit. A moving `main` or short SHA is rejected. Source installs
 are optional and never the production default. Never silently fall back from PyPI.
-The immutable Runtime 0.7.2 release commit is
-`0ce83104fefbaecabe6b9e4560d3c83ee4e20438`; CI's current-release acceptance
-installs published Runtime 0.7.2 from PyPI and exercises the default installer
+The immutable Runtime 0.7.3 release commit is
+`62cf418f3de3ab59dd93989eb5f5c40131317605`; CI's current-release acceptance
+installs published Runtime 0.7.3 from PyPI and exercises the default installer
 path. The standalone compatibility lane retains Runtime 0.2.2 at commit
 `c85d2bce788b117dddd854bb124971f7de8e564c`. The published release tag is the
 source of truth.
@@ -245,7 +249,7 @@ installation remains a separate operator-authorized development route. Existing
 environments are verified without reinstallation, so this flag does not
 retroactively certify their bytes.
 
-New installations default to Runtime 0.7.2. Runtime 0.2.2 remains the tested
+New installations default to Runtime 0.7.3. Runtime 0.2.2 remains the tested
 private-compatibility baseline in explicit examples and CI fixture pins. Runtime
 0.4.0 adds the separately configured shared owner. Use Runtime 0.5.0 or later for
 protected policy, doctor and remote Owner features, and discover its schemas before

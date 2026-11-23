@@ -4,7 +4,7 @@ description: Use, maintain and migrate Qdrant memories through MCP tools or a st
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
-  version: "0.4.7"
+  version: "0.4.8"
 ---
 
 # Qdrant memory
@@ -42,7 +42,7 @@ Read only the reference needed for the request:
 | New local profile, connect an existing Qdrant, back up/exit or troubleshoot | [Operator workflows](references/operator-workflows.md) | Standalone Runtime CLI for setup/doctor/export; the plugin MCP server exposes only scoped memory tools |
 | Search/save facts, replace/delete by exact ID, inspect provenance | [Usage](references/usage.md) | Scoped MCP/Hermes `qdrant_memory_*` tools or standalone CLI |
 | Status, diagnostics, inventory/export, authorized retry/scope deletion | [Maintenance](references/maintenance.md) | Standalone `qdrant-memory --home PROFILE` or existing Hermes CLI |
-| Adopt an existing destination onto the 0.7.2 Qdrant policy | [Operator workflows](references/operator-workflows.md) | Operator CLI `upgrade plan/apply/resume/status`; never exposed through MCP |
+| Adopt an existing destination onto the 0.7.3 Qdrant policy | [Operator workflows](references/operator-workflows.md) | Operator CLI `upgrade plan/apply/resume/status`; never exposed through MCP |
 | Mem0 JSON/collection dry-run, import, resume/retry-failed, verification | [Migration](references/migration.md) | Selected CLI's `migrate mem0` command |
 | Codex native v1/v2 inspection, migration, handoff or Owner candidate events | [Codex portability](references/codex.md) | Runtime CLI and, for Owner events, a separately verified adapter |
 
@@ -61,10 +61,12 @@ For DeepSeek Harness, read [DSH setup](references/dsh.md). For WorkBuddy, read
 DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update,
 delete under the same prefix). A different configured server name changes that
 prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
-strip scope checks. The public npm prerelease
-`@cnkang/qdrant-memory-dsh-bundle@0.2.0-rc.3` is installable and its guide pins
-launcher `0.1.0-rc.12` with Runtime 0.7.1. Published MCP paths provide explicit
-memory tools and do not automatically capture or prefetch conversation turns.
+strip scope checks. The latest published npm prerelease
+`@cnkang/qdrant-memory-dsh-bundle@0.2.0-rc.5` uses launcher
+`0.1.0-rc.14` and Runtime 0.7.2. The proposed Bundle `0.2.0-rc.6` and launcher
+`0.1.0-rc.15` with Runtime 0.7.3 are unpublished candidates; do not install or
+describe them as released. Published MCP paths provide explicit memory tools
+and do not automatically capture or prefetch conversation turns.
 The prerelease still lacks full protected live-model/Cloud and Desktop GUI
 acceptance. `native-owner` exposes no MCP tools, while `unified-owner` combines
 the lifecycle with four explicit MCP tools. Read [DSH setup](references/dsh.md)

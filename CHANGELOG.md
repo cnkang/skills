@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### qdrant-memory 0.4.8
+
+- Align install guidance and the bundled installer with published Runtime 0.7.3
+  and metadata-only MCP distribution 0.3.7; retain the 0.7.2 wheel lock as a
+  compatibility probe.
+- Document Runtime 0.7.3 upgrade-plan watermarks, reset epochs, checkpoint
+  verification, invalidation, Shared Owner receipt blockers and ENOSPC retry
+  behavior. Runtime installation remains separate from policy adoption.
+- Update DSH guidance to published Bundle rc.5 / launcher rc.14 and label
+  Bundle rc.6 / launcher rc.15 as unpublished candidates.
+- Keep Skills snapshot publication separate from merging the default branch;
+  readers must select a published snapshot containing qdrant-memory 0.4.8.
+
 ## skills-20261118.1 — 2026-11-18 (UTC)
 
 ### qdrant-memory 0.4.7
