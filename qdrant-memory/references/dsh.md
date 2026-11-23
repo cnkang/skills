@@ -8,12 +8,14 @@ Loading this Skill does not authorize installing software or modifying a profile
 ## Native lifecycle adapter status
 
 The published Bundle and Python/uvx overlay remain explicit MCP paths. They do
-not automatically capture or prefetch turns. The existing Bundle's
-`0.2.0-rc.3` public npm prerelease adds optional Native lifecycle under the same
+not automatically capture or prefetch turns. The latest published Bundle,
+`0.2.0-rc.5`, adds optional Native lifecycle under the same
 `@cnkang/qdrant-memory-dsh-bundle` npm name. The private Native module remains
 canonical source, not a second publication. It requires DSH `0.2.2-rc.1` and
-Node.js `>=24.9.0`; the published launcher pin is `0.1.0-rc.12` and selects
-Runtime 0.7.1. Runtime is public, but that does not establish model, Cloud or
+Node.js `>=24.9.0`; the published launcher pin is `0.1.0-rc.14` and selects
+Runtime 0.7.2. The proposed Bundle `0.2.0-rc.6` and launcher `0.1.0-rc.15`
+select Runtime 0.7.3 and remain unpublished candidates until their npm releases
+are verified. Runtime is public, but that does not establish model, Cloud or
 GUI acceptance. Runtime 0.6.2 added recovery for persisted
 Owner events. When `auto_capture.enabled` is true, DSH session recovery checks
 eligible receipts and automatically sends `remote-event --action retry` for

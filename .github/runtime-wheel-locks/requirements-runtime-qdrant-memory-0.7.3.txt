@@ -1,0 +1,4 @@
+--only-binary=:all:
+--no-deps
+hermes-plugin-qdrant-memory==0.7.3 \
+    --hash=sha256:ae41d7f7be6058f262e727e205914a81df4531a1a926226c79fd134a150e46ed
