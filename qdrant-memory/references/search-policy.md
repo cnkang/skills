@@ -47,8 +47,8 @@ A useful query names its subject and keeps the terms that identify the record.
 - Remove conversational context that adds no identifying term.
 - Split a complex question into separate searches when the parts have different
   subjects.
-- Send the query only. Do not send a full conversation or a long document to
-  the embedding service.
+- Keep the query to the identifying terms. A query is not a transcript, so leave
+  long documents out of the embedding input.
 
 | Poor query | Better query |
 |---|---|
