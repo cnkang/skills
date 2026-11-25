@@ -16,6 +16,8 @@
   point to the Runtime design assessment. No tool, schema or Runtime behavior
   changes in this release.
 
+## skills-20261123.1 — 2026-11-23 (UTC)
+
 ### qdrant-memory 0.4.8
 
 - Align install guidance and the bundled installer with published Runtime 0.7.3
