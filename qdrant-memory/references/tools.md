@@ -11,6 +11,9 @@ Schemas reject additional properties. User/agent/session scope is supplied by
 the trusted Hermes host or operator-configured MCP process, never by tool
 arguments. A client's displayed name is not authentication. Update/delete check the existing
 point in caller scope before preparing a durable operation under the runtime lock.
+`qdrant_memory_add` and `qdrant_memory_update` accept no category, metadata or
+importance argument. Read [memory policy](memory-policy.md) before you decide
+what to save.
 
 Example calls, only when these discovered tools are available and the action is
 authorized:
