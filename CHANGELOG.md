@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### qdrant-memory 0.4.9
+
+- Add memory judgment guidance under progressive disclosure: `memory-policy.md`
+  (recommended category vocabulary, admission policy, trust and freshness),
+  `search-policy.md` (when to search, query construction, multilingual queries,
+  natural impact reporting) and `experience-capture.md` (evidence-backed
+  recording of verified engineering lessons).
+- State the actual interface limits. Only `qdrant_memory_search` accepts a
+  category filter. `add` and `update` accept text and an exact ID. The taxonomy
+  stays optional vocabulary and never becomes a schema or a data scope.
+- Record that automatic task learning is not part of the shipped Runtime, and
+  point to the Runtime design assessment. No tool, schema or Runtime behavior
+  changes in this release.
+
 ### qdrant-memory 0.4.8
 
 - Align install guidance and the bundled installer with published Runtime 0.7.3
