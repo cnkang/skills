@@ -1,6 +1,6 @@
 ---
 name: qdrant-memory
-description: Use, maintain and migrate Qdrant memories through MCP tools or a standalone CLI, with Hermes compatibility.
+description: Use when a task continues earlier work, depends on a past decision or preference, repeats a known problem, follows an established procedure, or should record a verified lesson. Scoped search, explicit saves with exact-ID updates, maintenance, migration and trust rules for durable agent memory through MCP tools, the standalone CLI or Hermes.
 license: MIT
 compatibility: Requires a configured Qdrant memory runtime and embedding service. Use scoped MCP tools or the qdrant-memory standalone CLI without Hermes. Existing Hermes tools and hermes qdrant-memory remain compatible. Install and configure the runtime separately.
 metadata:
