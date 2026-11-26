@@ -103,8 +103,8 @@ It does not decide that a task produced a verified lesson.
 Do not describe automatic lesson capture as available. Do not simulate it by
 writing a lesson on every turn. The Runtime repository holds the current
 assessment, the evidence model and the acceptance criteria for a possible future
-opt-in policy:
-[task-learning assessment](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/docs/design/task-learning-assessment.md).
+opt-in policy in its
+[design notes](https://github.com/cnkang/hermes-plugin-qdrant-memory/tree/main/docs/design).
 
 ## Boundaries
 
