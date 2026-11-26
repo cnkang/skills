@@ -15,6 +15,9 @@
 - Record that automatic task learning is not part of the shipped Runtime, and
   point to the Runtime design assessment. No tool, schema or Runtime behavior
   changes in this release.
+- Rewrite the Skill description around the situations that need memory: continuing
+  earlier work, applying a past decision or preference, repeating a known problem,
+  following an established procedure, or recording a verified lesson.
 - Correct the DSH distribution status. Bundle `0.2.0-rc.6` and launcher
   `0.1.0-rc.15` are published on npm and select Runtime 0.7.3. Their
   verification limits stay unchanged.
