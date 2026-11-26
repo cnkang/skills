@@ -65,11 +65,9 @@ DSH normally exposes `mcp__qdrant-memory__qdrant_memory_search` (and add, update
 delete under the same prefix). A different configured server name changes that
 prefix. Match the discovered schema and raw tool suffix. Never invent a tool or
 strip scope checks. The latest published npm prerelease
-`@cnkang/qdrant-memory-dsh-bundle@0.2.0-rc.5` uses launcher
-`0.1.0-rc.14` and Runtime 0.7.2. The proposed Bundle `0.2.0-rc.6` and launcher
-`0.1.0-rc.15` with Runtime 0.7.3 are unpublished candidates; do not install or
-describe them as released. Published MCP paths provide explicit memory tools
-and do not automatically capture or prefetch conversation turns.
+`@cnkang/qdrant-memory-dsh-bundle@0.2.0-rc.6` uses launcher
+`0.1.0-rc.15` and Runtime 0.7.3. Published MCP paths provide explicit memory
+tools and do not automatically capture or prefetch conversation turns.
 The prerelease still lacks full protected live-model/Cloud and Desktop GUI
 acceptance. `native-owner` exposes no MCP tools, while `unified-owner` combines
 the lifecycle with four explicit MCP tools. Read [DSH setup](references/dsh.md)

@@ -47,11 +47,10 @@ def test_hermes_native_is_first_and_catalog_lag_is_explicit():
 
 def test_dsh_public_prerelease_and_acceptance_are_separate():
     text = (ROOT / "qdrant-memory/references/dsh.md").read_text(encoding="utf-8")
-    assert "latest published Bundle,\n`0.2.0-rc.5`" in text
-    assert "0.1.0-rc.14" in text
-    assert "Runtime 0.7.2" in text
-    assert "Bundle `0.2.0-rc.6` and launcher `0.1.0-rc.15`" in text
-    assert "remain unpublished candidates" in text
+    assert "latest published Bundle,\n`0.2.0-rc.6`" in text
+    assert "0.1.0-rc.15" in text
+    assert "Runtime 0.7.3" in text
+    assert "unpublished candidates" not in text
     assert "npm prerelease is installable" in text
     assert "real-model" in text
     assert "protected Cloud" in text
