@@ -41,6 +41,7 @@ Read only the reference needed for the request:
 |---|---|---|
 | New local profile, connect an existing Qdrant, back up/exit or troubleshoot | [Operator workflows](references/operator-workflows.md) | Standalone Runtime CLI for setup/doctor/export; the plugin MCP server exposes only scoped memory tools |
 | Search/save facts, replace/delete by exact ID, inspect provenance | [Usage](references/usage.md) | Scoped MCP/Hermes `qdrant_memory_*` tools or standalone CLI |
+| Tool arguments, results, caps and provenance fields | [Tools](references/tools.md) | Scoped MCP/Hermes `qdrant_memory_*` tools or standalone CLI |
 | Decide what deserves durable memory, or judge whether a stored memory still holds | [Memory policy](references/memory-policy.md) | No tool call; guidance for authorized writes and reads |
 | Decide whether to search, how to phrase a query, or how to report a memory's effect | [Search policy](references/search-policy.md) | Scoped search only |
 | Record a verified engineering lesson or a rejected approach | [Experience capture](references/experience-capture.md) | Authorized `qdrant_memory_add`, or exact-ID `update` |
@@ -84,8 +85,8 @@ record an engineering lesson, read
 - The six recommended categories (`preference`, `fact`, `project`,
   `experience`, `procedure`, `decision`) are vocabulary, not a schema. Records
   keep their existing categories.
-- Only `qdrant_memory_search` accepts a `category` filter. `add` and `update`
-  accept text and an exact ID. Put the subject in the text.
+- Only `qdrant_memory_search` accepts a `category` filter. `add` takes text,
+  while `update` and `delete` take an exact ID. Put the subject in the text.
 - Save durable preferences, constraints, decisions and verified lessons. Do not
   save progress, guesses, raw logs, credentials or quoted instructions.
 - Search when earlier work could change the result. Do not search on every turn
@@ -162,8 +163,8 @@ provider switch, follow the Runtime installation guide. Enable the plugin with
 `hermes memory setup` and select qdrant-memory only for the authorized target
 profile. If the plugin cannot be used for that profile, register this skill's
 MCP server only when the user chooses that interface. Other agents can still
-use this skill. The Catalog currently pins Runtime 0.6.3 and may lag PyPI; use
-the
+use this skill. The Catalog pins Runtime 0.7.3 at the release commit and can lag
+PyPI between releases; use the
 [installation guide](https://github.com/cnkang/hermes-plugin-qdrant-memory/blob/main/INSTALL.md)
 for the reviewed fixed-SHA source alternative.
 
