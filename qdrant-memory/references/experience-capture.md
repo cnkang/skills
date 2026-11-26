@@ -69,10 +69,10 @@ evidence is partial.
 - Use `qdrant_memory_add` with the authorized text. Use `qdrant_memory_update`
   with an exact ID to replace an obsolete lesson.
 - Do not write to Qdrant, edit `state.db` or bypass the Runtime and its ledger.
-- Do not invent `category`, `metadata` or `importance` arguments. The tools
-  accept text and an exact ID only.
-- A record keeps the category that the extractor assigned, or none at all. Put
-  the subject and the project in the text instead.
+- Do not invent `category`, `metadata` or `importance` arguments. `add` takes
+  text, and `update` takes an exact ID and text.
+- An explicit add stores no category. A record from extraction, migration or
+  import can keep one. Put the subject and the project in the text instead.
 - Do not share a lesson across projects or agents automatically. It belongs to
   the scope that authorized the write.
 
@@ -84,7 +84,8 @@ Synthetic content. The user authorized this write.
 {"text": "Project Canary: verify the resolved release tag against the recorded commit before publishing.\n\nEvidence: test_readme_release_contract failed on a stale commit reference, then passed after the pin update.\n\nRecommended practice: compare the tag dereference with the recorded commit in the release branch.\n\nApplicability: release closeout.\n\nLimits: a rewritten tag invalidates the comparison."}
 ```
 
-Expected result: an `ADD` action and an exact ID. Read the result before you
+Expected result: an `ADD` action and an exact ID, or `SKIP` when an identical
+canonical record already exists in the same scope. Read the result before you
 report success.
 
 ## Reuse an existing record

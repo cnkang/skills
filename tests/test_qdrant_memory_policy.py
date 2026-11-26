@@ -37,8 +37,9 @@ def test_add_and_update_document_no_category_argument():
     ]
     assert len(rows) == 2
     assert all("category" not in row for row in rows)
+    assert "id" not in rows[0]
     policy = " ".join(text("memory-policy.md").split())
-    assert "They have no category argument" in policy
+    assert "Neither takes a category argument" in policy
 
 
 def test_search_policy_keeps_both_decision_lists():

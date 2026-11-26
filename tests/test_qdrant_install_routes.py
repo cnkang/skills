@@ -38,7 +38,7 @@ def test_hermes_native_is_first_and_catalog_lag_is_explicit():
     assert "hermes-plugin-qdrant-memory/blob/main/INSTALL.md" in hermes
     assert "stop before `hermes memory setup`" in hermes
     assert "Do not request Qdrant credentials just to install" in hermes
-    assert "currently pins Runtime 0.6.3" in hermes
+    assert "pins Runtime 0.7.3" in hermes
     assert "INSTALL.md" in hermes
     assert (ROOT / "qdrant-memory/scripts/install_runtime.py").exists()
     assert (ROOT / "qdrant-memory/references/migration.md").exists()

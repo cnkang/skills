@@ -24,18 +24,21 @@ for each category.
 Check the discovered schema before you promise a category operation.
 
 - `qdrant_memory_search` accepts an optional `category` string. The Runtime
-  matches that string against the stored category list of each record.
-- `qdrant_memory_add` and `qdrant_memory_update` accept text only. They have no
-  category argument. The same schema applies to the standalone CLI.
+  compares it for exact, case-sensitive equality with each stored category. An
+  empty value applies no filter.
+- `qdrant_memory_add` takes text. `qdrant_memory_update` takes an exact ID and
+  text. Neither takes a category argument. The standalone CLI mirrors these
+  schemas.
 - The Hermes lifecycle extractor selects categories itself when it prepares a
   candidate record. An explicit write does not set or change a category.
 - Some records have an empty category list.
 
-Two consequences follow. First, a category filter can exclude relevant records,
+Three consequences follow. First, a category filter can exclude relevant records,
 so an empty filtered result is not proof that no such memory exists. Second, a
-record written through `qdrant_memory_add` must carry its own subject and
-qualifiers in the text, because no category or metadata argument can supply
-them.
+search returns at most eight records, so a short result never proves absence.
+Third, a record written through `qdrant_memory_add` must carry its own subject
+and qualifiers in the text, because no category or metadata argument can supply
+them. One argument is capped at 65,536 bytes and characters.
 
 Write the subject into the first sentence. Name the project or entity. Keep
 versions, identifiers and conditions that change the meaning. Prefer a short
