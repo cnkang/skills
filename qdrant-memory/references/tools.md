@@ -13,8 +13,9 @@ arguments. A client's displayed name is not authentication. Update/delete check 
 point in caller scope before preparing a durable operation under the runtime lock.
 `qdrant_memory_add` and `qdrant_memory_update` accept no category, metadata or
 importance argument. Each argument is capped at 65,536 bytes and characters. A
-search returns at most eight records by default, so a short result never proves
-absence. Read [memory policy](memory-policy.md) before you decide what to save.
+search uses the Runtime's `search.top_k` limit, which defaults to eight. A short
+result never proves absence. Read [memory policy](memory-policy.md) before you
+decide what to save.
 
 Example calls, only when these discovered tools are available and the action is
 authorized. Replace each ID with the exact ID returned by a scoped call. An
