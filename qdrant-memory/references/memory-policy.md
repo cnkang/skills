@@ -35,7 +35,8 @@ Check the discovered schema before you promise a category operation.
 
 Three consequences follow. First, a category filter can exclude relevant records,
 so an empty filtered result is not proof that no such memory exists. Second, a
-search returns at most eight records, so a short result never proves absence.
+search uses the Runtime's `search.top_k` limit, which defaults to eight. A short
+result never proves absence.
 Third, a record written through `qdrant_memory_add` must carry its own subject
 and qualifiers in the text, because no category or metadata argument can supply
 them. One argument is capped at 65,536 bytes and characters.

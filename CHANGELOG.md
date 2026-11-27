@@ -23,8 +23,8 @@
   verification limits stay unchanged.
 - Align the tool contract text with the shipped schemas: `add` takes text,
   `update` and `delete` take an exact ID, the category filter is an exact match,
-  a search returns at most eight records, and each argument is capped. Split the
-  example calls so each one is valid JSON.
+  the default search limit is eight records, and each argument is capped. Split
+  the example calls so each one is valid JSON.
 
 ## skills-20261123.1 — 2026-11-23 (UTC)
 
